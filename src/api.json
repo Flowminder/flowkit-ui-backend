@@ -1,0 +1,2226 @@
+{
+    "openapi":"3.0.3",
+    "info": {
+        "title":"FlowKitUI Backend",
+        "version":"1.2.1",
+        "description": "A REST API for managing and postprocessing Flowkit data"
+    },
+    "license": {
+        "name": "Mozilla Public License 2.0",
+        "identifier": "MPL-2.0",
+        "url": "https://mozilla.org/MPL/2.0/"
+    },
+    "servers": [
+        {
+            "url": "https://api.dev.haiti.mobility-dashboard.org/v1",
+            "description": "Dev"
+        },
+        {
+            "url": "https://api.stag.haiti.mobility-dashboard.org/v1",
+            "description": "Staging"
+        },
+        {
+            "url": "https://api.haiti.mobility-dashboard.org/v1",
+            "description": "Production"
+        },
+        {
+            "url": "https://localhost:5000/v1",
+            "description": "Local development server"
+        }
+    ],
+    "tags": [
+        {
+            "name": "general",
+            "description": "General endpoints"
+        },
+        {
+            "name": "accounts",
+            "description": "Endpoints for managing accounts"
+        },
+        {
+            "name": "data",
+            "description": "Endpoints for getting data; used by the UI"
+        },
+        {
+            "name": "maintenance",
+            "description": "Endpoints for setting up flowkit-ui-backend; used by FlowKit"
+        }
+    ],
+    "paths": {
+        "/heartbeat": {
+            "get": {
+                "operationId": "heartbeat",
+                "tags": ["general"],
+                "description":"Checks whether the API is up and running",
+                "responses": {
+                    "200": { "$ref": "#/components/responses/heartbeat" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            }
+        },
+        "/data_providers": {
+            "get": {
+                "operationId": "list_data_providers",
+                "tags": ["general"],
+                "description":"Gets a list of all data providers configured for this flowkit-ui-backend instance",
+                "responses": {
+                    "200": { "$ref": "#/components/responses/data_providers" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            },
+            "post": {
+                "operationId": "create_data_provider",
+                "x-skip-test": {"reason":"Post tests are broken"},
+                "tags": ["maintenance"],
+                "description":"Adds a new data provider",
+                "security": [{
+                    "auth0": ["admin"]
+                }],
+                "requestBody": {
+                    "required": true,
+                    "description": "The data provider to add",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/data_provider",
+                                "x-body-name": "data_provider"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created: The resource has been added and is returned in the content part of this response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/data_provider"
+                                }
+                            }
+                        }
+                    },
+                    "303": { "$ref": "#/components/responses/see_other" },
+                    "400": { "$ref": "#/components/responses/bad_request" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "404": { "$ref": "#/components/responses/not_found" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            }
+        },
+        "/data_providers/{dpid}": {
+            "parameters": [
+                {"$ref": "#/components/parameters/dpid"}
+            ],
+            "patch": {
+                "x-skip-test": {"reason":"Patch tests are broken"},
+                "operationId": "update_data_provider",
+                "tags": ["maintenance"],
+                "description":"Updates a data provider",
+                "security": [{
+                    "auth0": ["write:data"]
+                }],
+                "requestBody": {
+                    "required": true,
+                    "description": "The new resource",
+                    "content": {
+                        "application/merge-patch+json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/data_provider",
+                                "x-body-name": "data_provider"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": { "$ref": "#/components/responses/no_content" },
+                    "400": { "$ref": "#/components/responses/bad_request" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "404": { "$ref": "#/components/responses/not_found" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            },
+            "delete": {
+                "operationId": "delete_data_provider",
+                "tags": ["maintenance"],
+                "description":"Deletes a data provider",
+                "security": [{
+                    "auth0": ["admin"]
+                }],
+                "responses": {
+                    "204": { "$ref": "#/components/responses/no_content" },
+                    "400": { "$ref": "#/components/responses/bad_request" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "404": { "$ref": "#/components/responses/not_found" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            }
+        },
+        "/categories": {
+            "get": {
+                "operationId": "list_categories",
+                "tags": ["data"],
+                "description":"Gets all available categories currently ingested in this flowkit-ui-backend instance",
+                "security": [{
+                    "auth0": ["read:free_data"]
+                }],
+                "responses": {
+                    "200": { "$ref": "#/components/responses/categories" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            },
+            "post": {
+                "operationId": "create_category",
+                "x-skip-test": {"reason":"Post tests are broken"},
+                "tags": ["maintenance"],
+                "description":"Adds a new category",
+                "security": [{
+                    "auth0": ["admin"]
+                }],
+                "requestBody": {
+                    "required": true,
+                    "description": "The category to add",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/category",
+                                "x-body-name": "category"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created: The resource has been added and is returned in the content part of this response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/category"
+                                }
+                            }
+                        }
+                    },
+                    "303": { "$ref": "#/components/responses/see_other" },
+                    "400": { "$ref": "#/components/responses/bad_request" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "404": { "$ref": "#/components/responses/not_found" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            }
+        },
+        "/categories/{category_id}": {
+            "parameters": [
+                {"$ref": "#/components/parameters/category_id"}
+            ],
+            "get": {
+                "operationId": "get_category",
+                "tags": ["data"],
+                "description":"Gets a single category",
+                "security": [{
+                    "auth0": ["read:free_data"]
+                }],
+                "responses": {
+                    "200": { "$ref": "#/components/responses/category" },
+                    "400": { "$ref": "#/components/responses/bad_request" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "404": { "$ref": "#/components/responses/not_found" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            },
+            "patch": {
+                "x-skip-test": {"reason":"Patch tests are broken"},
+                "operationId": "update_category",
+                "tags": ["maintenance"],
+                "description":"Updates a category",
+                "security": [{
+                    "auth0": ["admin"]
+                }],
+                "requestBody": {
+                    "required": true,
+                    "description": "The new resource",
+                    "content": {
+                        "application/merge-patch+json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/category",
+                                "x-body-name": "category"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": { "$ref": "#/components/responses/no_content" },
+                    "400": { "$ref": "#/components/responses/bad_request" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "404": { "$ref": "#/components/responses/not_found" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            },
+            "delete": {
+                "operationId": "delete_category",
+                "tags": ["maintenance"],
+                "description":"Deletes a single category",
+                "security": [{
+                    "auth0": ["admin"]
+                }],
+                "responses": {
+                    "204": { "$ref": "#/components/responses/no_content" },
+                    "400": { "$ref": "#/components/responses/bad_request" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "404": { "$ref": "#/components/responses/not_found" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            }
+        },
+        "/indicators": {
+            "get": {
+                "operationId": "list_indicators",
+                "tags": ["data"],
+                "description":"Gets all available indicators currently ingested in this flowkit-ui-backend instance",
+                "security": [{
+                    "auth0": ["read:free_data"]
+                }],
+                "responses": {
+                    "200": { "$ref": "#/components/responses/indicators" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            },
+            "post": {
+                "operationId": "create_indicator",
+                "x-skip-test": {"reason":"Post tests are broken"},
+                "tags": ["maintenance"],
+                "description":"Adds a new indicator",
+                "security": [{
+                    "auth0": ["admin"]
+                }],
+                "requestBody": {
+                    "required": true,
+                    "description": "The indicator to add",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/indicator",
+                                "x-body-name": "indicator"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created: The resource has been added and is returned in the content part of this response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/indicator"
+                                }
+                            }
+                        }
+                    },
+                    "400": { "$ref": "#/components/responses/bad_request" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "404": { "$ref": "#/components/responses/not_found" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            }
+        },
+        "/indicators/{indicator_id}": {
+            "parameters": [
+                {"$ref": "#/components/parameters/indicator_id"}
+            ],
+            "get": {
+                "operationId": "get_indicator",
+                "tags": ["data"],
+                "description":"Gets a single indicator",
+                "security": [{
+                    "auth0": ["read:free_data"]
+                }],
+                "responses": {
+                    "200": { "$ref": "#/components/responses/indicator" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            },
+            "patch": {
+                "x-skip-test": {"reason":"Patch tests are broken"},
+                "operationId": "update_indicator",
+                "tags": ["maintenance"],
+                "description":"Updates an indicator",
+                "security": [{
+                    "auth0": ["admin"]
+                }],
+                "requestBody": {
+                    "required": true,
+                    "description": "The new resource",
+                    "content": {
+                        "application/merge-patch+json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/indicator",
+                                "x-body-name": "indicator"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": { "$ref": "#/components/responses/no_content" },
+                    "400": { "$ref": "#/components/responses/bad_request" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "404": { "$ref": "#/components/responses/not_found" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            },
+            "delete": {
+                "operationId": "delete_indicator",
+                "tags": ["maintenance"],
+                "description":"Deletes a single indicator",
+                "security": [{
+                    "auth0": ["admin"]
+                }],
+                "responses": {
+                    "204": { "$ref": "#/components/responses/no_content" },
+                    "400": { "$ref": "#/components/responses/bad_request" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "404": { "$ref": "#/components/responses/not_found" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            }
+        },
+        "/indicators_for_category/{category_id}": {
+            "parameters": [
+                {"$ref": "#/components/parameters/category_id"}
+            ],
+            "get": {
+                "operationId": "get_indicators_for_category",
+                "tags": ["data"],
+                "description":"Gets all available indicators for the given category",
+                "security": [{
+                    "auth0": ["read:free_data"]
+                }],
+                "responses": {
+                    "200": { "$ref": "#/components/responses/indicators" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            }
+        },
+        "/spatial_resolutions": {
+            "get": {
+                "operationId": "list_spatial_resolutions",
+                "tags": ["data"],
+                "description":"Gets all available spatial resolutions currently ingested in this flowkit-ui-backend instance. This excludes the boundaries, which are typically quite large and should be retrieved individually.",
+                "security": [{
+                    "auth0": ["read:free_data"]
+                }],
+                "responses": {
+                    "200": { "$ref": "#/components/responses/spatial_resolutions" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            },
+            "post": {
+                "operationId": "create_spatial_resolution",
+                "x-skip-test": {"reason":"Post tests are broken"},
+                "tags": ["maintenance"],
+                "description":"Adds a new spatial resolution",
+                "security": [{
+                    "auth0": ["admin"]
+                }],
+                "requestBody": {
+                    "required": true,
+                    "description": "The spatial resolution to add",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/spatial_resolution",
+                                "x-body-name": "spatial_resolution"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created: The resource has been added and is returned in the content part of this response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/spatial_resolution"
+                                }
+                            }
+                        }
+                    },
+                    "400": { "$ref": "#/components/responses/bad_request" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "404": { "$ref": "#/components/responses/not_found" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            }
+        },
+        "/spatial_resolutions/{srid}": {
+            "parameters": [
+                {"$ref": "#/components/parameters/srid"}
+            ],
+            "get": {
+                "operationId": "get_spatial_resolution",
+                "tags": ["data"],
+                "description":"Gets a single spatial resolution",
+                "security": [{
+                    "auth0": ["read:free_data"]
+                }],
+                "responses": {
+                    "200": {
+                        "description": "OK: The resource exists and is returned in the content part of this response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/spatial_resolution"
+                                }
+                            }
+                        }
+                    },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            },
+            "patch": {
+                "x-skip-test": {"reason":"Patch tests are broken"},
+                "operationId": "update_spatial_resolution",
+                "tags": ["maintenance"],
+                "description":"Updates a spatial resolution",
+                "security": [{
+                    "auth0": ["admin"]
+                }],
+                "requestBody": {
+                    "required": true,
+                    "description": "The new resource",
+                    "content": {
+                        "application/merge-patch+json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/spatial_resolution",
+                                "x-body-name": "spatial_resolution"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": { "$ref": "#/components/responses/no_content" },
+                    "400": { "$ref": "#/components/responses/bad_request" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "404": { "$ref": "#/components/responses/not_found" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            },
+            "delete": {
+                "operationId": "delete_spatial_resolution",
+                "tags": ["maintenance"],
+                "description":"Deletes a spatial resolution",
+                "security": [{
+                    "auth0": ["admin"]
+                }],
+                "responses": {
+                    "204": { "$ref": "#/components/responses/no_content" },
+                    "400": { "$ref": "#/components/responses/bad_request" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "404": { "$ref": "#/components/responses/not_found" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            }
+        },
+        "/spatial_resolutions_for_category/{category_id}": {
+            "parameters": [
+                { "$ref": "#/components/parameters/category_id" }
+            ],
+            "get": {
+                "operationId": "get_spatial_resolutions_for_category",
+                "tags": ["data"],
+                "description":"Gets all available spatial resolutions for a category but without the boundaries",
+                "security": [{
+                    "auth0": ["read:free_data"]
+                }],
+                "responses": {
+                    "200": { "$ref": "#/components/responses/spatial_resolutions" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            }
+        },
+        "/temporal_resolutions": {
+            "get": {
+                "operationId": "list_temporal_resolutions",
+                "tags": ["data"],
+                "description":"Gets all available temporal resolutions currently ingested in this flowkit-ui-backend instance",
+                "security": [{
+                    "auth0": ["read:free_data"]
+                }],
+                "responses": {
+                    "200": { "$ref": "#/components/responses/temporal_resolutions" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            },
+            "post": {
+                "operationId": "create_temporal_resolution",
+                "x-skip-test": {"reason":"Post tests are broken"},
+                "tags": ["maintenance"],
+                "description":"Adds a new temporal resolution",
+                "security": [{
+                    "auth0": ["admin"]
+                }],
+                "requestBody": {
+                    "required": true,
+                    "description": "The temporal resolution to add",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/temporal_resolution",
+                                "x-body-name": "temporal_resolution"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created: The resource has been added and is returned in the content part of this response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/temporal_resolution"
+                                }
+                            }
+                        }
+                    },
+                    "400": { "$ref": "#/components/responses/bad_request" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "404": { "$ref": "#/components/responses/not_found" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            }
+        },
+        "/temporal_resolutions/{trid}": {
+            "parameters": [
+                {"$ref": "#/components/parameters/trid"}
+            ],
+            "get": {
+                "operationId": "get_temporal_resolution",
+                "tags": ["data"],
+                "description":"Gets a single temporal resolution",
+                "security": [{
+                    "auth0": ["read:free_data"]
+                }],
+                "responses": {
+                    "200": {
+                        "description": "OK: The resource exists and is returned in the content part of this response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/temporal_resolution"
+                                }
+                            }
+                        }
+                    },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            },
+            "patch": {
+                "x-skip-test": {"reason":"Patch tests are broken"},
+                "operationId": "update_temporal_resolution",
+                "tags": ["maintenance"],
+                "description":"Updates a temporal resolution",
+                "security": [{
+                    "auth0": ["admin"]
+                }],
+                "requestBody": {
+                    "required": true,
+                    "description": "The new resource",
+                    "content": {
+                        "application/merge-patch+json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/temporal_resolution",
+                                "x-body-name": "temporal_resolution"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": { "$ref": "#/components/responses/no_content" },
+                    "400": { "$ref": "#/components/responses/bad_request" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "404": { "$ref": "#/components/responses/not_found" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            },
+            "delete": {
+                "operationId": "delete_temporal_resolution",
+                "tags": ["maintenance"],
+                "description":"Deletes a temporal resolution",
+                "security": [{
+                    "auth0": ["admin"]
+                }],
+                "responses": {
+                    "204": { "$ref": "#/components/responses/no_content" },
+                    "400": { "$ref": "#/components/responses/bad_request" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "404": { "$ref": "#/components/responses/not_found" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            }
+        },
+        "/temporal_resolutions_for_category/{category_id}": {
+            "parameters": [
+                { "$ref": "#/components/parameters/category_id" }
+            ],
+            "get": {
+                "operationId": "get_temporal_resolutions_for_category",
+                "tags": ["data"],
+                "description":"Gets all available temporal resolutions for this category",
+                "security": [{
+                    "auth0": ["read:free_data"]
+                }],
+                "responses": {
+                    "200": { "$ref": "#/components/responses/temporal_resolutions" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            }
+        },
+        "/users/{uid}": {
+            "parameters": [
+                {"$ref": "#/components/parameters/uid"}
+            ],
+            "get": {
+                "operationId": "get_user",
+                "tags": ["accounts"],
+                "description":"Gets information about a single user",
+                "security": [{
+                    "auth0": ["profile"]
+                }],
+                "responses": {
+                    "200": {
+                        "description": "OK: The user exists and their metadata is returned in the content part of this response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/user_metadata"
+                                }
+                            }
+                        }
+                    },
+                    "400": { "$ref": "#/components/responses/bad_request" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "404": { "$ref": "#/components/responses/not_found" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            },
+            "patch": {
+                "x-skip-test": {"reason":"Patch tests are broken"},
+                "operationId": "update_user",
+                "tags": ["accounts"],
+                "description":"Updates a user's metadata",
+                "security": [{
+                    "auth0": ["profile"]
+                }],
+                "requestBody": {
+                    "required": true,
+                    "description": "The user to update",
+                    "content": {
+                        "application/merge-patch+json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/user_metadata",
+                                "x-body-name": "user"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": { "$ref": "#/components/responses/no_content" },
+                    "400": { "$ref": "#/components/responses/bad_request" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "404": { "$ref": "#/components/responses/not_found" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            },
+            "delete": {
+                "operationId": "delete_user",
+                "tags": ["accounts"],
+                "description":"Deletes a single user",
+                "security": [{
+                    "auth0": ["profile"]
+                }],
+                "responses": {
+                    "204": { "$ref": "#/components/responses/no_content" },
+                    "400": { "$ref": "#/components/responses/bad_request" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "404": { "$ref": "#/components/responses/not_found" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            }
+        },
+        "/setup": {
+            "get": {
+                "operationId": "get_setup",
+                "tags": ["general"],
+                "description":"Get the current config for this flowkit-ui-backend server.",
+                "responses": {
+                    "200": { "$ref": "#/components/responses/config" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            },
+            "post": {
+                "operationId": "replace_setup",
+                "x-skip-test": {"reason":"Post tests are broken"},
+                "tags": ["maintenance"],
+                "description":"Set up the data storage using the data submitted in this request. Delete all existing data.",
+                "security": [{
+                    "auth0": ["admin"]
+                }],
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/config"
+                },
+                "responses": {
+                    "204": { "$ref": "#/components/responses/no_content" },
+                    "400": { "$ref": "#/components/responses/bad_request" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            },
+            "patch": {
+                "x-skip-test": {"reason":"Patch tests are broken"},
+                "operationId": "update_setup",
+                "tags": ["maintenance"],
+                "description":"Set up the data storage using the data submitted in this request. Update existing data where it exists.",
+                "security": [{
+                    "auth0": ["admin"]
+                }],
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/config"
+                },
+                "responses": {
+                    "204": { "$ref": "#/components/responses/no_content" },
+                    "400": { "$ref": "#/components/responses/bad_request" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            },
+            "delete": {
+                "operationId": "delete_setup",
+                "tags": ["maintenance"],
+                "description":"Delete all existing data.",
+                "security": [{
+                    "auth0": ["admin"]
+                }],
+                "responses": {
+                    "204": { "$ref": "#/components/responses/no_content" },
+                    "400": { "$ref": "#/components/responses/bad_request" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            }
+        },
+        "/data": {
+            "post": {
+                "operationId": "create_dataset",
+                "x-skip-test": {"reason":"Post tests are broken"},
+                "tags": ["maintenance"],
+                "description":"Add data and metadata to the database.",
+                "security": [{
+                    "auth0": ["write:data"]
+                }],
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/dataset"
+                },
+                "responses": {
+                    "201": { "$ref": "#/components/responses/created" },
+                    "204": { "$ref": "#/components/responses/no_content" },
+                    "400": { "$ref": "#/components/responses/bad_request" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "404": { "$ref": "#/components/responses/not_found" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            },
+            "patch": {
+                "x-skip-test": {"reason":"Patch tests are broken"},
+                "operationId": "update_dataset",
+                "tags": ["maintenance"],
+                "description":"Add data and metadata to the database and overwrite if it exists.",
+                "security": [{
+                    "auth0": ["write:data"]
+                }],
+                "requestBody": {
+                    "required": true,
+                    "description": "The new resource",
+                    "content": {
+                        "application/merge-patch+json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/dataset",
+                                "x-body-name": "dataset"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": { "$ref": "#/components/responses/created" },
+                    "204": { "$ref": "#/components/responses/no_content" },
+                    "400": { "$ref": "#/components/responses/bad_request" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "404": { "$ref": "#/components/responses/not_found" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            },
+            "delete": {
+                "x-skip-test": {"reason": "This delete test is currently broken."},
+                "operationId": "delete_dataset",
+                "tags": ["maintenance"],
+                "description":"Delete data and metadata from the database.",
+                "security": [{
+                    "auth0": ["write:data"]
+                }],
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/dataset"
+                },
+                "responses": {
+                    "204": { "$ref": "#/components/responses/no_content" },
+                    "400": { "$ref": "#/components/responses/bad_request" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "404": { "$ref": "#/components/responses/not_found" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            }
+        },
+        "/csv/{category_id}/{srid}/{trid}": {
+            "parameters": [
+                { "$ref": "#/components/parameters/category_id" },
+                { "$ref": "#/components/parameters/srid" },
+                { "$ref": "#/components/parameters/trid" }
+            ],
+            "get": {
+                "operationId": "get_csv",
+                "tags": ["data"],
+                "description":"Retrieves a CSV serialisation of the requested data",
+                "security": [{
+                    "auth0": ["read:free_data"]
+                }],
+                "responses": {
+                    "200": { "$ref": "#/components/responses/csv" },
+                    "400": { "$ref": "#/components/responses/bad_request" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "404": { "$ref": "#/components/responses/not_found" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            }
+        },
+        "/timerange/{category_id}/{indicator_id}/{srid}/{trid}": {
+            "parameters": [
+                { "$ref": "#/components/parameters/category_id" },
+                { "$ref": "#/components/parameters/indicator_id" },
+                { "$ref": "#/components/parameters/srid" },
+                { "$ref": "#/components/parameters/trid" }
+            ],
+            "get": {
+                "operationId": "get_time_range",
+                "tags": ["data"],
+                "description":"Get the range of available temporal units for the given parameters",
+                "security": [{
+                    "auth0": ["read:free_data"]
+                }],
+                "responses": {
+                    "200": { "$ref": "#/components/responses/time_range" },
+                    "400": { "$ref": "#/components/responses/bad_request" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "404": { "$ref": "#/components/responses/not_found" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            }
+        },
+        "/query": {
+            "post": {
+                "operationId": "run_query",
+                "x-skip-test": {"reason":"Post tests are broken"},
+                "tags": ["data"],
+                "description":"Run a query to get data from the database",
+                "security": [{
+                    "auth0": ["read:free_data"]
+                }],
+                "requestBody": {
+                    "required": true,
+                    "description": "The query parameters",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/query_parameters",
+                                "x-body-name": "query_parameters"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": { "$ref": "#/components/responses/query_result" },
+                    "400": { "$ref": "#/components/responses/bad_request" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "404": { "$ref": "#/components/responses/not_found" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "auth0" : {
+                "type" : "oauth2",
+                "description" : "This API uses OAuth 2 with the authorisationCode flow.",
+                "flows" : {
+                    "authorizationCode" : {
+                        "authorizationUrl":"https://flowminder-dev.eu.auth0.com/authorize",
+                        "tokenUrl" : "https://flowminder-dev.eu.auth0.com/token",
+                        "scopes" : {
+                            "profile": "Read, edit and delete your account, profile and settings for this application",
+                            "read:free_data" : "Get the free data",
+                            "read:premium_data" : "Get the premium data",
+                            "write:data" : "Add and modify data",
+                            "admin" : "Modify config"
+                        }
+                    }
+                }
+            }
+        },
+        "parameters": {
+            "dpid": {
+                "in": "path",
+                "name": "dpid",
+                "required": true,
+                "description": "The data provider ID",
+                "schema": {
+                    "type": "integer"
+                },
+                "example": 1
+            },
+            "uid": {
+                "in": "path",
+                "name": "uid",
+                "required": true,
+                "description": "The user ID",
+                "schema": {
+                    "type": "string"
+                },
+                "example": "user-4e128f03-a086-4167-81bd-bcfcc0175744"
+            },
+            "srid": {
+                "in": "path",
+                "name": "srid",
+                "required": true,
+                "description": "The spatial resolution ID",
+                "schema": {
+                    "$ref": "#/components/schemas/srid"
+                }
+            },
+            "trid": {
+                "in": "path",
+                "name": "trid",
+                "required": true,
+                "description": "The temporal resolution ID",
+                "schema": {
+                    "$ref": "#/components/schemas/trid"
+                }
+            },
+            "category_id": {
+                "in": "path",
+                "name": "category_id",
+                "required": true,
+                "description": "The category ID",
+                "schema": {
+                    "$ref": "#/components/schemas/category_id"
+                }
+            },
+            "indicator_id": {
+                "in": "path",
+                "name": "indicator_id",
+                "required": true,
+                "description": "The indicator ID",
+                "schema": {
+                    "$ref": "#/components/schemas/indicator_id"
+                }
+            }
+        },
+        "requestBodies": {
+            "config": {
+                "required": true,
+                "description": "A server configuration",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/config",
+                            "x-body-name": "config"
+                        }
+                    }
+                }
+            },
+            "dataset": {
+                "required": true,
+                "description": "A combination of data and metadata, representing a new dataset to be added",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/dataset",
+                            "x-body-name": "dataset"
+                        }
+                    }
+                }
+            }
+        },
+        "responses": {
+            "heartbeat": {
+                "description": "OK: The results for this request were retrieved successfully.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/heartbeat"
+                        }
+                    }
+                }
+            },
+            "config": {
+                "description": "OK: The results for this request were retrieved successfully.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/config"
+                        }
+                    }
+                }
+            },
+            "data_providers": {
+                "description": "OK: The results for this request were retrieved successfully.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/data_providers"
+                        }
+                    }
+                }
+            },
+            "spatial_resolutions": {
+                "description": "OK: The results for this request were retrieved successfully.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/spatial_resolutions"
+                        }
+                    }
+                }
+            },
+            "temporal_resolutions": {
+                "description": "OK: The results for this request were retrieved successfully.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/temporal_resolutions"
+                        }
+                    }
+                }
+            },
+            "category": {
+                "description": "OK: The results for this request were retrieved successfully.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/category"
+                        }
+                    }
+                }
+            },
+            "categories": {
+                "description": "OK: The results for this request were retrieved successfully.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/categories"
+                        }
+                    }
+                }
+            },
+            "indicator": {
+                "description": "OK: The results for this request were retrieved successfully.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/indicator"
+                        }
+                    }
+                }
+            },
+            "indicators": {
+                "description": "OK: The results for this request were retrieved successfully.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/indicators"
+                        }
+                    }
+                }
+            },
+            "csv": {
+                "description": "OK: The results for this request were retrieved successfully.",
+                "content": {
+                    "text/csv": {
+                        "schema": {
+                            "$ref": "#/components/schemas/csv"
+                        }
+                    }
+                }
+            },
+            "time_range": {
+                "description": "OK: The request was valid and the result is returned in the content part of this response.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/time_range"
+                        }
+                    }
+                }
+            },
+            "query_result": {
+                "description": "OK: The data query was valid and the result is returned in the content part of this response.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/query_result"
+                        }
+                    }
+                }
+            },
+            "created": {
+                "description": "Created: The resource was created successfully."
+            },
+            "no_content": {
+                "description": "OK: The request was successful."
+            },
+            "see_other": {
+                "description": "See other: The resource already exists and is returned in the response."
+            },
+            "bad_request": {
+                "description": "Bad Request: The request is malformed, incomplete or otherwise invalid."
+            },
+            "unauthorized": {
+                "description": "Unauthorized: The user does not have the permissions to access this resource."
+            },
+            "not_found": {
+                "description": "Not Found: The requested data could not be found."
+            },
+            "too_many_requests": {
+                "description": "Too Many Requests: The user has exceeded the limit of allowed simultaneous requests."
+            },
+            "internal_server_error": {
+                "description": "Internal Server Error: Something went wrong on the server while retrieving the data."
+            },
+            "service_unavailable": {
+                "description": "Service Unavailable: The server is currently down, e.g. for maintenance. Please try again later."
+            }
+        },
+        "schemas": {
+            "heartbeat": {
+                "description": "The heartbeat of the application",
+                "properties": {
+                    "datetime": {
+                        "description": "The date the heartbeat was created.",
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "docker_image": {
+                        "description": "The version number of the docker image. When semver is used, the version is stable.",
+                        "type": "string"
+                    }
+                    ,
+                    "git_branch": {
+                        "description": "The current branch from which this build was created.",
+                        "type": "string"
+                    }
+                    ,
+                    "git_commit": {
+                        "description": "The git commit from which this build was created.",
+                        "type": "string"
+                    }
+                    ,
+                    "git_tag": {
+                        "description": "The git tag for this build. May be null or empty when untagged.",
+                        "type": "string"
+                    }
+                    ,
+                    "python_package": {
+                        "description": "The name of the flowkit-ui-backend python package.",
+                        "type": "string"
+                    }
+                    ,
+                    "python_version": {
+                        "description": "The version number the flowkit-ui-backend python package",
+                        "type": "string"
+                    }
+                },
+                "example": {
+                    "datetime": "2022-01-24T16:42:34.149009Z",
+                    "docker_image": "flowminder/flowkit-ui-backend:v0.0.1",
+                    "git_branch": "dev",
+                    "git_commit": "0123456",
+                    "git_tag": "v0.0.1",
+                    "python_package": "flowkit_ui_backend",
+                    "python_version": "3.9.7"
+                }
+            },
+            "data_provider": {
+                "title": "Data provider",
+                "type": "object",
+                "description": "A data provider configured in the flowkit-ui-backend",
+                "required": [
+                    "name"
+                ],
+                "properties": {
+                    "dpid": {
+                        "description": "The ID for this data provider",
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "name": {
+                        "description": "The name of the data provider",
+                        "type": "string"
+                    },
+                    "logo": {
+                        "description": "The URL for a logo for this data provider",
+                        "type": "string"
+                    },
+                    "url": {
+                        "description": "The URL of the data provider's website",
+                        "type": "string"
+                    },
+                    "translation": {
+                        "$ref": "#/components/schemas/translation"
+                    }
+                },
+                "example": {
+                    "dpid": 1,
+                    "name": "Data provider 1 Ltd.",
+                    "logo": "https://example.com/pic.jpg",
+                    "url": "https://example.com"
+                }
+            },
+            "data_providers": {
+                "description": "A wrapper object for data providers",
+                "required": [
+                    "data_providers"
+                ],
+                "type": "object",
+                "properties": {
+                    "data_providers": {
+                        "description": "A list of available data providers",
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/data_provider" }
+                    }
+                }
+            },
+            "language": {
+                "title": "Language",
+                "description": "A language that is part of the metadata",
+                "required": [
+                    "name"
+                ],
+                "properties": {
+                    "lid": {
+                        "description": "The ID for this language",
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "code": {
+                        "description": "The ISO 639-1 alpha-2 code for this language",
+                        "type": "string",
+                        "minLength": 2,
+                        "maxLength": 2
+                    },
+                    "name": {
+                        "description": "The name of the data provider",
+                        "type": "string"
+                    },
+                    "flag": {
+                        "description": "An emoji representing the flag for this langauage",
+                        "type": "string"
+                    },
+                    "default": {
+                        "description": "Whether this is the default langauage",
+                        "type": "boolean",
+                        "default": false
+                    }
+                },
+                "example": {
+                    "code": "fr",
+                    "name": "French",
+                    "flag": "🇫🇷",
+                    "default": false
+                }
+            },
+            "spatial_resolution": {
+                "title": "Spatial resolution",
+                "description": "A spatial resolution available in flowkit-ui-backend",
+                "required": [
+                    "label", "index"
+                ],
+                "properties": {
+                    "srid": {
+                        "description": "A unique identifier",
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "label": {
+                        "description": "A human-readable name",
+                        "type": "string"
+                    },
+                    "index": {
+                        "description": "A numeric index placing this resolution in relation to other available resolutions",
+                        "type": "integer"
+                    },
+                    "description": {
+                        "description": "An explanation for this resolution",
+                        "type": "string"
+                    },
+                    "boundaries": {
+                        "$ref": "#/components/schemas/topojson",
+                        "writeOnly": true
+                    },
+                    "translation": {
+                        "$ref": "#/components/schemas/translation"
+                    }
+                },
+                "example": {
+                    "srid": 1,
+                    "label": "Department",
+                    "index": 1,
+                    "description": "In the administrative divisions of Haiti, the department is the first of four levels of government.",
+                    "translation": "{ 'fr': { 'label': 'Departement' }}"
+                }
+            },
+            "spatial_resolutions": {
+                "description": "A wrapper object for spatial resolutions",
+                "required": [
+                    "spatial_resolutions"
+                ],
+                "type": "object",
+                "properties": {
+                    "spatial_resolutions": {
+                        "description": "A list of available spatial resolutions",
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/spatial_resolution" }
+                    }
+                }
+            },
+            "temporal_resolution": {
+                "title": "Temporal resolution",
+                "description": "A temporal resolution available in flowkit-ui-backend",
+                "required": [
+                    "label", "index", "relativedelta_unit", "relativedelta_num", "default_selected"
+                ],
+                "properties": {
+                    "trid": {
+                        "description": "A unique identifier",
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "label": {
+                        "description": "A human-readable name",
+                        "type": "string"
+                    },
+                    "index": {
+                        "description": "A numeric index placing this resolution in relation to other available resolutions",
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "relativedelta_unit": {
+                        "description": "The unit for the timedelta that this stemporal resolution represents",
+                        "type": "string",
+                        "enum": [ "years", "months", "weeks", "days", "hours" ]
+                    },
+                    "relativedelta_num": {
+                        "description": "The number of timedelta units contained in one temporal unit at this resolution",
+                        "type": "integer",
+                        "minimum": 1,
+                        "default": 1
+                    },
+                    "date_format": {
+                        "description": "The Python format to be used for temporal units at this resolution",
+                        "type": "string",
+                        "example": "%Y-%m-%d"
+                    },
+                    "default_selected": {
+                        "description": "The number of time units to select by default for this temporal resolution",
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "description": {
+                        "description": "An explanation for this resolution",
+                        "type": "string"
+                    },
+                    "translation": {
+                        "$ref": "#/components/schemas/translation"
+                    }
+                },
+                "example": {
+                    "trid": 1,
+                    "label": "Month",
+                    "index": 1,
+                    "relativedelta_unit": "months",
+                    "relativedelta_num": 1,
+                    "date_format": "%Y-%m",
+                    "default_selected": 24,
+                    "description": "A month represents a full calendar month for which the data has been aggregated."
+                }
+            },
+            "temporal_resolutions": {
+                "description": "A wrapper object for temporal resolutions",
+                "required": [
+                    "temporal_resolutions"
+                ],
+                "type": "object",
+                "properties": {
+                    "temporal_resolutions": {
+                        "description": "A list of available temporal resolutions",
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/temporal_resolution" }
+                    }
+                }
+            },
+            "category": {
+                "title": "Category",
+                "description": "The category of data",
+                "required": [
+                    "category_id", "type"
+                ],
+                "properties": {
+                    "category_id": {
+                        "description": "A machine-readable, unique category ID",
+                        "type": "string",
+                        "example": "resident_metrics"
+                    },
+                    "type": {
+                        "description": "TODO: should use data_type enum. The type of data. single_location for data that relates to only one spatial entity and flow for data that describes movement from one to another.",
+                        "type": "string",
+                        "enum": ["single_location", "flow"]
+                    },
+                    "order": {
+                        "description": "The order of categories in the UI",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "flowgeek_url": {
+                        "description": "A link to a Flowgeek page with further information about this category",
+                        "type": "string",
+                        "example": "https://www.flowgeek.org/path/to/url"
+                    },
+                    "label": {
+                        "description": "A human-readable label for this category",
+                        "type": "string",
+                        "example": "Resident metrics"
+                    },
+                    "description": {
+                        "description": "A description of this category, what it represents, how it is calculated etc.",
+                        "type": "string",
+                        "example": "This category contains residents metrics"
+                    },
+                    "translation": {
+                        "$ref": "#/components/schemas/translation"
+                    }
+                }
+            },
+            "categories": {
+                "description": "A wrapper object for categories",
+                "required": [
+                    "categories"
+                ],
+                "type": "object",
+                "properties": {
+                    "categories": {
+                        "description": "A list of available categories",
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/category" }
+                    }
+                }
+            },
+            "indicator": {
+                "title": "Indicator",
+                "description": "The type of data",
+                "required": [
+                    "indicator_id", "category_id"
+                ],
+                "properties": {
+                    "indicator_id": {
+                        "description": "The name of the indicator",
+                        "type": "string",
+                        "example": "resident_count"
+                    },
+                    "category_id": {
+                        "description": "The category ID this indicator belongs to",
+                        "type": "string"
+                    },
+                    "order": {
+                        "description": "The order of indicators per category in the UI with the first one being the default indicator for each category",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "flowgeek_url": {
+                        "description": "A link to a Flowgeek page with further information about this indicator",
+                        "type": "string",
+                        "example": "https://www.flowgeek.org/path/to/url"
+                    },
+                    "label": {
+                        "description": "A human-readable label for this indicator",
+                        "type": "string",
+                        "example": "Resident count"
+                    },
+                    "description": {
+                        "description": "A description of this indicator, what it represents, how it is calculated etc.",
+                        "type": "string",
+                        "example": "This indicator represents the total number of residents for each spatial and temporal unit."
+                    },
+                    "method": {
+                        "description": "A longer explanation of the method used to calculate the indicator",
+                        "type": "string",
+                        "example": "This indicator was calculated using the following method:\n1. Some step\n2. Another step\n3. Final calculation"
+                    },
+                    "scale": {
+                        "description": "The type of scale applicable to this indicator",
+                        "type": "string",
+                        "enum": ["sequential", "diverging"]
+                    },
+                    "decimals": {
+                        "description": "The number of decimals to use when rendering the value. 0 decimals mean it will be shown as an integer.",
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "min_value": {
+                        "description": "The smallest value this indicator can have.",
+                        "type": "number",
+                        "nullable": true,
+                        "example": -100
+                    },
+                    "max_value": {
+                        "description": "The largest value this indicator can have.",
+                        "type": "number",
+                        "nullable": true,
+                        "example": 100
+                    },
+                    "num_bins": {
+                        "description": "The number of bins to render this indicator. If `bins` is specified, this will be ignored.",
+                        "type": "number",
+                        "nullable": true,
+                        "example": 7
+                    },
+                    "bins": {
+                        "type": "array",
+                        "nullable": true,
+                        "description": "An list of all bins",
+                        "items": { "$ref": "#/components/schemas/bin" }
+                    },
+                    "translation": {
+                        "$ref": "#/components/schemas/translation"
+                    }
+                }
+            },
+            "indicators": {
+                "description": "A wrapper object for indicators",
+                "required": [
+                    "indicators"
+                ],
+                "type": "object",
+                "properties": {
+                    "indicators": {
+                        "description": "A list of available indicators",
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/indicator" }
+                    }
+                }
+            },
+            "metadata" : {
+                "title": "Metadata",
+                "description": "Metadata relating to the actual data",
+                "required": [
+                    "revision", "srid", "trid", "category_id", "indicator_id"
+                ],
+                "properties": {
+                    "mdid": {
+                        "description": "The metadata ID",
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "date_added": {
+                        "description": "The date the dataset was ingested",
+                        "readOnly": true,
+                        "$ref": "#/components/schemas/datetime"
+                    },
+                    "revision": {
+                        "description": "A version number",
+                        "type": "string"
+                    },
+                    "category_id": {
+                        "description": "The identifier for the category that this metadata relates to",
+                        "type": "string"
+                    },
+                    "indicator_id": {
+                        "description": "The identifier for the indicator that this metadata relates to",
+                        "type": "string"
+                    },
+                    "srid": {
+                        "description": "The identifier for the spatial resolution that this aggregate relates to",
+                        "type": "integer"
+                    },
+                    "trid": {
+                        "description": "The identifier for the temporal resolution that this aggregate relates to",
+                        "type": "integer"
+                    },
+                    "dt": {
+                        "description": "The date for the data this metadata refers to",
+                        "$ref": "#/components/schemas/dt"
+                    },
+                    "min_value": {
+                        "description": "The minimum value across all data associated with this metadata.",
+                        "type": "integer"
+                    },
+                    "max_value": {
+                        "description": "The maximum value across all data associated with this metadata.",
+                        "type": "integer"
+                    }
+                },
+                "example": {
+                    "mdid": 1,
+                    "date_added": "2020-03-24T15:00:00",
+                    "revision": "v1.2.3",
+                    "category_id": "residents_indicators_people",
+                    "indicator_id": "arrived",
+                    "srid": 1,
+                    "trid": 1
+                }
+            },
+            "single_location_data" : {
+                "title": "Single location data",
+                "description": "Data referring to exactly one spatial unit for one metadata instance",
+                "required": [
+                    "spatial_unit_id"
+                ],
+                "properties": {
+                    "mdid": {
+                        "description": "The ID of the metadata for this data",
+                        "type": "integer"
+                    },
+                    "spatial_unit_id": {
+                        "description": "The identifier for the single spatial unit that this data object relates to",
+                        "type": "string",
+                        "example": "HT05"
+                    },
+                    "data": {
+                        "description": "The data",
+                        "type": "number",
+                        "nullable": true
+                    }
+                },
+                "example": {
+                    "mdid": 1,
+                    "spatial_unit_id": "HT04",
+                    "data": 24
+                }
+            },
+            "flow_data" : {
+                "title": "Flow data",
+                "description": "Data representing a flow between two spatial entities for one metadata instance",
+                "required": [
+                    "mdid", "origin", "destination"
+                ],
+                "properties": {
+                    "mdid": {
+                        "description": "The ID of the metadata for this data",
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "origin": {
+                        "description": "The identifier for the origin spatial unit that this data object relates to",
+                        "type": "string",
+                        "example": "HT05"
+                    },
+                    "destination": {
+                        "description": "The identifier for the destination spatial unit that this data object relates to",
+                        "type": "string",
+                        "example": "HT07",
+                        "nullable": true
+                    },
+                    "data": {
+                        "description": "The data",
+                        "type": "number",
+                        "nullable": true
+                    }
+                },
+                "example": {
+                    "mdid": 1,
+                    "origin": "HT02",
+                    "destination": "HT07",
+                    "data": 128.5
+                }
+            },
+            "dataset" : {
+                "description": "A combination of data and metadata to be ingested into the database",
+                "required": [
+                    "metadata", "data_type", "data_input"
+                ],
+                "properties": {
+                    "metadata": {
+                        "$ref": "#/components/schemas/metadata"
+                    },
+                    "data_type": {
+                        "description": "TODO: should use data_type enum. The type of data. single_location for data that relates to only one spatial entity and flow for data that describes movement from one to another.",
+                        "type": "string",
+                        "enum": ["single_location", "flow"]
+                    },
+                    "data_input": {
+                        "description": "Data to be ingested as part of this dataset.",
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/data_input" }
+                    }
+                }
+            },
+            "data_type": {
+                "description": "TODO: not currently used. The data type. single_location is for data with one value per spatial unit whereas flow data has one value for a combination of two spatial units representing the direction of the flow.",
+                "type": "string",
+                "enum": ["single_location", "flow"]
+            },
+            "dt": {
+                "description": "An actual timestamp",
+                "type": "string",
+                "format": "date-time",
+                "example": "2021-01-30T08:30:00Z"
+            },
+            "datetime": {
+                "description": "A date plus optionally time formatted as one of the following: YYYY, YYYY-mm, YYYYwWW, YYYY-mm-dd, YYYY-mm-ddTHH:MM or YYYY-mm-ddTHH:MM:SS",
+                "type": "string",
+                "nullable": true,
+                "minLength": 4,
+                "maxLength": 19,
+                "pattern": "^([1-2][0-9]{3})((-(0[1-9]|1[0-2])(-(0[1-9]|[1-2][0-9]|3[0-1]))?(T(([0-1][0-9]|2[0-3]):([0-5][0-9])(:([0-5][0-9]))?))?)|(w(0[1-9]|[1-4][0-9]|5[0-3])))?$",
+                "example": "2020-03-24T15:00:00"
+            },
+            "time_range": {
+                "description": "The range of available temporal units in data for a given combination of parameters",
+                "type": "object",
+                "properties": {
+                    "start_date": {
+                        "type": "string",
+                        "description": "The earliest available time unit",
+                        "$ref": "#/components/schemas/datetime"
+                    },
+                    "end_date": {
+                        "type": "string",
+                        "description": "The latest available time unit",
+                        "$ref": "#/components/schemas/datetime"
+                    },
+                    "all_dates": {
+                        "type": "array",
+                        "nullable": true,
+                        "description": "An ordered list of all available time unit",
+                        "items": { "$ref": "#/components/schemas/datetime" }
+                    },
+                    "min_value": {
+                        "description": "The minimum value across all data in this time range.",
+                        "type": "integer"
+                    },
+                    "max_value": {
+                        "description": "The maximum value across all data in this time range.",
+                        "type": "integer"
+                    }
+                },
+                "example": {
+                    "start_date": "2020-01-01",
+                    "end_date": "2021-06-30"
+                }
+            },
+            "geojson": {
+                "description": "A GeoJSON geometry",
+                "type": "object",
+                "externalDocs": {
+                    "url": "https://datatracker.ietf.org/doc/html/rfc7946"
+                }
+            },
+            "topojson": {
+                "description": "A TopoJSON geometry",
+                "type": "object",
+                "externalDocs": {
+                    "url": "https://github.com/topojson/topojson-specification"
+                }
+            },
+            "csv": {
+                "description": "A CSV file containing data for one category, with some columns representing indicators. The content depends on the parameters.",
+                "type": "string",
+                "externalDocs": {
+                    "url": "https://www.rfc-editor.org/rfc/rfc4180"
+                },
+                "example": "column1,column2,column3\nrow1-1,row1-2,row1-3\nrow2-1,row2-2,row2-3"
+            },
+            "user_metadata": {
+                "description": "Data we store about users on Auth0",
+                "required": [
+                    "preferred_language", "show_tutorial", "signup_cache"
+                ],
+                "properties": {
+                    "preferred_language": {
+                        "description": "The ISO 639-1 alpha-2 code of the user's preferred language; to be used in the UI",
+                        "type": "string"
+                    },
+                    "show_tutorial": {
+                        "description": "Whether to show the tutorial to the user after they have signed in",
+                        "type": "boolean",
+                        "default": true
+                    },
+                    "signup_cache": {
+                        "$ref": "#/components/schemas/signup_cache"
+                    }
+                },
+                "example": {
+                    "preferred_language": "en",
+                    "show_tutorial": true,
+                    "signup_cache": {
+                        "first_name":"Bob",
+                        "last_name":"Smith",
+                        "email":"bob.smith@example.com",
+                        "org":"ExampleCo",
+                        "purpose":"To help decide on placement of distaster response workers",
+                        "terms":true,
+                        "no_harm":true,
+                        "privacy":true
+                    }
+                }
+            },
+            "signup_cache": {
+                "description": "The information a user can provide during signup",
+                "required": [
+                    "first_name", "last_name", "email", "purpose"
+                ],
+                "properties": {
+                    "first_name": {
+                        "description": "The user's first name",
+                        "type": "string"
+                    },
+                    "last_name": {
+                        "description": "The user's last name",
+                        "type": "string"
+                    },
+                    "email": {
+                        "description": "The user's email address",
+                        "type": "string"
+                    },
+                    "org": {
+                        "description": "The user's affiliation",
+                        "type": "string"
+                    },
+                    "industry": {
+                        "description": "The industry for the affiliation",
+                        "type": "string"
+                    },
+                    "purpose": {
+                        "description": "The user's last name",
+                        "type": "string"
+                    },
+                    "terms": {
+                        "description": "Whether the user has accepted the terms and conditions",
+                        "type": "boolean",
+                        "default": false
+                    },
+                    "no_harm": {
+                        "description": "Whether the user has agreed not do do any harm",
+                        "type": "boolean",
+                        "default": false
+                    },
+                    "privacy": {
+                        "description": "Whether the user has accepted the privacy policy",
+                        "type": "boolean",
+                        "default": false
+                    },
+                    "marketing": {
+                        "description": "Whether the user has accepted the privacy policy",
+                        "type": "boolean",
+                        "default": false
+                    }
+                },
+                "example": {
+                    "first_name":"Bob",
+                    "last_name":"Smith",
+                    "email":"bob.smith@example.com",
+                    "org":"ExampleCo",
+                    "industry": "Humanitarian aid",
+                    "purpose":"To help decide on placement of disaster response workers",
+                    "terms":true,
+                    "no_harm":true,
+                    "privacy":true,
+                    "marketing": false
+                }
+            },
+            "data_input" : {
+                "description": "Data for the purpose of ingesting it into the database",
+                "required": [
+                    "spatial_unit_ids", "data"
+                ],
+                "properties": {
+                    "spatial_unit_ids": {
+                        "description": "An ordered list of identifiers for spatial unit(s) that this aggregate relates to. The number and ordering of this list is defined by the type of data that is being ingested.",
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "example": "HT07"
+                        }
+                    },
+                    "data": {
+                        "description": "The data",
+                        "type": "number",
+                        "nullable": true
+                    }
+                },
+                "example": {
+                    "spatial_unit_ids": ["HT07", "HT08"],
+                    "data": 128.5
+                }
+            },
+            "category_id": {
+                "description": "A unique category ID",
+                "type": "string",
+                "example": "residents_indicators_people"
+            },
+            "indicator_id": {
+                "description": "An indicator ID that's unique across categories. To achieve this, it is prefixed by the category ID and a . character.",
+                "type": "string",
+                "example": "residents_indicators_people.residents"
+            },
+            "srid": {
+                "description": "A spatial resolution ID",
+                "type": "integer",
+                "minimum": 1
+            },
+            "trid": {
+                "description": "A temporal resolution ID",
+                "type": "integer",
+                "minimum": 1
+            },
+            "query_parameters": {
+                "description": "Parameters specifying a data query",
+                "required": [
+                    "category_id", "indicator_id", "srid", "trid", "start_date", "duration"
+                ],
+                "properties": {
+                    "category_id": {
+                        "$ref": "#/components/schemas/category_id"
+                    },
+                    "indicator_id": {
+                        "$ref": "#/components/schemas/indicator_id"
+                    },
+                    "srid": {
+                        "$ref": "#/components/schemas/srid"
+                    },
+                    "trid": {
+                        "$ref": "#/components/schemas/trid"
+                    },
+                    "start_date": {
+                        "description": "The first day to be included in the data",
+                        "$ref": "#/components/schemas/datetime"
+                    },
+                    "duration": {
+                        "description": "The number of temporal aggregation units to be included",
+                        "type": "integer",
+                        "minimum": 1,
+                        "minLength": 1,
+                        "maxLength": 4
+                    }
+                }
+            },
+            "query_result" : {
+                "description": "The result for a query made through the API",
+                "properties": {
+                    "min": {
+                        "description": "The smallest value in the result set",
+                        "type": "number",
+                        "nullable": true
+                    },
+                    "max": {
+                        "description": "The largest value in the result set",
+                        "type": "number",
+                        "nullable": true
+                    },
+                    "data_by_date": {
+                        "description": "All data for the requested category, indicator, spatial- and temporal resolution and time range. The response is an object the structure of which depends on whether the result is for a single value or a flow. The keys are always dates, corresponding to the date format of the requested spatial resolution. The values are objects where the keys are spatial entity identifiers. In the first case, the values are numeric. In the second case, the values are objects where the keys are spatial entity identifiers representing the destination of the flow (as opposed to the origin in the outer identifier) and the values are numeric.",
+                        "type": "object"
+                    }
+                },
+                "example": {
+                    "min": 0.2,
+                    "max": null,
+                    "data_by_date": {
+                        "2020-04": {
+                            "A": {
+                                "B": 5,
+                                "C": 0
+                            },
+                            "B": {
+                                "A": 14,
+                                "C": 7
+                            },
+                            "C": {
+                                "A": 10,
+                                "B": 53
+                            }
+                        }
+                    }
+                }
+            },
+            "config": {
+                "description": "A server configuration describing the data stored on the server",
+                "required": [
+                    "languages", "data_providers", "categories", "indicators", "spatial_resolutions", "temporal_resolutions"
+                ],
+                "properties": {
+                    "languages": {
+                        "description": "All languages",
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/language" },
+                        "default": []
+                    },
+                    "data_providers": {
+                        "description": "All data providers",
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/data_provider" },
+                        "default": []
+                    },
+                    "categories": {
+                        "description": "All data categories",
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/category" },
+                        "default": []
+                    },
+                    "indicators": {
+                        "description": "All data indicators",
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/indicator" },
+                        "default": []
+                    },
+                    "temporal_resolutions": {
+                        "description": "All available temporal aggregation units",
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/temporal_resolution" },
+                        "default": []
+                    },
+                    "spatial_resolutions": {
+                        "description": "All available spatial aggregation units",
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/spatial_resolution" },
+                        "default": []
+                    }
+                }
+            },
+            "translation": {
+                "description": "Serialised JSON containing an object with optional translations for other properties of this object. The keys are the language codes and the values are dicts (original label/translated value).",
+                "type": "string",
+                "example": "{ 'fr': { 'label': 'Departement' }}"
+            },
+            "bin": {
+                "description": "A bin definition",
+                "type": "object",
+                "properties": {
+                    "min": {
+                        "type": "number",
+                        "description": "The lower bound of the bin (included)"
+                    },
+                    "max": {
+                        "type": "number",
+                        "description": "The upper bound of the bin (excluded)"
+                    },
+                    "width": {
+                        "type": "string",
+                        "description": "The width of the arc if the bin is for a flow indicator as a percentage of the default."
+                    }
+                },
+                "example": [
+                    { "min": -3, "max": 3, "width": "10%" },
+                    { "min": -6, "max": -3, "width": "30%" },
+                    { "min": 3, "max": 6, "width": "30%" },
+                    { "min": null, "max": -6, "width": "100%" },
+                    { "min": 6, "max": null, "width": "100%" }
+                ]
+            }
+        }
+    }
+}

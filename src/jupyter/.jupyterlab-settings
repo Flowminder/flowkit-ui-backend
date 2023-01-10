@@ -1,0 +1,14 @@
+{
+    "codeCellConfig": {
+        "lineNumbers": true,
+        "lineWrap": "off",
+        "codeFolding": true
+    },
+    "markdownCellConfig": {
+        "codeFolding": true
+    },
+    "rawCellConfig": {
+        "codeFolding": true
+    },
+    "recordTiming": true
+}

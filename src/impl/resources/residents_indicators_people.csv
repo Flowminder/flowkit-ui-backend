@@ -1,0 +1,7 @@
+month,pcod,residents,residents_perKm2,arrived,departed,delta_arrived,residents_diffwithref,abnormality,residents_pctchangewithref
+2020-02-01,HT0111-01,1,2,3,1,2,3,1,2
+2020-02-01,HT0112-01,0,1,2,3,2,,,
+2020-03-01,HT0111-01,3,2,1,3,-2,-1,-3,-2
+2020-03-01,HT0112-01,0,1,0,2,0,1,0,2
+2020-07-01,HT0113-01,,,,,,,,
+2020-08-01,HT0113-01,9,8,7,9,8,-7,-9,-8

@@ -1,0 +1,189 @@
+# This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+# If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+version: 2.1
+
+commands:
+  upload_codecov:
+    parameters:
+      test:
+        type: string
+    steps:
+      - run:
+          name: Upload codecov
+          command: |
+            curl https://keybase.io/codecovsecurity/pgp_keys.asc | gpg --no-default-keyring --keyring trustedkeys.gpg --import # One-time step
+            curl -Os https://uploader.codecov.io/latest/linux/codecov
+            curl -Os https://uploader.codecov.io/latest/linux/codecov.SHA256SUM
+            curl -Os https://uploader.codecov.io/latest/linux/codecov.SHA256SUM.sig
+            gpgv codecov.SHA256SUM.sig codecov.SHA256SUM
+            shasum -a 256 -c codecov.SHA256SUM
+            chmod +x codecov
+            ./codecov <<parameters.test>>
+
+defaults:
+  - &settings
+    filters:
+      branches:
+        only:
+          - main
+      tags:
+        only: /^v.*/
+
+jobs:
+  lint:
+    docker:
+      - image: cimg/python:3.8
+    steps:
+      - checkout
+      - run: pip install black[jupyter]
+      - run: black --check .
+
+  build:
+    machine:
+      image: ubuntu-2004:202111-02
+      docker_layer_caching: true
+    resource_class: large
+    working_directory: /tmp/flowkit-ui-backend
+    steps:
+      - checkout
+      - run:
+          name: Get information about ALL branches
+          command: |
+            git fetch -a
+      - run:
+          name: Check if env vars are correct
+          command: make -e
+      - run:
+          name: Make sure requirements.txt are up to date
+          command: |
+            make -e deps
+      - run:
+          name: Build docker image and docs
+          command: |
+            make -e build
+      - run:
+          name: Run unit tests (use container-internal data dir)
+          command: |
+            mkdir test_results
+            export DATA_DIR_LOCAL= && make -e test
+      - store_test_results:
+          path: test_results/results.xml
+      - run:
+          name: Push image(s) to dockerhub
+          command: |
+            echo "$DOCKER_ACCESS_TOKEN" | docker login -u "$DOCKER_USER" --password-stdin
+            docker push -a flowminder/flowkit-ui-backend
+            docker push -a flowminder/flowkit-ui-backend-db
+      - run:
+          name: Prepare files for persisting
+          command: |
+            zip -r doc.zip doc/api doc/coverage
+            mkdir ./deploy
+            cp src-generated/.env ./deploy/.env
+      - store_artifacts:
+          path: /tmp/flowkit-ui-backend/doc.zip
+          destination: flowkit-ui-backend-docs.zip
+      - persist_to_workspace:
+          root: /tmp/flowkit-ui-backend
+          paths:
+            - doc
+            - deploy
+      - upload_codecov:
+          test: test_results
+
+  deploy_static:
+    docker:
+      - image: node:19.0.1
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - add_ssh_keys:
+          fingerprints:
+            - "e9:e2:4f:54:4d:7f:9e:a6:a0:be:12:5d:11:fb:09:87"
+      - run:
+          name: Install and configure dependencies
+          command: |
+            npm install -g --silent gh-pages@2.0.1
+            git config user.email "flowkit-ui-backend-ci@flowminder.org"
+            git config user.name "flowkit-ui-backend-ci"
+      - run:
+          name: Merge new docs into current version of gh-pages
+          command: |
+            BRANCH=$(if [[ -n $(git branch --show-current) ]]; then git branch --show-current; else git branch -a --contains $(git rev-parse --short HEAD) | sed '/HEAD/d' | sed 's/remotes\/origin\///g' | sed 's/\*//g' | sed 's/ *//g' | awk '!_[$0]++'; fi)
+            git checkout gh-pages
+            rm -rf ./${BRANCH}
+            mv -f ./build/doc ./${BRANCH}
+            cp ./${BRANCH}/api/index.html ./index.html
+            mv ./build /tmp/build
+            mv ./* /tmp/build
+            mv /tmp/build .
+            rm -rf ./build/docker
+            ls -lar ./build
+            git checkout ${BRANCH}
+      - run:
+          name: Deploy docs to gh-pages branch
+          command: |
+            BRANCH=<<pipeline.git.branch>>
+            NOW=$(date)
+            rm -f ./build/branch.txt
+            echo \"Latest deployed branch: ${BRANCH} at ${NOW}\" > ./build/branch.txt
+            ls -lar ./build
+            gh-pages -m 'auto commit [ci skip]' -d ./build
+
+  update-mob-dashtag:
+    docker:
+      - image: cimg/base:2021.04
+    working_directory: /tmp/mbdash
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "d8:81:fa:f4:16:fd:48:bb:95:1a:7e:fd:e7:31:30:21"
+      - run:
+          name: Create known hosts file
+          command: |
+            ssh-keyscan github.com >> ~/.ssh/known_hosts
+      - run:
+          name: Clone Mobility Dashboard repository
+          command: |
+            GIT_SSH_COMMAND='ssh -i ~/.ssh/id_rsa_fingerprint'
+            git clone git@github.com:Flowminder/flowminder-gcp-mobility-dashboard.git /tmp/mbdash
+      - run:
+          name: Replace dev mob-dashboard api tfvars file
+          command: |
+            git checkout dev
+            echo "api_image_tag = \"${CIRCLE_TAG:-${CIRCLE_SHA1:0:7}}\"" > api-tag.auto.tfvars
+      - run:
+          name: Add and commit the change to mob-dashboard
+          command: |
+            git add api-tag.auto.tfvars
+            git config user.email "flowkit-ui-backend-ci@flowminder.org"
+            git config user.name "flowkit-ui-backend-ci"
+            git commit -m "maint: bump flowkit-ui-backend to version ${CIRCLE_TAG:-${CIRCLE_SHA1:0:7}}"
+      - run:
+          name: Push changes to git
+          command: |
+            git push
+
+workflows:
+  version: 2
+  build_test_deploy:
+    jobs:
+      - lint
+      - build
+      - deploy_static:
+          <<: *settings
+          requires:
+            - build
+      - update-mob-dashtag:
+          context:
+            - flowminder-gcp-mobility-dashboard-gcr-context
+          requires:
+            - build
+          filters:
+            branches:
+              only:
+                - main
+            tags:
+              only: /^v.*/

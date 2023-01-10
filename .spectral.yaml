@@ -1,0 +1,20 @@
+# This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+# If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+extends: "/usr/local/lib/node_modules/ibm-openapi-validator/node_modules/@ibm-cloud/openapi-ruleset/src/ibm-oas.js"
+rules:
+  string-boundary: off
+  content-entry-provided: off
+  response-example-provided: off
+  description-mentions-json: off
+  no-$ref-siblings: off
+  request-body-object: off
+  consecutive-path-param-segments: off
+  array-boundary: off
+  oas3-valid-schema-example: off
+  inline-response-schema: off
+  operation-summary: off
+  merge-patch-optional-properties: off
+  delete-body: off
+  patch-request-content-type: off
+  oas3-schema: off

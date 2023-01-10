@@ -1,0 +1,49 @@
+-- This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+-- If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+/* SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO"; */
+/* SET AUTOCOMMIT = 0; */
+/* START TRANSACTION; */
+/* SET time_zone = "+00:00"; */
+{{#defaultDatabaseName}}
+--
+-- Database: `{{{defaultDatabaseName}}}`
+--
+CREATE DATABASE IF NOT EXISTS `{{{defaultDatabaseName}}}` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+{{/defaultDatabaseName}}
+
+-- --------------------------------------------------------
+
+{{#models}}{{#model}}{{#hasVars}}{{^isArray}}{{#title}}--
+-- Table structure{{#vendorExtensions}}{{#x-mysql-schema}}{{#tableDefinition}} for table `{{tblName}}`{{/tableDefinition}}{{/x-mysql-schema}}{{/vendorExtensions}} generated from model '{{classname}}'
+{{#description}}
+-- {{.}}
+{{/description}}
+--
+
+{{#vendorExtensions}}
+{{#x-mysql-schema}}
+{{#tableDefinition}}
+CREATE TABLE IF NOT EXISTS {{#defaultDatabaseName}}`{{{.}}}`.{{/defaultDatabaseName}}`{{tblName}}` (
+{{/tableDefinition}}
+{{/x-mysql-schema}}
+{{/vendorExtensions}}
+  `id` INT PRIMARY KEY AUTO_INCREMENT,
+  {{#vars}}
+  {{#vendorExtensions}}
+  {{#x-mysql-schema}}
+  {{#columnDefinition}}
+  `{{colName}}` {{colDataType}}{{#colDataTypeArguments}}{{#-first}}({{/-first}}{{#isString}}'{{/isString}}{{argumentValue}}{{#isString}}'{{/isString}}{{^-last}}, {{/-last}}{{#-last}}){{/-last}}{{/colDataTypeArguments}}{{#colUnsigned}} UNSIGNED{{/colUnsigned}}{{#colNotNull}} NOT NULL{{/colNotNull}}{{#colDefault}} DEFAULT {{#isString}}'{{defaultValue}}'{{/isString}}{{^isString}}{{defaultValue}}{{/isString}}{{/colDefault}}{{#colComment}} COMMENT '{{.}}'{{/colComment}}{{^-last}},{{/-last}}
+  {{/columnDefinition}}
+  {{/x-mysql-schema}}
+  {{/vendorExtensions}}
+  {{/vars}}
+{{#vendorExtensions}}
+{{#x-mysql-schema}}
+{{#tableDefinition}}
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci{{#tblComment}} COMMENT='{{.}}'{{/tblComment}};
+{{/tableDefinition}}
+{{/x-mysql-schema}}
+{{/vendorExtensions}}
+
+{{/title}}{{/isArray}}{{/hasVars}}{{/model}}{{/models}}

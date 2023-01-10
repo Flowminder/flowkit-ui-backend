@@ -1,0 +1,32 @@
+# IDE
+**/.vscode
+**/.idea
+
+# OpenAPI-generator & generated docs
+**/doc/api
+**/src-generated
+*gen*.log
+**/doc/examples/*.html
+**/data
+
+# Python
+*.pyc
+__pycache__/
+
+# Pytest/coverage
+.coverage
+**/coverage
+
+# jupyter-related files
+**/.ipynb_checkpoints
+**/.cache
+**/.npm
+**/.jupyter
+**/.local
+**/.ipython
+**/.yarn
+**/.config
+doc/examples/.bash_history
+**/.bash_history
+
+test_results/

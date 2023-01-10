@@ -1,0 +1,24 @@
+import requests
+import json
+
+response = requests.{{httpMethod}}({{#hasBodyParams}}
+    # {{description}}
+    {{#bodyParams}}{{paramName}}={},{{/bodyParams}}{{/hasBodyParams}}
+    url="{{basePath}}{{path}}{{#hasQueryParams}}?{{#queryParams}}{{^-first}}&{{/-first}}{{baseName}}=&lbrace;{{baseName}}&rbrace;{{/queryParams}}{{/hasQueryParams}}"{{#authMethods}}{{#isBasicBearer}}{{^hasConsumes}},
+    headers={
+        "Authorization: Bearer [[accessToken]]"
+    }{{/hasConsumes}}{{/isBasicBearer}}{{/authMethods}}{{^authMethods}}{{#hasConsumes}},
+    headers={
+        "Content-Type: {{#consumes}}{{{mediaType}}}{{^-last}},{{/-last}}{{/consumes}}"
+    }{{/hasConsumes}}{{/authMethods}}{{#authMethods}}{{#isBasicBearer}}{{#hasConsumes}},
+    headers={
+        "Authorization: Bearer [[accessToken]]",
+        "Content-Type: {{#consumes}}{{{mediaType}}}{{^-last}},{{/-last}}{{/consumes}}"
+    }{{/hasConsumes}}{{/isBasicBearer}}{{/authMethods}}{{#allParams}}{{#isBodyParam}},
+    # {{baseName}}: {{description}}
+    data = {}{{/isBodyParam}}{{/allParams}}{{#hasConsumes}}{{#allParams}}{{#isFile}},
+    files = {
+        '{{paramName}}': ('{{baseName}}.zip', '[[{{example}}]]')
+    }{{/isFile}}{{/allParams}}{{/hasConsumes}}
+)
+print(json.dumps(json.loads(response.content), indent=4))

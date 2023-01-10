@@ -1,0 +1,110 @@
+# This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+# If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+version: "3.8"
+
+networks:
+  docker_nw:
+    driver: bridge
+
+services:
+  web:
+    container_name: $CONTAINER_NAME
+    image: $IMAGE_NAME_ACTUAL
+    user: $CONTAINER_USER:$CONTAINER_USER
+    restart: unless-stopped
+    ports:
+      - "${SERVER_PORT_HOST}:${SERVER_PORT_CONTAINER}"
+    volumes:
+      - $VOLUME_IMPL
+      - $VOLUME_DATA
+      - $PWD/.env:/home/$CONTAINER_USER/$APP_NAME/src/.env:ro
+      - $PWD/test_results/:/home/$CONTAINER_USER/$APP_NAME/test_results:rw
+      - $PWD/doc/:/home/$CONTAINER_USER/$APP_NAME/doc:rw
+    environment:
+      &flowkit-ui-backend-env
+      - APP_NAME=$APP_NAME
+      - APP_DIR=$APP_DIR
+      - PACKAGE_NAME=$PACKAGE_NAME
+      - CONTAINER_USER=$CONTAINER_USER
+      - DATA_DIR_CONTAINER=$DATA_DIR_CONTAINER
+      - SERVER_PORT_CONTAINER=$SERVER_PORT_CONTAINER
+      - DB_PORT_CONTAINER=$DB_PORT_CONTAINER
+      - DB_NAME=$DB_NAME
+      - DB_USER=$DB_USER
+      - DB_PW=$DB_PW
+      - FLOWKIT_UI_URL=$FLOWKIT_UI_URL
+      - JUPYTER_PORT=$JUPYTER_PORT
+      - AUTH0_DOMAIN=$AUTH0_DOMAIN
+      - AUTH0_CLIENT_ID=$AUTH0_CLIENT_ID
+      - AUTH0_CLIENT_SECRET=$AUTH0_CLIENT_SECRET
+      - AUTH0_AUDIENCE=$AUTH0_AUDIENCE
+      - DEV_MODE=$DEV_MODE
+      - LOG_LEVEL=$LOG_LEVEL
+      - FORCE_DB_SETUP=$FORCE_DB_SETUP
+      - JUPYTER_ENABLED=$JUPYTER_ENABLED
+      - SERVER_PORT_HOST=$SERVER_PORT_HOST
+      - DB_PORT_HOST=$DB_PORT_HOST
+      - DATA_DIR_LOCAL=$DATA_DIR_LOCAL
+      - CONTAINER_NAME=$CONTAINER_NAME
+      - CONTAINER_NAME_DB=$CONTAINER_NAME_DB
+    command: bash -c "set -a; source .env; cd ./src; uvicorn $APP_NAME.main:app $RELOAD --host 0.0.0.0 --port $SERVER_PORT_CONTAINER";
+    networks:
+      docker_nw:
+
+
+  db:
+    container_name: $CONTAINER_NAME_DB
+    image: $IMAGE_NAME_DB_ACTUAL
+    restart: unless-stopped
+    ports:
+      - "${DB_PORT_HOST}:${DB_PORT_CONTAINER}"
+    environment:
+      - MYSQL_USER=$CONTAINER_USER
+      - MYSQL_PASSWORD=$DB_PW
+      - MYSQL_ROOT_PASSWORD=$DB_PW
+      - MYSQL_DATABASE=$DB_NAME
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'mysql -u$$MYSQL_USER -p$$MYSQL_PASSWORD -e "SELECT 1" >/dev/null 2>&1;'
+        ]
+      interval: 1s
+      timeout: 10s
+      retries: 30
+    networks:
+      docker_nw:
+
+
+  jupyter:
+    container_name: ${CONTAINER_NAME}-jupyter
+    image: jupyter/minimal-notebook:2022-10-13
+    user: root
+    restart: unless-stopped
+    ports:
+      - "${JUPYTER_PORT}:8888"
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      - JUPYTER_TOKEN=jupyter
+      - NB_USER=$CONTAINER_USER
+      - NB_UID=$UID
+      - NB_GID=$GID
+      - CHOWN_HOME='yes'
+      - CHOWN_HOME_OPTS=-R
+      - CONTAINER_USER=$CONTAINER_USER
+      - APP_NAME=$APP_NAME
+      - PACKAGE_NAME=$PACKAGE_NAME
+      - FORCE_DB_SETUP=0
+      - IS_TEST=0
+      - DB_USER=$DB_USER
+      - DB_PW=$DB_PW
+      - CONTAINER_NAME_DB=$CONTAINER_NAME_DB
+      - DB_PORT_CONTAINER=$DB_PORT_CONTAINER
+      - DB_NAME=$DB_NAME
+    volumes:
+      - $PWD/src/jupyter:/home/${CONTAINER_USER}:rw
+      - $PWD/src/impl:/home/${APP_DIR}/src/impl:ro
+    command: /bin/bash -c "pip install httpx pandas; jupyter labextension install @arbennett/base16-one-dark; cp ~/.jupyterlab-settings ~/.jupyter/lab/user-settings/@jupyterlab/notebook-extension/tracker.jupyterlab-settings; start.sh jupyter lab"
+    networks:
+      docker_nw:

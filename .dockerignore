@@ -1,0 +1,9 @@
+.vscode*
+.circleci*
+.git*
+codegen*
+.dockerignore
+.gitignore
+.pre-commit-config.yaml
+README.md
+Makefile

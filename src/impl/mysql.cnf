@@ -1,0 +1,10 @@
+[mysqld]
+max_allowed_packet=512M
+local-infile=1
+max_connections = 120
+
+[mysql]
+local-infile=1
+
+[client]
+loose-local-infile=1
