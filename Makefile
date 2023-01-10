@@ -44,10 +44,12 @@ endif
 # use a bind mount for the impl dir when in dev mode
 ifeq ($(DEV_MODE),1)
 	VOLUME_IMPL:=$(PWD)/src/impl:/home/$(APP_DIR)/src/impl:rw
+	VOLUME_TEST:=$(PWD)/src/tests:/home/$(APP_DIR)/src/tests:rw
 	RELOAD:=--reload
 	IMAGE_NAME_ACTUAL:=flowminder/$(APP_NAME):latest
 else
 	VOLUME_IMPL:=/dev/null:/tmp/volume_impl
+	VOLUME_TEST:=/dev/null:/tmp/volume_tests
 	RELOAD:=
 	IMAGE_NAME_ACTUAL:=$(IMAGE_NAME)
 endif

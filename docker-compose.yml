@@ -17,6 +17,7 @@ services:
       - "${SERVER_PORT_HOST}:${SERVER_PORT_CONTAINER}"
     volumes:
       - $VOLUME_IMPL
+      - $VOLUME_TEST
       - $VOLUME_DATA
       - $PWD/.env:/home/$CONTAINER_USER/$APP_NAME/src/.env:ro
       - $PWD/test_results/:/home/$CONTAINER_USER/$APP_NAME/test_results:rw
