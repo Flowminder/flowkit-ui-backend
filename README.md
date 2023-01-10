@@ -1,7 +1,7 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![CircleCI](https://circleci.com/gh/Flowminder/flowkit-ui-backend/tree/dev.svg?style=shield&circle-token=796b4bc41e57655a4779f8d112f8985557668385)](https://circleci.com/gh/Flowminder/flowkit-ui-backend/tree/dev)
+[![CircleCI](https://circleci.com/gh/Flowminder/flowkit-ui-backend/tree/main.svg?style=shield&circle-token=796b4bc41e57655a4779f8d112f8985557668385)](https://circleci.com/gh/Flowminder/flowkit-ui-backend/tree/dev)
 [![OpenAPI spec](https://img.shields.io/badge/OpenAPI_spec-online-brightgreen)](https://flowminder.github.io/flowkit-ui-backend)
-[![codecov](https://codecov.io/gh/Flowminder/flowkit-ui-backend/branch/dev/graph/badge.svg?token=9C65D1IEAF)](https://codecov.io/gh/Flowminder/flowkit-ui-backend)
+[![codecov](https://codecov.io/gh/Flowminder/flowkit-ui-backend/branch/main/graph/badge.svg?token=9C65D1IEAF)](https://codecov.io/gh/Flowminder/flowkit-ui-backend)
 
 # FlowKit-UI backend
 
