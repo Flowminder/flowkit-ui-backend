@@ -133,10 +133,6 @@ workflows:
     jobs:
       - lint
       - build
-      - deploy_static:
-          <<: *settings
-          requires:
-            - build
       - update-mob-dashtag:
           context:
             - flowminder-gcp-mobility-dashboard-gcr-context
