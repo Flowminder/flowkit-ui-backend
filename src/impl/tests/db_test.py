@@ -189,12 +189,12 @@ async def test_drop_indices_none(mocker):
 @pytest.mark.asyncio
 async def test_drop_indices(mocker):
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.run",
-        side_effect=[(None, None), (None, None), (None, None)],
+        "flowkit_ui_backend.impl.util.db.get_index",
+        side_effect=["baz", None, None],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.get_index",
-        side_effect=["foo"],
+        "flowkit_ui_backend.impl.util.db.run",
+        side_effect=[(None, None)],
     )
 
     await db.drop_indices(category_type="single_location", pool=await get_pool())

@@ -44,12 +44,10 @@ endif
 # use a bind mount for the impl dir when in dev mode
 ifeq ($(DEV_MODE),1)
 	VOLUME_IMPL:=$(PWD)/src/impl:/home/$(APP_DIR)/src/impl:rw
-	VOLUME_TEST:=$(PWD)/src/tests:/home/$(APP_DIR)/src/tests:rw
 	RELOAD:=--reload
 	IMAGE_NAME_ACTUAL:=flowminder/$(APP_NAME):latest
 else
 	VOLUME_IMPL:=/dev/null:/tmp/volume_impl
-	VOLUME_TEST:=/dev/null:/tmp/volume_tests
 	RELOAD:=
 	IMAGE_NAME_ACTUAL:=$(IMAGE_NAME)
 endif
@@ -251,7 +249,7 @@ test:
 			--cov-report html:/home/$(APP_DIR)/doc/coverage \
 			--cov-report xml:/home/$(APP_DIR)/test_results/coverage.xml \
 			--junit-xml=/home/$(APP_DIR)/test_results/results.xml \
-			/home/$(APP_DIR)/src-generated/tests  && \
+			/home/$(APP_DIR)/src-generated/tests /home/$(APP_DIR)/src-generated/src/$(PACKAGE_NAME)/impl/tests && \
 			coverage-badge -o /home/$(APP_DIR)/doc/coverage/coverage.svg"; \
 		ERR=$$?; \
 		docker-compose -p $(APP_NAME_TEST) down ;\
