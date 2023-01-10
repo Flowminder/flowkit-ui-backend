@@ -100,7 +100,6 @@ all:
 	echo -e "No target given. Please use one of these:\n"; \
 	echo -e "- \033[1mupgrade\033[0m \tUpgrade the dependencies"; \
 	echo -e "- \033[1mdeps\033[0m \t\tRe-generate the dependencies from the *.in files"; \
-	echo -e "- \033[1mdoc\033[0m \t\tBuild the docs only"; \
 	echo -e "- \033[1mcode\033[0m \t\tBuild the code only"; \
 	echo -e "- \033[1mbuild\033[0m \tBuild the docker image, including docs"; \
 	echo -e "- \033[1mtest\033[0m \t\tRun all tests in a dedicated container"; \
@@ -114,14 +113,8 @@ all:
 	echo -e "Local user: $(UID):$(GID) using shell $(SHELL)"; \
 	echo -e ""
 
---clean: --docclean --codeclean
+--clean: --codeclean
 	$(info Cleaning tmp files...)
-
---docclean:
-	$(info Cleaning docs...)
-	rm -rf ./doc/api
-	rm -rf ./doc/coverage
-	echo "Done."
 
 --codeclean:
 	$(info Cleaning generated code...)
@@ -131,21 +124,6 @@ all:
 --validate-api:
 	$(info Validating API spec...)
 	docker run --rm --volume "$(PWD)":/data jamescooke/openapi-validator:0.96.0 -v -s -r .spectral.yaml ./src/api.json
-
---docgen: --docclean --validate-api
-	$(info Generating API documentation...)
-	docker run --rm -v "$(PWD):/tmp/code" \
-	-u "$(UID):$(GID)" \
-	-e JAVA_OPTS="-Xmx15G -DloggerPath=conf/log4j.properties" \
-	openapitools/openapi-generator-cli:v6.2.0 generate \
-	-g html2 \
-	-i /tmp/code/src/api.json \
-	-o /tmp/code/doc/api \
-	-t /tmp/code/codegen/templates/html2 \
-	--skip-validate-spec --global-property debugOperations=true>docgen.log;
-	echo "Done. Please find your API docs at $(PWD)/doc/api"
-
-doc: --docgen
 
 --codegen: --codeclean --validate-api
 	$(info Generating code from API spec...)
@@ -201,7 +179,7 @@ deps:
     --output-file=/tmp/requirements/dev-requirements.txt /tmp/requirements/dev-requirements.in
 
 
-build: --clean --docgen --codegen
+build: --clean --codegen
 	$(info Running build...)
 	echo "Copying required files into generated code..."
 	cp ./src/.coveragerc ./src-generated/.coveragerc
@@ -246,11 +224,9 @@ test:
 			--cov-config=/home/$(APP_DIR)/.coveragerc \
 			--cov=$(PACKAGE_NAME) \
 			--cov-report term-missing \
-			--cov-report html:/home/$(APP_DIR)/doc/coverage \
 			--cov-report xml:/home/$(APP_DIR)/test_results/coverage.xml \
 			--junit-xml=/home/$(APP_DIR)/test_results/results.xml \
-			/home/$(APP_DIR)/src-generated/tests /home/$(APP_DIR)/src-generated/src/$(PACKAGE_NAME)/impl/tests && \
-			coverage-badge -o /home/$(APP_DIR)/doc/coverage/coverage.svg"; \
+			/home/$(APP_DIR)/src-generated/tests /home/$(APP_DIR)/src-generated/src/$(PACKAGE_NAME)/impl/tests"; \
 		ERR=$$?; \
 		docker-compose -p $(APP_NAME_TEST) down ;\
 		exit $$ERR
