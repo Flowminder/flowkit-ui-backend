@@ -78,16 +78,11 @@ jobs:
       - run:
           name: Prepare files for persisting
           command: |
-            zip -r doc.zip doc/api doc/coverage
             mkdir ./deploy
             cp src-generated/.env ./deploy/.env
-      - store_artifacts:
-          path: /tmp/flowkit-ui-backend/doc.zip
-          destination: flowkit-ui-backend-docs.zip
       - persist_to_workspace:
           root: /tmp/flowkit-ui-backend
           paths:
-            - doc
             - deploy
       - upload_codecov:
           test: test_results
