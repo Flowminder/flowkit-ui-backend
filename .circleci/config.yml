@@ -83,7 +83,6 @@ jobs:
           paths:
             - deploy
       - upload_codecov:
-          name: Upload test results to Codecov
           test: test_results
 
 
