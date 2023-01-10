@@ -67,6 +67,8 @@ jobs:
           command: |
             mkdir test_results
             export DATA_DIR_LOCAL= && make -e test
+      - store_test_results:
+          path: test_results/results.xml
       - run:
           name: Push image(s) to dockerhub
           command: |
