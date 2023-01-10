@@ -59,7 +59,7 @@ jobs:
           command: |
             make -e deps
       - run:
-          name: Build docker image and docs
+          name: Build docker image
           command: |
             make -e build
       - run:
@@ -67,8 +67,6 @@ jobs:
           command: |
             mkdir test_results
             export DATA_DIR_LOCAL= && make -e test
-      - store_test_results:
-          path: test_results/results.xml
       - run:
           name: Push image(s) to dockerhub
           command: |
@@ -85,6 +83,7 @@ jobs:
           paths:
             - deploy
       - upload_codecov:
+          name: Upload test results to Codecov
           test: test_results
 
 
