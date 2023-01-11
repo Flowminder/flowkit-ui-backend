@@ -100,7 +100,7 @@ all:
 	echo -e "No target given. Please use one of these:\n"; \
 	echo -e "- \033[1mupgrade\033[0m \tUpgrade the dependencies"; \
 	echo -e "- \033[1mdeps\033[0m \t\tRe-generate the dependencies from the *.in files"; \
-	echo -e "- \033[1mcode\033[0m \t\Generate the code"; \
+	echo -e "- \033[1mcode\033[0m \t\tGenerate the code"; \
 	echo -e "- \033[1mbuild\033[0m \tBuild the docker image"; \
 	echo -e "- \033[1mtest\033[0m \t\tRun all tests in a dedicated container"; \
 	echo -e "- \033[1mrun\033[0m \t\tRun the application"; \
