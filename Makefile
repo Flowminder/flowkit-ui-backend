@@ -123,7 +123,7 @@ all:
 
 --validate-api:
 	$(info Validating API spec...)
-	docker run --rm --volume "$(PWD)":/data jamescooke/openapi-validator:0.96.0 -v -s -r .spectral.yaml ./src/api.json
+	docker run --rm --volume "$(PWD)":/data jamescooke/openapi-validator:0.97.3 -v -s -r .spectral.yaml ./src/api.json
 
 --codegen: --codeclean --validate-api
 	$(info Generating code from API spec...)
