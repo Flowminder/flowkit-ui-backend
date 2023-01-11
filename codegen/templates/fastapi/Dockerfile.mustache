@@ -35,6 +35,8 @@ RUN pip install --no-cache-dir -r /tmp/requirements.txt  && pip cache purge
 # copy all files to the container and make our user own them
 COPY --chown={{user}}:{{user}} ./src-generated /home/{{user}}/{{packageName}}/src-generated
 COPY --chown={{user}}:{{user}} ./src/impl /home/{{user}}/{{packageName}}/src-generated/src/{{packageName}}/impl
+# remove test files - they are only needed for the test image, see below
+RUN rm -rf /home/{{user}}/{{packageName}}/src-generated/src/{{packageName}}/impl/tests
 
 # run the actual (generated) app inside its directory
 WORKDIR /home/{{user}}/{{packageName}}/src-generated
@@ -46,6 +48,7 @@ ENTRYPOINT ["uvicorn" , "{{packageName}}.main:app", "--host", "0.0.0.0", "--port
 FROM prod as test
 
 COPY --chown={{user}}:{{user}} ./src/.coveragerc /home/{{user}}/{{packageName}}/.coveragerc
+COPY --chown={{user}}:{{user}} ./src/impl/tests /home/{{user}}/{{packageName}}/src-generated/src/{{packageName}}/impl/tests
 
 # Add dev requirements
 RUN pip install --no-cache-dir -r dev-requirements.txt  && pip cache purge
