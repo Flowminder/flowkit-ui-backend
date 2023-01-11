@@ -224,7 +224,6 @@ test:
 			--cov-config=/home/$(APP_DIR)/.coveragerc \
 			--cov=$(PACKAGE_NAME) \
 			--cov-report term-missing \
-			--cov-report html:/home/$(APP_DIR)/doc/coverage \
 			--cov-report xml:/home/$(APP_DIR)/test_results/coverage.xml \
 			--junit-xml=/home/$(APP_DIR)/test_results/results.xml \
 			/home/$(APP_DIR)/src-generated/tests /home/$(APP_DIR)/src-generated/src/$(PACKAGE_NAME)/impl/tests"; \
