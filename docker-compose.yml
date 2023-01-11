@@ -18,9 +18,9 @@ services:
     volumes:
       - $VOLUME_IMPL
       - $VOLUME_DATA
-      - $PWD/.env:/home/$CONTAINER_USER/$APP_NAME/src/.env:ro
-      - $PWD/test_results/:/home/$CONTAINER_USER/$APP_NAME/test_results:rw
-      - $PWD/doc/:/home/$CONTAINER_USER/$APP_NAME/doc:rw
+      - $PWD/.env:/home/$APP_DIR/src/.env:ro
+      - $PWD/test_results/:/home/$APP_DIR/test_results:rw
+      - $PWD/doc/:/home/$APP_DIR/doc:rw
     environment:
       &flowkit-ui-backend-env
       - APP_NAME=$APP_NAME
