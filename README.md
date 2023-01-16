@@ -5,7 +5,7 @@
 
 # FlowKit-UI backend
 
-A Flowkit query postprocessing, data management and authentication/authorisation component
+A [Flowkit](https://github.com/Flowminder/Flowkit) query postprocessing, data management and authentication/authorisation component, designed for use with [Flowminder/flowkit-ui](https://github.com/Flowminder/flowkit-ui).
 
 ## Requirements
 
@@ -32,6 +32,7 @@ You can use the following targets:
 
 -   `doc`: generate docs, from API spec; to be found at `./doc`
 -   `code`: generate code from API spec; to be found at `./src-generated`
+-   `deps`: Regenerate pinned requirements.txt files
 -   `build`:
     -   generate code and docs using the OpenAPI spec at `src/api.json`
     -   link the implementation code into the generated code
@@ -49,10 +50,10 @@ The API document can be viewed at [http://localhost:5000/openapi.json](http://lo
 This requires you to update the `src/api.json` file.
 This file is the **single source of truth** and should be the place that contains the API spec and documentation.
 
-Once you're happy, you need to make sure that any endpoints as defined in the spec are reflected in the implementation (located at `src/impl/controllers`).
-Each category of endpoints (using OpenAPI's "tag" feature) will require a separate file. So if you tag is e.g. `general` then the file needs to be called `general_controller_impl.py`.
+Once you're happy, you need to make sure that any endpoints as defined in the spec are reflected in the implementation (located at `src/impl/apis`).
+Each category of endpoints (using OpenAPI's "tag" feature) will require a separate file. So if you tag is e.g. `general` then the file needs to be called `general_api_impl.py`.
 
-Each `controller_impl.py` file is just a collection of methods representing the implementation of each endpoint.
+Each `api_impl.py` file is just a collection of methods representing the implementation of each endpoint.
 No class is needed; the only requirement is that the controller implementation function uses
 
 -   the same name AND
@@ -79,8 +80,4 @@ def heartbeat():
 When running a docker container locally, the web server is running in development mode.
 Since we never copied the implementation code onto the container but linked it in as a volume instead, you can just edit the implementation files in `src/impl`. After you save the file, any changes will be picked up by the web server automatically. So after you resend the API request (e.g. by refreshing your page), the updated version is used.
 
-If you need to add any dependencies, add them to `src/impl/requirements.txt` and refer to the section above as the docker image will have to be rebuilt.
-
-## Deployment
-
-**TODO**
+If you need to add any dependencies, add them to `src/impl/requirements.in` or `src/impl/dev-requirements.in` and refer to the section above as the docker image will have to be rebuilt.
