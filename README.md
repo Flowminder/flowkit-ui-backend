@@ -32,7 +32,7 @@ You can use the following targets:
 
 -   `doc`: generate docs, from API spec; to be found at `./doc`
 -   `code`: generate code from API spec; to be found at `./src-generated`
--   `deps`: Rgenerate pinned requirements.txt files
+-   `deps`: Regenerate pinned requirements.txt files
 -   `build`:
     -   generate code and docs using the OpenAPI spec at `src/api.json`
     -   link the implementation code into the generated code
