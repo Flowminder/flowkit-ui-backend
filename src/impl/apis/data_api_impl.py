@@ -216,31 +216,36 @@ async def run_query(query_parameters: QueryParameters, pool: Pool = None) -> Que
     categories = await db.select_data(
         base_model=Category, id_key="category_id", ids=[query_parameters.category_id], pool=pool
     )
-    category = categories[0]
-    # make sure to amend table name for data tables
-    base_table_name = f"{category.type}_data"
-    table_name = f"{base_table_name}_{query_parameters.indicator_id}"
-    logger.debug(
-        "Using indicator-specific data table",
-        base_table_name=base_table_name,
-        table_name=table_name,
-    )
+    category = None
+    if len(categories) > 0:
+        category = categories[0]
+        # make sure to amend table name for data tables
+        base_table_name = f"{category.type}_data"
+        table_name = f"{base_table_name}_{query_parameters.indicator_id}"
+        logger.debug(
+            "Using indicator-specific data table",
+            base_table_name=base_table_name,
+            table_name=table_name,
+        )
+
+    if not category or category.type not in ["single_location", "flow"]:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail=f"Could not find category '{query_parameters.category_id}'",
+        )
 
     # get temporal resolution to know how to format the spatial entities
     logger.debug("Get temporal resolution object")
     temporal_resolutions = await db.select_data(
         base_model=TemporalResolution, id_key="trid", ids=[str(query_parameters.trid)], pool=pool
     )
-    tr = temporal_resolutions[0]
-
-    if (
-        len(categories) == 0
-        or len(temporal_resolutions) == 0
-        or categories[0].type not in ["single_location", "flow"]
-    ):
+    tr = None
+    if len(temporal_resolutions) > 0:
+        tr = temporal_resolutions[0]
+    else:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
-            detail="Could not find category or temporal resolution",
+            detail=f"Could not find temporal resolution with ID {query_parameters.trid}",
         )
 
     # filter by date

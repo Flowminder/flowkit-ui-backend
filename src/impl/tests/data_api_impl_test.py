@@ -10,6 +10,7 @@ from http import HTTPStatus
 from fastapi import HTTPException
 from flowkit_ui_backend.impl.apis import data_api_impl
 from flowkit_ui_backend.models.query_parameters import QueryParameters
+from flowkit_ui_backend.models.query_result import QueryResult
 from flowkit_ui_backend.models.time_range import TimeRange
 from flowkit_ui_backend.models.single_location_data import SingleLocationData
 from flowkit_ui_backend.models.categories import Categories
@@ -186,13 +187,24 @@ async def test_get_spatial_resolutions_for_category(mocker):
 async def test_get_spatial_resolutions_for_category_error(mocker):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
-        side_effect=[[], HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR)],
+        side_effect=[
+            [],
+            HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR),
+            [],
+            HTTPException(status_code=HTTPStatus.NOT_FOUND),
+        ],
     )
 
     with pytest.raises(HTTPException):
         await data_api_impl.get_spatial_resolutions_for_category(
             category_id="foo", pool=await get_pool()
         )
+
+    result = await data_api_impl.get_spatial_resolutions_for_category(
+        category_id="foo", pool=await get_pool()
+    )
+    assert type(result) == SpatialResolutions
+    assert result.spatial_resolutions == []
 
 
 @pytest.mark.asyncio
@@ -245,13 +257,24 @@ async def test_get_temporal_resolutions_for_category(mocker):
 async def test_get_temporal_resolutions_for_category_error(mocker):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
-        side_effect=[[], HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR)],
+        side_effect=[
+            [],
+            HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR),
+            [],
+            HTTPException(status_code=HTTPStatus.NOT_FOUND),
+        ],
     )
 
     with pytest.raises(HTTPException):
         await data_api_impl.get_temporal_resolutions_for_category(
             category_id="foo", pool=await get_pool()
         )
+
+    result = await data_api_impl.get_temporal_resolutions_for_category(
+        category_id="foo", pool=await get_pool()
+    )
+    assert type(result) == TemporalResolutions
+    assert result.temporal_resolutions == []
 
 
 @pytest.mark.asyncio
@@ -330,31 +353,35 @@ async def test_run_query_unknown_query_type(mocker):
 
 @pytest.mark.asyncio
 async def test_run_query(mocker):
-    # mocker.patch(
-    #    "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
-    #    side_effect=[[cat], [tr]],
-    # )
-    # mocker.patch(
-    #    "flowkit_ui_backend.impl.apis.data_api_impl.db.run",
-    #    side_effect=[
-    #        (
-    #            None,
-    #            [
-    #                (
-    #                    None,
-    #                    1,
-    #                    None,
-    #                    None,
-    #                    None,
-    #                    None,
-    #                    None,
-    #                    None,
-    #                    datetime.datetime.fromisoformat("1970-01-01"),
-    #                )
-    #            ],
-    #        ),
-    #    ],
-    # )
+    mocker.patch(
+        "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
+        side_effect=[[cat], [tr]],
+    )
+    mocker.patch(
+        "flowkit_ui_backend.impl.apis.data_api_impl.db.run",
+        side_effect=[
+            (
+                ["mdid", "spatial_unit_id", "data"],
+                [
+                    (
+                        None,
+                        1,
+                        None,
+                        None,
+                        None,
+                        None,
+                        None,
+                        None,
+                        datetime.datetime.fromisoformat("1970-01-01"),
+                    )
+                ],
+            ),
+            (
+                ["mdid", "spatial_unit_id", "data"],
+                [(1, "unit1", 99), (1, "unit2", 100), (1, "unit3", 256)],
+            ),
+        ],
+    )
 
     query_parameters = QueryParameters(
         category_id="foo",
@@ -367,6 +394,44 @@ async def test_run_query(mocker):
     # TODO: not sure how to mock this
     # result = await data_api_impl.run_query(query_parameters=query_parameters, pool=await get_pool())
     # assert result == QueryResult(min=1.23, max=1.23, data_by_date={"1970": {"foo": 1.23}})
+
+
+@pytest.mark.asyncio
+async def test_run_query_no_category(mocker):
+    mocker.patch(
+        "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
+        side_effect=[[], []],
+    )
+
+    query_parameters = QueryParameters(
+        category_id="foo",
+        indicator_id="foo.bar",
+        srid=1,
+        trid=1,
+        start_date="2022-03-17",
+        duration=1,
+    )
+    with pytest.raises(HTTPException):
+        await data_api_impl.run_query(query_parameters=query_parameters, pool=await get_pool())
+
+
+@pytest.mark.asyncio
+async def test_run_query_no_tr(mocker):
+    mocker.patch(
+        "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
+        side_effect=[[cat], []],
+    )
+
+    query_parameters = QueryParameters(
+        category_id="foo",
+        indicator_id="foo.bar",
+        srid=1,
+        trid=1,
+        start_date="2022-03-17",
+        duration=1,
+    )
+    with pytest.raises(HTTPException):
+        await data_api_impl.run_query(query_parameters=query_parameters, pool=await get_pool())
 
 
 @pytest.mark.asyncio

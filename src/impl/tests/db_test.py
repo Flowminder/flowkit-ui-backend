@@ -85,10 +85,54 @@ async def test_provision_db_force_setup(mocker):
         "flowkit_ui_backend.impl.util.db.os.path.isfile",
         side_effect=[False],
     )
-
     os.environ["FORCE_DB_SETUP"] = "1"
+
     await db.provision_db(pool=await get_pool())
     # TODO: add meaningful tests
+
+
+@pytest.mark.asyncio
+async def test_provision_db_dont_force_setup(mocker):
+    mocker.patch(
+        "flowkit_ui_backend.impl.util.db.os.path.isfile",
+        side_effect=[False],
+    )
+    os.environ["FORCE_DB_SETUP"] = "0"
+
+    await db.provision_db(pool=await get_pool())
+    # TODO: add meaningful tests
+
+
+@pytest.mark.asyncio
+async def test_provision_db_fail(mocker):
+    mocker.patch(
+        "flowkit_ui_backend.impl.util.db.os.path.isfile",
+        side_effect=[False],
+    )
+    mocker.patch(
+        "flowkit_ui_backend.impl.util.db.run_script",
+        side_effect=[False],
+    )
+    os.environ["FORCE_DB_SETUP"] = "0"
+
+    result = await db.provision_db(pool=await get_pool())
+    assert result is False
+
+
+@pytest.mark.asyncio
+async def test_provision_db_error(mocker):
+    mocker.patch(
+        "flowkit_ui_backend.impl.util.db.os.path.isfile",
+        side_effect=[False],
+    )
+    mocker.patch(
+        "flowkit_ui_backend.impl.util.db.run_script",
+        side_effect=[Exception("foo")],
+    )
+    os.environ["FORCE_DB_SETUP"] = "0"
+
+    result = await db.provision_db(pool=await get_pool())
+    assert result is False
 
 
 @pytest.mark.asyncio
@@ -223,6 +267,12 @@ async def test_load_prepared_sql():
 @pytest.mark.asyncio
 async def test_run():
     await db.run("SHOW VARIABLES", pool=await get_pool())
+    # TODO: add meaningful tests
+
+
+@pytest.mark.asyncio
+async def test_run_with_args():
+    await db.run("SHOW VARIABLES", args=[], pool=await get_pool())
     # TODO: add meaningful tests
 
 
