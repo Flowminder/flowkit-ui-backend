@@ -50,7 +50,7 @@ async def test_{{operationId}}(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    assert response.status_code >= 200 and response.status_code < 300
 
 
 {{#vendorExtensions.x-skip-test}}
@@ -96,7 +96,7 @@ async def test_{{operationId}}_no_impl(client: TestClient, mocker):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 501
+    assert response.status_code == 501
 
 
 {{#vendorExtensions.x-skip-test}}
