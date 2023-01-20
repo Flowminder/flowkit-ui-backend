@@ -6,9 +6,12 @@
 from http import HTTPStatus
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
+from {{packageName}}.main import app
 import pytest
 {{#imports}}{{import}}  # noqa: F401
 {{/imports}}
+
+client = TestClient(app)
 
 {{#operations}}
 {{#operation}}
@@ -17,7 +20,7 @@ import pytest
 @pytest.mark.skip("{{reason}}")
 {{/vendorExtensions.x-skip-test}}
 @pytest.mark.asyncio
-async def test_{{operationId}}_happy_case(client: TestClient):
+async def test_{{operationId}}_happy_case():
     """Test case for {{{operationId}}}
 
     {{{summary}}}
@@ -56,7 +59,7 @@ async def test_{{operationId}}_happy_case(client: TestClient):
 @pytest.mark.skip("{{reason}}")
 {{/vendorExtensions.x-skip-test}}
 @pytest.mark.asyncio
-async def test_{{operationId}}_content(client: TestClient, mocker):
+async def test_{{operationId}}_content(mocker):
     """Test case for {{{operationId}}} when there is no implementation
 
     {{{summary}}}
@@ -102,7 +105,7 @@ async def test_{{operationId}}_content(client: TestClient, mocker):
 @pytest.mark.skip("{{reason}}")
 {{/vendorExtensions.x-skip-test}}
 @pytest.mark.asyncio
-async def test_{{operationId}}_no_content(client: TestClient, mocker):
+async def test_{{operationId}}_no_content(mocker):
     """Test case for {{{operationId}}} when there is no implementation
 
     {{{summary}}}
@@ -148,7 +151,7 @@ async def test_{{operationId}}_no_content(client: TestClient, mocker):
 @pytest.mark.skip("{{reason}}")
 {{/vendorExtensions.x-skip-test}}
 @pytest.mark.asyncio
-async def test_{{operationId}}_no_impl(client: TestClient, mocker):
+async def test_{{operationId}}_no_impl(mocker):
     """Test case for {{{operationId}}} when there is no implementation
 
     {{{summary}}}
@@ -193,7 +196,7 @@ async def test_{{operationId}}_no_impl(client: TestClient, mocker):
 @pytest.mark.skip("{{reason}}")
 {{/vendorExtensions.x-skip-test}}
 @pytest.mark.asyncio
-async def test_{{operationId}}_http_exception(client: TestClient, mocker):
+async def test_{{operationId}}_http_exception(mocker):
     """Test case for {{{operationId}}} when there is no implementation
 
     {{{summary}}}
