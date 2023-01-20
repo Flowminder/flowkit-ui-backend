@@ -144,7 +144,7 @@ async def test_{{operationId}}_http_exception(client: TestClient, mocker):
     print(response)
 
     # uncomment below to assert the status code of the HTTP response
-    assert response.status_code == 418
+    assert response.status_code == 500
     assert response.content == 'foo'
 
 {{/operation}}
