@@ -17,7 +17,7 @@ import pytest
 @pytest.mark.skip("{{reason}}")
 {{/vendorExtensions.x-skip-test}}
 @pytest.mark.asyncio
-async def test_{{operationId}}(client: TestClient):
+async def test_{{operationId}}_happy_case(client: TestClient):
     """Test case for {{{operationId}}}
 
     {{{summary}}}
