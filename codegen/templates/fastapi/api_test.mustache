@@ -3,6 +3,8 @@
 
 # coding: utf-8
 
+from http import HTTPStatus
+from fastapi import HTTPException
 from fastapi.testclient import TestClient
 import pytest
 {{#imports}}{{import}}  # noqa: F401
@@ -62,7 +64,7 @@ async def test_{{operationId}}_no_impl(client: TestClient, mocker):
     """
 
     mocker.patch(
-        "{{packageName}}.impl.apis.{{classFilename}}_impl",
+        "{{packageName}}.apis.{{classFilename}}.{{classFilename}}_impl",
         {{operationId}}=None,
     )
 
@@ -95,6 +97,55 @@ async def test_{{operationId}}_no_impl(client: TestClient, mocker):
 
     # uncomment below to assert the status code of the HTTP response
     #assert response.status_code == 501
+
+
+{{#vendorExtensions.x-skip-test}}
+@pytest.mark.skip("{{reason}}")
+{{/vendorExtensions.x-skip-test}}
+@pytest.mark.asyncio
+async def test_{{operationId}}_http_exception(client: TestClient, mocker):
+    """Test case for {{{operationId}}} when there is no implementation
+
+    {{{summary}}}
+    """
+
+    mocker.patch(
+        "{{packageName}}.apis.{{classFilename}}.{{classFilename}}_impl.{{operationId}}",
+        side_effect=[HTTPException(HTTPStatus.IM_A_TEAPOT, detail='foo')]
+    )
+
+    {{#bodyParam}}
+    {{paramName}} = {{#isContainer}}[{{/isContainer}}{{{example}}}{{#isContainer}}]{{/isContainer}}
+    {{/bodyParam}}
+    {{#queryParams}}
+    {{#-first}}params = [{{/-first}}("{{paramName}}", {{{example}}}){{^-last}}, {{/-last}}{{#-last}}]{{/-last}}{{/queryParams}}
+    headers = {{=<% %>=}}{<%#headerParams%><%={{ }}=%>
+        "{{paramName}}": {{{example}}},{{/headerParams}}{{#authMethods}}
+        {{#isOAuth}}"Authorization": "Bearer special-key",{{/isOAuth}}{{#isApiKey}}"{{name}}": "special-key",{{/isApiKey}}{{#isBasicBasic}}"Authorization": "BasicZm9vOmJhcg==",{{/isBasicBasic}}{{#isBasicBearer}}"Authorization": "Bearer special-key",{{/isBasicBearer}}{{/authMethods}}
+    }
+    {{#formParams}}
+    {{#-first}}
+    data = {
+    {{/-first}}
+        "{{paramName}}": {{{example}}}{{^-last}},{{/-last}}
+    {{#-last}}
+    }
+    {{/-last}}
+    {{/formParams}}
+    response = client.request(
+        "{{httpMethod}}",
+        "{{{path}}}"{{#pathParams}}{{#-first}}.format({{/-first}}{{baseName}}={{{example}}}{{^-last}}, {{/-last}}{{#-last}}){{/-last}}{{/pathParams}},
+        headers=headers,{{#bodyParam}}
+        json={{paramName}},{{/bodyParam}}{{#formParams}}{{#-first}}
+        data=data,{{/-first}}{{/formParams}}{{#queryParams}}{{#-first}}
+        params=params,{{/-first}}{{/queryParams}}
+    )
+
+    print(response)
+
+    # uncomment below to assert the status code of the HTTP response
+    assert response.status_code == 418
+    assert response.content == 'foo'
 
 {{/operation}}
 {{/operations}}
