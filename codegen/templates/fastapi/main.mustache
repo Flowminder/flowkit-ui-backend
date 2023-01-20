@@ -9,6 +9,7 @@ import os
 import structlog
 import asyncio
 import aiomysql
+import traceback
 from http import HTTPStatus
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError, HTTPException as StarletteHTTPException
@@ -75,12 +76,14 @@ async def permission_exception_handler(request: Request, e: PermissionError):
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request, e):
     logger.error(f"{type(e)}: {str(e)}")
-    return await http_exception_handler(request, e)
+    logger.error(traceback.format_exc())
+    return JSONResponse(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, content=str(e))
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, e):
     logger.error(f"{type(e)}: {str(e)}")
-    return await request_validation_exception_handler(request, e)
+    logger.error(traceback.format_exc())
+    return JSONResponse(status_code=HTTPStatus.BAD_REQUEST, content=str(e))
 
 @app.on_event("startup")
 async def _startup():
