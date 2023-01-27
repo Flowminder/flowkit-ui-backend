@@ -3,6 +3,7 @@
 
 import structlog
 import os
+import httpx
 from typing import Optional
 from http import HTTPStatus
 from aiomysql import Pool
@@ -46,6 +47,16 @@ async def delete_user(uid: str, pool: Pool = None) -> None:
     await Auth0(os.getenv("AUTH0_DOMAIN"), await get_management_api_m2m_token()).users.delete_async(
         uid
     )
+
+
+async def reset_password(uid: str, pool: Pool = None) -> None:
+    response = httpx.post(
+        url=f"https://{os.getenv('AUTH0_DOMAIN')}/dbconnections/change_password",
+        headers={"Content-Type": "application/json"},
+        # TODO: add email
+        data=f'{{"client_id": "{os.getenv("AUTH0_CLIENT_ID")}", "email": "", "connection": "Username-Password-Authentication"}}',
+    )
+    logger.debug(response)
 
 
 async def get_management_api_m2m_token() -> Optional[str]:

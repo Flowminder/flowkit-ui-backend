@@ -816,6 +816,30 @@
                 }
             }
         },
+        "/reset_password/{uid}": {
+            "parameters": [
+                {"$ref": "#/components/parameters/uid"}
+            ],
+            "get": {
+                "operationId": "reset_password",
+                "tags": ["accounts"],
+                "description":"Triggers a password reset for the user",
+                "security": [{
+                    "auth0": ["profile"]
+                }],
+                "responses": {
+                    "204": {
+                        "description": "OK: The password reset has been initiated and the suer should check their email for further instructions."
+                    },
+                    "400": { "$ref": "#/components/responses/bad_request" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "404": { "$ref": "#/components/responses/not_found" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            }
+        },
         "/setup": {
             "get": {
                 "operationId": "get_setup",
