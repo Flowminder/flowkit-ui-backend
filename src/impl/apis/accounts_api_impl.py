@@ -49,14 +49,17 @@ async def delete_user(uid: str, pool: Pool = None) -> None:
     )
 
 
-async def reset_password(uid: str, pool: Pool = None) -> None:
+async def reset_password(email: str, pool: Pool = None) -> None:
     response = httpx.post(
         url=f"https://{os.getenv('AUTH0_DOMAIN')}/dbconnections/change_password",
         headers={"Content-Type": "application/json"},
-        # TODO: add email
-        data=f'{{"client_id": "{os.getenv("AUTH0_CLIENT_ID")}", "email": "", "connection": "Username-Password-Authentication"}}',
+        data=f'{{"client_id": "{os.getenv("AUTH0_CLIENT_ID")}", "email": "{email}", "connection": "Username-Password-Authentication"}}',
     )
-    logger.debug(response)
+    if response.status_code != HTTPStatus.OK:
+        raise HTTPException(
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            detail=f"Could not trigger password reset for email {email}",
+        )
 
 
 async def get_management_api_m2m_token() -> Optional[str]:

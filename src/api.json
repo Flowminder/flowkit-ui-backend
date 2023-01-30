@@ -816,9 +816,9 @@
                 }
             }
         },
-        "/reset_password/{uid}": {
+        "/reset_password/{email}": {
             "parameters": [
-                {"$ref": "#/components/parameters/uid"}
+                {"$ref": "#/components/parameters/email"}
             ],
             "get": {
                 "operationId": "reset_password",
@@ -1107,6 +1107,16 @@
                     "type": "string"
                 },
                 "example": "user-4e128f03-a086-4167-81bd-bcfcc0175744"
+            },
+            "email": {
+                "in": "path",
+                "name": "email",
+                "required": true,
+                "description": "The user's email address",
+                "schema": {
+                    "type": "string"
+                },
+                "example": "user@example.com"
             },
             "srid": {
                 "in": "path",
