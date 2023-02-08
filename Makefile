@@ -250,6 +250,10 @@ run: clear
 		"cd ./src; \
 		uvicorn $(PACKAGE_NAME).main:app $(RELOAD) --host 0.0.0.0 --port $(SERVER_PORT_CONTAINER);"
 
+ingest:
+	$(info Running ingestion script to populate database...)
+	export JUPYTER_PORT=$(JUPYTER_PORT); export CONTAINER_USER=$(CONTAINER_USER); export UID=$(UID); export GID=$(GID); docker-compose -p $(APP_NAME) --env-file ./.env run --entrypoint="bash -c \"cd /home/$(CONTAINER_USER); jupyter nbconvert --to script PopulateDatabase.ipynb; ls -la; python PopulateDatabase.py\"" jupyter
+
 lint:
 	$(info Linting source code...)
 	docker-compose -p $(APP_NAME)_lint down
