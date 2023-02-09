@@ -104,6 +104,7 @@ all:
 	echo -e "- \033[1mbuild\033[0m \tBuild the docker image"; \
 	echo -e "- \033[1mtest\033[0m \t\tRun all tests in a dedicated container"; \
 	echo -e "- \033[1mrun\033[0m \t\tRun the application"; \
+	echo -e "- \033[1mingest\033[0m \tIngest data into the database, see src/jupyter/PopulateDatabase.ipynb for details"; \
 	echo -e ""; \
 	echo -e "API version: $(API_VERSION) (/$(API_VERSION_URL_APPENDIX)); Python version: $(PYTHON_VERSION)"; \
 	echo -e "Git info: $(GIT_COMMIT) ($(GIT_BRANCH)); tag: $(GIT_TAG)"; \
@@ -252,7 +253,7 @@ run: clear
 
 ingest:
 	$(info Running ingestion script to populate database...)
-	export JUPYTER_PORT=$(JUPYTER_PORT); export CONTAINER_USER=$(CONTAINER_USER); export UID=$(UID); export GID=$(GID); docker-compose -p $(APP_NAME) --env-file ./.env run --entrypoint="bash -c \"cd /home/$(CONTAINER_USER); jupyter nbconvert --to script PopulateDatabase.ipynb; ls -la; python PopulateDatabase.py\"" jupyter
+	export JUPYTER_PORT=$(JUPYTER_PORT); export CONTAINER_USER=$(CONTAINER_USER); export UID=$(UID); export GID=$(GID); docker-compose -p $(APP_NAME) --env-file ./.env run --entrypoint="bash -c \"pip install httpx pandas; cd /home/$(CONTAINER_USER); jupyter nbconvert --to script PopulateDatabase.ipynb; cat PopulateDatabase.py | grep -v get_ipython > run.py; python run.py; rm PopulateDatabase.py run.py\"" jupyter
 
 lint:
 	$(info Linting source code...)
