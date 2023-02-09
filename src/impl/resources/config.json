@@ -48,7 +48,7 @@
             "description_fr": "Les indicateurs relatifs au changement de résidence décrivent les variations (mensuelles) à long terme du nombre de personnes qui changent de lieu de résidence entre des paires de zones."
         },
         {
-            "category_id": "visitors",
+            "category_id": "presence",
             "type": "single_location",
             "order": 3,
             "flowgeek_url": "https://www.flowgeek.org/methods/calculating-mobility-indicators/presence-indicators/",
@@ -58,7 +58,7 @@
             "description_fr": "Les indicateurs relatifs à la présence décrivent les variations à court terme du nombre de personnes présentes dans chaque zone."
         },
         {
-            "category_id": "trips",
+            "category_id": "movements",
             "type": "flow",
             "order": 4,
             "flowgeek_url": "https://www.flowgeek.org/methods/calculating-mobility-indicators/movement-indicators",
@@ -278,8 +278,8 @@
         },
 
         {
-            "category_id": "visitors",
-            "indicator_id": "visitors.visitors",
+            "category_id": "presence",
+            "indicator_id": "presence.presence",
             "order": 1,
             "flowgeek_url": "https://www.flowgeek.org/methods/calculating-mobility-indicators/presence-indicators#presence",
             "label": "Presence",
@@ -294,8 +294,8 @@
             "max_value": null
         },
         {
-            "category_id": "visitors",
-            "indicator_id": "visitors.visitors_perKm2",
+            "category_id": "presence",
+            "indicator_id": "presence.presence_perKm2",
             "order": 2,
             "flowgeek_url": "https://www.flowgeek.org/methods/calculating-mobility-indicators/presence-indicators#presence-km2",
             "label": "Presence per square km",
@@ -310,8 +310,8 @@
             "max_value": null
         },
         {
-            "category_id": "visitors",
-            "indicator_id": "visitors.visitors_diffwithref",
+            "category_id": "presence",
+            "indicator_id": "presence.presence_diffwithref",
             "order": 3,
             "flowgeek_url": "https://www.flowgeek.org/methods/calculating-mobility-indicators/presence-indicators#presence-difference",
             "label": "Presence difference",
@@ -326,8 +326,8 @@
             "max_value": null
         },
         {
-            "category_id": "visitors",
-            "indicator_id": "visitors.visitors_pctchangewithref",
+            "category_id": "presence",
+            "indicator_id": "presence.presence_pctchangewithref",
             "order": 4,
             "flowgeek_url": "https://www.flowgeek.org/methods/calculating-mobility-indicators/presence-indicators#presence-difference-percentage-change",
             "label": "Percent change in presence difference",
@@ -342,8 +342,8 @@
             "max_value": null
         },
         {
-            "category_id": "visitors",
-            "indicator_id": "visitors.abnormality",
+            "category_id": "presence",
+            "indicator_id": "presence.abnormality",
             "order": 5,
             "flowgeek_url": "https://www.flowgeek.org/methods/calculating-mobility-indicators/presence-indicators#presence-abnormality",
             "label": "Abnormality",
@@ -358,8 +358,8 @@
             "max_value": null
         },
         {
-            "category_id": "visitors",
-            "indicator_id": "visitors.trips_in",
+            "category_id": "presence",
+            "indicator_id": "presence.trips_in",
             "order": 6,
             "flowgeek_url": "https://www.flowgeek.org/methods/calculating-mobility-indicators/presence-indicators#trips-in",
             "label": "Trips in",
@@ -374,8 +374,8 @@
             "max_value": null
         },
         {
-            "category_id": "visitors",
-            "indicator_id": "visitors.trips_out",
+            "category_id": "presence",
+            "indicator_id": "presence.trips_out",
             "order": 7,
             "flowgeek_url": "https://www.flowgeek.org/methods/calculating-mobility-indicators/presence-indicators#trips-out",
             "label": "Trips out",
@@ -391,8 +391,8 @@
         },
 
         {
-            "category_id": "trips",
-            "indicator_id": "trips.travellers",
+            "category_id": "movements",
+            "indicator_id": "movements.travellers",
             "order": 1,
             "flowgeek_url": "https://www.flowgeek.org/methods/calculating-mobility-indicators/movement-indicators#travellers",
             "label": "Travellers",
@@ -407,8 +407,8 @@
             "max_value": null
         },
         {
-            "category_id": "trips",
-            "indicator_id": "trips.travellers_diffwithref",
+            "category_id": "movements",
+            "indicator_id": "movements.travellers_diffwithref",
             "order": 2,
             "flowgeek_url": "https://www.flowgeek.org/methods/calculating-mobility-indicators/movement-indicators#travellers-difference",
             "label": "Travellers difference",
@@ -423,8 +423,8 @@
             "max_value": null
         },
         {
-            "category_id": "trips",
-            "indicator_id": "trips.travellers_pctchangewithref",
+            "category_id": "movements",
+            "indicator_id": "movements.travellers_pctchangewithref",
             "order": 3,
             "flowgeek_url": "https://www.flowgeek.org/methods/calculating-mobility-indicators/movement-indicators#travellers-difference-percentage-change",
             "label": "Percent change in travellers difference",
@@ -439,8 +439,8 @@
             "max_value": null
         },
         {
-            "category_id": "trips",
-            "indicator_id": "trips.abnormality",
+            "category_id": "movements",
+            "indicator_id": "movements.abnormality",
             "order": 4,
             "flowgeek_url": "https://www.flowgeek.org/methods/calculating-mobility-indicators/movement-indicators#travellers-abnormality",
             "label": "Abnormality",

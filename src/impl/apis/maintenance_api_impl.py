@@ -47,7 +47,6 @@ async def create_category(category: Category, pool: Pool = None) -> Tuple[Catego
 
 
 async def create_indicator(indicator: Indicator, pool: Pool = None) -> Tuple[Indicator, int]:
-
     categories = await db.select_data(
         base_model=Category, id_key="category_id", ids=[indicator.category_id], pool=pool
     )
@@ -146,7 +145,6 @@ async def delete_category(category_id: str, pool: Pool = None) -> None:
 
 
 async def delete_indicator(indicator_id: str, pool: Pool = None) -> None:
-
     indicators = await db.select_data(
         base_model=Indicator, id_key="indicator_id", ids=[indicator_id], pool=pool
     )
@@ -258,7 +256,6 @@ async def update_setup(config: Config, pool: Pool = None) -> None:
 
 
 async def delete_setup(pool: Pool = None) -> None:
-
     await db.delete_data(base_model=Language, pool=pool)
     await db.delete_data(base_model=DataProvider, pool=pool)
 
@@ -293,7 +290,6 @@ async def update_dataset(dataset: Dataset, pool: Pool = None) -> Tuple[None, int
 
 
 async def check_dataset_exists(dataset: Dataset, pool: Pool = None) -> List[str]:
-
     sql = f"""
     SELECT md.mdid FROM `{DB_NAME}`.`metadata` AS md
     WHERE md.`category_id`=%(category_id)s
@@ -317,7 +313,6 @@ async def check_dataset_exists(dataset: Dataset, pool: Pool = None) -> List[str]
 
 
 async def delete_dataset(dataset: Dataset, pool: Pool = None) -> None:
-
     mdids = await check_dataset_exists(dataset, pool=pool)
     if len(mdids) > 0:
         existing_mdids = ",".join(mdids)
@@ -360,7 +355,6 @@ async def delete_dataset(dataset: Dataset, pool: Pool = None) -> None:
 async def add_dataset(
     dataset: Dataset, overwrite: bool = False, pool: Pool = None
 ) -> Tuple[None, int]:
-
     if dataset.data_input is None or len(dataset.data_input) <= 0:
         raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="No data to ingest")
 

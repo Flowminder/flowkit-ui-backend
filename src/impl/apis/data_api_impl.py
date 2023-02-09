@@ -95,7 +95,6 @@ async def get_spatial_resolution(srid: int, pool: Pool = None) -> SpatialResolut
 async def get_spatial_resolutions_for_category(
     category_id: str, pool: Pool = None
 ) -> Optional[SpatialResolutions]:
-
     metadata = await db.select_data(
         base_model=Metadata, id_key="category_id", ids=[category_id], pool=pool
     )
@@ -137,7 +136,6 @@ async def get_temporal_resolution(trid: int, pool: Pool = None) -> TemporalResol
 async def get_temporal_resolutions_for_category(
     category_id: str, pool: Pool = None
 ) -> Optional[TemporalResolutions]:
-
     metadata = await db.select_data(
         base_model=Metadata, id_key="category_id", ids=[category_id], pool=pool
     )
@@ -158,7 +156,6 @@ async def get_temporal_resolutions_for_category(
 async def get_time_range(
     category_id: str, indicator_id: str, srid: int, trid: int, pool: Pool = None
 ) -> TimeRange:
-
     # get temporal resolution to know how to format the spatial entities
     temporal_resolutions = await db.select_data(
         base_model=TemporalResolution, id_key="trid", ids=[str(trid)], pool=pool
@@ -210,7 +207,6 @@ async def get_time_range(
 
 
 async def run_query(query_parameters: QueryParameters, pool: Pool = None) -> QueryResult:
-
     # get category to find which data table to use
     logger.debug("Get category object")
     categories = await db.select_data(

@@ -45,6 +45,7 @@ md = Metadata(
     dt=datetime.datetime.fromisoformat("1970-01-01"),
 )
 
+
 # helper function to get a pool without an app
 async def get_pool():
     return await aiomysql.create_pool(

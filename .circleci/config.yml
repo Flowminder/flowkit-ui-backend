@@ -36,7 +36,7 @@ jobs:
       - image: cimg/python:3.8
     steps:
       - checkout
-      - run: pip install black[jupyter]
+      - run: pip install --force-reinstall -v "black[jupyter]==23.1.0"
       - run: black --check .
 
   build:

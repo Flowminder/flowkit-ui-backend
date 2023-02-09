@@ -29,7 +29,6 @@ INDICES = {"metadata": "dt", "single_location_data": "mdid", "flow_data": "mdid"
 
 
 async def provision_db(pool: Pool = None) -> boolean:
-
     # can't use env vars as they are reset whenever the dev server reloads
     if os.path.isfile(PERSISTENT_FIRST_RUN):
         logger.debug("This is a subsequent run. Skipping provisioning... ")
@@ -140,7 +139,6 @@ async def load_prepared_sql(base_model: BaseModel, query_type: str) -> str:
 async def run(
     sql: str, args: Optional[list] = None, pool: Pool = None
 ) -> Tuple[List[str], List[tuple]]:
-
     async with pool.acquire() as conn, conn.cursor() as cursor:
         if args is not None:
             await cursor.execute(sql, args=args)
@@ -156,7 +154,6 @@ async def run(
 
 
 async def run_script(script_path: str, pool: Pool = None) -> boolean:
-
     success = False
     try:
         async with aiofiles.open(script_path) as script:
@@ -178,7 +175,6 @@ async def select_data(
     table_name_override: str = None,
     pool: Pool = None,
 ) -> List[BaseModel]:
-
     if id_key is not None and (ids is None or len(ids) == 0):
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
@@ -267,7 +263,6 @@ async def insert_data(
     table_name_override: Optional[str] = None,
     pool: Pool = None,
 ) -> Optional[int]:
-
     insert_query = await load_prepared_sql(base_model, "INSERT")
 
     # determine table name - conveniently it's the same as the python module name for the data type
@@ -379,7 +374,6 @@ async def update_data(
     resource: BaseModel = None,
     pool: Pool = None,
 ):
-
     if id_key is None:
         raise Exception("ID key not given, can't update without it.")
     id_value = id_value if id_value is not None else getattr(resource, id_key)
