@@ -253,7 +253,7 @@ run: clear
 
 ingest:
 	$(info Running ingestion script to populate database...)
-	export JUPYTER_PORT=$(JUPYTER_PORT); export CONTAINER_USER=$(CONTAINER_USER); export UID=$(UID); export GID=$(GID); docker-compose -p $(APP_NAME) --env-file ./.env run --entrypoint="bash -c \"pip install httpx pandas; cd /home/$(CONTAINER_USER); jupyter nbconvert --to script PopulateDatabase.ipynb; cat PopulateDatabase.py | grep -v get_ipython > run.py; python run.py; rm PopulateDatabase.py run.py\"" jupyter
+	export JUPYTER_PORT=$(JUPYTER_PORT); export CONTAINER_USER=$(CONTAINER_USER); export UID=$(UID); export GID=$(GID); docker-compose -p $(APP_NAME) --env-file ./.env run jupyter bash -c "pip install httpx pandas; cd /home/$(CONTAINER_USER); jupyter nbconvert --to script PopulateDatabase.ipynb; cat PopulateDatabase.py | grep -v get_ipython > run.py; python run.py; rm PopulateDatabase.py run.py"
 
 lint:
 	$(info Linting source code...)
