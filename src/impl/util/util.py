@@ -98,7 +98,6 @@ async def add_translation(
 
 # take a serialised "translation" field and turn it into extra properties on the object
 def restore_translation(obj: BaseModel) -> BaseModel:
-
     if (
         hasattr(obj, "translation")
         and obj.translation is not None

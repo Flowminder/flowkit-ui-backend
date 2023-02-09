@@ -19,7 +19,6 @@ def test_num():
 
 
 def test_load_config_from_json():
-
     # inexistent file
     with pytest.raises(Exception) as e:
         util.load_config_from_json("")
@@ -39,7 +38,6 @@ def test_load_config_from_json():
 
 @pytest.mark.asyncio
 async def test_load_data_from_csv():
-
     # inexistent file
     result = await util.load_data_from_csv("")
     assert result == {}

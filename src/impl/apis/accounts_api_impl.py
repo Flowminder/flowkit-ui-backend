@@ -63,7 +63,6 @@ async def reset_password(email: str, pool: Pool = None) -> None:
 
 
 async def get_management_api_m2m_token() -> Optional[str]:
-
     try:
         # - obtain m2m access token for management API using the flowkit_ui_backend's client grant as set in Auth0 dashboard
         get_token = asyncify(GetToken)(os.getenv("AUTH0_DOMAIN"))

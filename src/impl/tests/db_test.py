@@ -114,7 +114,6 @@ async def test_get_index(mocker):
 
 @pytest.mark.asyncio
 async def test_add_index(mocker):
-
     mocker.patch(
         "flowkit_ui_backend.impl.util.db.run",
         side_effect=[Exception("Index exists"), None, Exception("Table doesn't exist")],
@@ -133,7 +132,6 @@ async def test_add_index(mocker):
 
 @pytest.mark.asyncio
 async def test_drop_index(mocker):
-
     mocker.patch(
         "flowkit_ui_backend.impl.util.db.run",
         side_effect=[None, Exception("Index doesn't exist"), Exception("Table doesn't exist")],
