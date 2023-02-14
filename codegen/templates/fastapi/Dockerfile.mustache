@@ -35,6 +35,8 @@ RUN pip install --no-cache-dir -r /tmp/requirements.txt  && pip cache purge
 # copy all files to the container and make our user own them
 COPY --chown={{user}}:{{user}} ./src-generated /home/{{user}}/{{packageName}}/src-generated
 COPY --chown={{user}}:{{user}} ./src/impl /home/{{user}}/{{packageName}}/src-generated/src/{{packageName}}/impl
+COPY --chown={{user}}:{{user}} ./src/jupyter/*.ipynb /home/{{user}}/{{packageName}}/src-generated/src/{{packageName}}/jupyter/
+COPY --chown={{user}}:{{user}} ./src/jupyter/.jupyterlab-settings /home/{{user}}/{{packageName}}/src-generated/src/{{packageName}}/jupyter/.jupyterlab-settings
 # remove test files - they are only needed for the test image, see below
 RUN rm -rf /home/{{user}}/{{packageName}}/src-generated/src/{{packageName}}/impl/tests
 
