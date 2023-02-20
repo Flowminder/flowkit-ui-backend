@@ -1985,6 +1985,14 @@
                     },
                     "signup_cache": {
                         "$ref": "#/components/schemas/signup_cache"
+                    },
+                    "roles_expiry": {
+                        "description": "When this date is reached, any roles assigned to the user expire.",
+                        "$ref": "#/components/schemas/datetime"
+                    },
+                    "account_expiry": {
+                        "description": "When this date is reached, the user account is marked for deletion at the next time the deletion job is run.",
+                        "$ref": "#/components/schemas/datetime"
                     }
                 },
                 "example": {
@@ -1999,7 +2007,9 @@
                         "terms":true,
                         "no_harm":true,
                         "privacy":true
-                    }
+                    },
+                    "roles_expiry": "2020-03-24T15:00:00",
+                    "account_expiry": null
                 }
             },
             "signup_cache": {
