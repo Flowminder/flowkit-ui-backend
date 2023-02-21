@@ -2003,7 +2003,7 @@
                         "last_name":"Smith",
                         "email":"bob.smith@example.com",
                         "org":"ExampleCo",
-                        "purpose":"To help decide on placement of distaster response workers",
+                        "purpose":"To help decide on placement of disaster response workers",
                         "terms":true,
                         "no_harm":true,
                         "privacy":true
