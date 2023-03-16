@@ -1065,6 +1065,51 @@
                     "503": { "$ref": "#/components/responses/service_unavailable" }
                 }
             }
+        },
+        "/scope_mapping": {
+            "post": {
+                "operationId": "add_scope_mapping",
+                "x-skip-test": {"reason":"Post tests are broken"},
+                "tags": ["maintenance"],
+                "description":"Add a scope mapping.",
+                "security": [{
+                    "auth0": ["write:data"]
+                }],
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/scope_mapping"
+                },
+                "responses": {
+                    "201": { "$ref": "#/components/responses/created" },
+                    "204": { "$ref": "#/components/responses/no_content" },
+                    "400": { "$ref": "#/components/responses/bad_request" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "404": { "$ref": "#/components/responses/not_found" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            },
+            "delete": {
+                "x-skip-test": {"reason": "This delete test is currently broken."},
+                "operationId": "delete_scope_mapping",
+                "tags": ["maintenance"],
+                "description":"Delete a scope mapping.",
+                "security": [{
+                    "auth0": ["write:data"]
+                }],
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/scope_mapping"
+                },
+                "responses": {
+                    "204": { "$ref": "#/components/responses/no_content" },
+                    "400": { "$ref": "#/components/responses/bad_request" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "404": { "$ref": "#/components/responses/not_found" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            }
         }
     },
     "components": {
@@ -1176,6 +1221,18 @@
                         "schema": {
                             "$ref": "#/components/schemas/dataset",
                             "x-body-name": "dataset"
+                        }
+                    }
+                }
+            },
+            "scope_mapping": {
+                "required": true,
+                "description": "A mapping between scopes and metadata IDs to signify what a scope gives access to",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/scope_mapping",
+                            "x-body-name": "scope_mapping"
                         }
                     }
                 }
@@ -2264,6 +2321,30 @@
                     { "min": null, "max": -6, "width": "100%" },
                     { "min": 6, "max": null, "width": "100%" }
                 ]
+            },
+            "scope_mapping": {
+                "title": "Scope mapping",
+                "type": "object",
+                "description": "A mapping between scopes and metadata IDs to signify what a scope gives access to",
+                "required": [
+                    "scope", "mdid"
+                ],
+                "properties": {
+                    "scope": {
+                        "description": "The scope ID as defined in the Auth0 security schema",
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "mdid": {
+                        "description": "The metadata ID that the scope gives access to",
+                        "type": "integer",
+                        "readOnly": true
+                    }
+                },
+                "example": {
+                    "scope": "read:free_data",
+                    "mdid": 1
+                }
             }
         }
     }

@@ -21,6 +21,7 @@ from flowkit_ui_backend.models.category import Category
 from flowkit_ui_backend.models.indicator import Indicator
 from flowkit_ui_backend.models.spatial_resolution import SpatialResolution
 from flowkit_ui_backend.models.temporal_resolution import TemporalResolution
+from flowkit_ui_backend.models.scope_mapping import ScopeMapping
 from flowkit_ui_backend.impl.util import db
 from flowkit_ui_backend.impl.apis import data_api_impl
 
@@ -440,3 +441,11 @@ async def add_dataset(
     )
 
     return None, return_status_code
+
+
+async def add_scope_mapping(scope_mapping: ScopeMapping, pool: Pool = None) -> None:
+    pass
+
+
+async def delete_scope_mapping(scope_mapping: ScopeMapping, pool: Pool = None) -> None:
+    pass
