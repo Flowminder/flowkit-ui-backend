@@ -2206,6 +2206,11 @@
                         "minimum": 1,
                         "minLength": 1,
                         "maxLength": 4
+                    },
+                    "mdids_only": {
+                        "description": "If true don't return data, only metadata IDs",
+                        "type": "boolean",
+                        "default": false
                     }
                 }
             },
@@ -2224,7 +2229,17 @@
                     },
                     "data_by_date": {
                         "description": "All data for the requested category, indicator, spatial- and temporal resolution and time range. The response is an object the structure of which depends on whether the result is for a single value or a flow. The keys are always dates, corresponding to the date format of the requested spatial resolution. The values are objects where the keys are spatial entity identifiers. In the first case, the values are numeric. In the second case, the values are objects where the keys are spatial entity identifiers representing the destination of the flow (as opposed to the origin in the outer identifier) and the values are numeric.",
-                        "type": "object"
+                        "type": "object",
+                        "nullable": true
+                    },
+                    "mdids": {
+                        "description": "A set of metadata IDs representing the query result",
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "example": "123"
+                        },
+                        "nullable": true
                     }
                 },
                 "example": {

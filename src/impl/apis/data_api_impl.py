@@ -206,7 +206,9 @@ async def get_time_range(
     return time_range
 
 
-async def run_query(query_parameters: QueryParameters, pool: Pool = None) -> QueryResult:
+async def run_query(
+    query_parameters: QueryParameters, mdids_only: bool = False, pool: Pool = None
+) -> QueryResult:
     # get category to find which data table to use
     logger.debug("Get category object")
     categories = await db.select_data(
@@ -271,6 +273,10 @@ async def run_query(query_parameters: QueryParameters, pool: Pool = None) -> Que
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="No metadata found")
 
     mdids = [str(md[1]) for md in result]
+    # support getting mdids only
+    if query_parameters.mdids_only is True:
+        return QueryResult(mdids=mdids)
+
     mdid_to_date = {str(md[1]): md[8] for md in result}
     logger.debug(f"Found metadata objects, now getting data...", num=len(mdids))
 
