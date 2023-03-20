@@ -100,7 +100,7 @@ async def get_token_{{name}}(
     if not valid:
         raise PermissionError(f"Invalid token: Required permissions {security_scopes.scopes} not present")
 
-    return TokenModel(sub=claims['sub'])
+    return TokenModel(sub=claims['sub'], permissions=claims['permissions'])
 
 
 def validate_scope_{{name}}(
@@ -153,7 +153,7 @@ def get_token_{{name}}(
     logger.debug(token_api_key_header)
     logger.debug(token_api_key_cookie)
     logger.debug(token_api_key_query)
-    return TokenModel(sub=credentials.credentials)
+    return TokenModel(sub=credentials.credentials, permissions=[])
 
 {{/isApiKey}}
 {{#isBasicBasic}}
@@ -174,7 +174,7 @@ def get_token_{{name}}(
 
     logger.debug("basic auth get_token_{{name}}")
     logger.debug(credentials)
-    return TokenModel(sub=credentials.credentials)
+    return TokenModel(sub=credentials.credentials, permissions=[])
 
 {{/isBasicBasic}}
 {{#isBasicBearer}}
@@ -194,6 +194,6 @@ def get_token_{{name}}(credentials: HTTPAuthorizationCredentials = Depends(beare
 
     logger.debug("bearer auth get_token_{{name}}")
     logger.debug(credentials)
-    return TokenModel(sub=credentials.credentials)
+    return TokenModel(sub=credentials.credentials, permissions=[])
 {{/isBasicBearer}}
 {{/authMethods}}

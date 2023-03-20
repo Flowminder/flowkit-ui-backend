@@ -13,14 +13,13 @@ from aiomysql import Pool
 from dateutil.relativedelta import relativedelta
 from http import HTTPStatus
 from dotenv import load_dotenv
+from flowkit_ui_backend.models.extra_models import TokenModel
 from flowkit_ui_backend.models.query_parameters import QueryParameters
 from flowkit_ui_backend.models.spatial_resolution import SpatialResolution
 from flowkit_ui_backend.models.spatial_resolutions import SpatialResolutions
 from flowkit_ui_backend.models.temporal_resolution import TemporalResolution
 from flowkit_ui_backend.models.temporal_resolutions import TemporalResolutions
 from flowkit_ui_backend.models.metadata import Metadata
-from flowkit_ui_backend.models.single_location_data import SingleLocationData
-from flowkit_ui_backend.models.flow_data import FlowData
 from flowkit_ui_backend.models.time_range import TimeRange
 from flowkit_ui_backend.models.category import Category
 from flowkit_ui_backend.models.categories import Categories
@@ -38,12 +37,16 @@ DEFAULT_NUM_BINS = 7
 DB_NAME = os.getenv("DB_NAME")
 
 
-async def list_categories(pool: Pool = None) -> Optional[Categories]:
+async def list_categories(
+    pool: Pool = None, token_model: TokenModel = None
+) -> Optional[Categories]:
     categories = await db.select_data(base_model=Category, pool=pool)
     return Categories(categories=categories)
 
 
-async def get_category(category_id: str, pool: Pool = None) -> Category:
+async def get_category(
+    category_id: str, pool: Pool = None, token_model: TokenModel = None
+) -> Category:
     categories = await db.select_data(
         base_model=Category, id_key="category_id", ids=[category_id], pool=pool
     )
@@ -52,12 +55,16 @@ async def get_category(category_id: str, pool: Pool = None) -> Category:
     return categories[0]
 
 
-async def list_indicators(pool: Pool = None) -> Optional[Indicators]:
+async def list_indicators(
+    pool: Pool = None, token_model: TokenModel = None
+) -> Optional[Indicators]:
     indicators = await db.select_data(base_model=Indicator, pool=pool)
     return Indicators(indicators=indicators)
 
 
-async def get_indicator(indicator_id: str, pool: Pool = None) -> Indicator:
+async def get_indicator(
+    indicator_id: str, pool: Pool = None, token_model: TokenModel = None
+) -> Indicator:
     indicators = await db.select_data(
         base_model=Indicator, id_key="indicator_id", ids=[indicator_id], pool=pool
     )
@@ -66,14 +73,18 @@ async def get_indicator(indicator_id: str, pool: Pool = None) -> Indicator:
     return indicators[0]
 
 
-async def get_indicators_for_category(category_id: str, pool: Pool = None) -> Optional[Indicators]:
+async def get_indicators_for_category(
+    category_id: str, pool: Pool = None, token_model: TokenModel = None
+) -> Optional[Indicators]:
     indicators = await db.select_data(
         base_model=Indicator, id_key="category_id", ids=[category_id], pool=pool
     )
     return Indicators(indicators=indicators)
 
 
-async def list_spatial_resolutions(pool: Pool = None) -> Optional[SpatialResolutions]:
+async def list_spatial_resolutions(
+    pool: Pool = None, token_model: TokenModel = None
+) -> Optional[SpatialResolutions]:
     spatial_resolutions = await db.select_data(
         base_model=SpatialResolution,
         # leave out the actual boundary - that will be retrieved individually
@@ -83,7 +94,9 @@ async def list_spatial_resolutions(pool: Pool = None) -> Optional[SpatialResolut
     return SpatialResolutions(spatial_resolutions=spatial_resolutions)
 
 
-async def get_spatial_resolution(srid: int, pool: Pool = None) -> SpatialResolution:
+async def get_spatial_resolution(
+    srid: int, pool: Pool = None, token_model: TokenModel = None
+) -> SpatialResolution:
     spatial_resolutions = await db.select_data(
         base_model=SpatialResolution, id_key="srid", ids=[str(srid)], pool=pool
     )
@@ -93,7 +106,7 @@ async def get_spatial_resolution(srid: int, pool: Pool = None) -> SpatialResolut
 
 
 async def get_spatial_resolutions_for_category(
-    category_id: str, pool: Pool = None
+    category_id: str, pool: Pool = None, token_model: TokenModel = None
 ) -> Optional[SpatialResolutions]:
     metadata = await db.select_data(
         base_model=Metadata, id_key="category_id", ids=[category_id], pool=pool
@@ -117,12 +130,16 @@ async def get_spatial_resolutions_for_category(
     return SpatialResolutions(spatial_resolutions=spatial_resolutions)
 
 
-async def list_temporal_resolutions(pool: Pool = None) -> Optional[TemporalResolutions]:
+async def list_temporal_resolutions(
+    pool: Pool = None, token_model: TokenModel = None
+) -> Optional[TemporalResolutions]:
     temporal_resolutions = await db.select_data(base_model=TemporalResolution, pool=pool)
     return TemporalResolutions(temporal_resolutions=temporal_resolutions)
 
 
-async def get_temporal_resolution(trid: int, pool: Pool = None) -> TemporalResolution:
+async def get_temporal_resolution(
+    trid: int, pool: Pool = None, token_model: TokenModel = None
+) -> TemporalResolution:
     temporal_resolutions = await db.select_data(
         base_model=TemporalResolution, id_key="trid", ids=[str(trid)], pool=pool
     )
@@ -134,7 +151,7 @@ async def get_temporal_resolution(trid: int, pool: Pool = None) -> TemporalResol
 
 
 async def get_temporal_resolutions_for_category(
-    category_id: str, pool: Pool = None
+    category_id: str, pool: Pool = None, token_model: TokenModel = None
 ) -> Optional[TemporalResolutions]:
     metadata = await db.select_data(
         base_model=Metadata, id_key="category_id", ids=[category_id], pool=pool
@@ -154,7 +171,12 @@ async def get_temporal_resolutions_for_category(
 
 
 async def get_time_range(
-    category_id: str, indicator_id: str, srid: int, trid: int, pool: Pool = None
+    category_id: str,
+    indicator_id: str,
+    srid: int,
+    trid: int,
+    pool: Pool = None,
+    token_model: TokenModel = None,
 ) -> TimeRange:
     # get temporal resolution to know how to format the spatial entities
     temporal_resolutions = await db.select_data(
@@ -207,7 +229,10 @@ async def get_time_range(
 
 
 async def run_query(
-    query_parameters: QueryParameters, mdids_only: bool = False, pool: Pool = None
+    query_parameters: QueryParameters,
+    mdids_only: bool = False,
+    pool: Pool = None,
+    token_model: TokenModel = None,
 ) -> QueryResult:
     # get category to find which data table to use
     logger.debug("Get category object")
@@ -367,5 +392,7 @@ async def run_query(
         max=max_value if max_value != -math.inf else None,
         data_by_date=dict(sorted(data_by_date.items())),
     )
+
+    logger.warn("TODO: check permissions", token_model=token_model)
 
     return new_result
