@@ -443,9 +443,61 @@ async def add_dataset(
     return None, return_status_code
 
 
-async def add_scope_mapping(scope_mapping: ScopeMapping, pool: Pool = None) -> None:
-    pass
+async def check_scope_mapping_exists(scope_mapping: ScopeMapping, pool: Pool = None) -> List[str]:
+    sql = f"""
+    SELECT sm.id FROM `{DB_NAME}`.`scope_mapping` AS sm
+    WHERE sm.`scope`=%(scope)s
+    AND sm.`mdid`=%(mdid)s
+    """
+    props = {"scope": scope_mapping.scope, "mdid": scope_mapping.mdid}
+    (column_names, result) = await db.run(sql, props, pool=pool)
+    if result is not None and len(result) > 0:
+        logger.debug(
+            f"Found existing scope mapping{'' if len(result)==1 else 's'}", num=len(result)
+        )
+
+    return [str(row[0]) for row in result]
+
+
+async def add_scope_mapping(
+    scope_mapping: ScopeMapping, overwrite: bool = False, pool: Pool = None
+) -> None:
+    logger.warn(scope_mapping)
+
+    if scope_mapping is None or scope_mapping.scope is None or scope_mapping.mdid is None:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST, detail=f"Scope mapping {scope_mapping} is invalid"
+        )
+
+    return_status_code = HTTPStatus.NO_CONTENT
+    scope_mappings = await check_scope_mapping_exists(scope_mapping, pool=pool)
+    if len(scope_mappings) > 0:
+        if overwrite:
+            await delete_scope_mapping(scope_mappings, pool=pool)
+            return_status_code = HTTPStatus.CREATED
+        else:
+            return None, HTTPStatus.NO_CONTENT
+    else:
+        return_status_code = HTTPStatus.CREATED
+
+    await db.insert_data(
+        base_model=ScopeMapping,
+        data=[scope_mapping],
+        bulk=False,
+        pool=pool,
+    )
+
+    return None, return_status_code
 
 
 async def delete_scope_mapping(scope_mapping: ScopeMapping, pool: Pool = None) -> None:
-    pass
+    ids = await check_scope_mapping_exists(scope_mapping, pool=pool)
+    if len(ids) > 0:
+        existing_ids = ",".join(ids)
+        logger.debug(f"Deleting existing dataset{'' if len(ids)==1 else 's'}", ids=ids)
+
+        sql = f"""
+        DELETE FROM `{DB_NAME}`.`scope_mapping`
+        WHERE `id` IN ({existing_ids})
+        """
+        await db.run(sql=sql, pool=pool)
