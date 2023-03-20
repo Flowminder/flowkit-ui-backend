@@ -186,13 +186,16 @@ async def get_time_range(
     date_format = temporal_resolutions[0].date_format
 
     sql = f"""
-    SELECT DISTINCT `dt`, `min_value`, `max_value`
-    FROM `{os.getenv('DB_NAME')}`.`metadata`
-    WHERE `category_id`=%s
-    AND `indicator_id`=%s
-    AND srid=%s
-    AND trid=%s
-    ORDER BY dt ASC
+    SELECT DISTINCT md.`dt`, md.`min_value`, md.`max_value`
+    FROM `{DB_NAME}`.`metadata` AS md
+    LEFT JOIN `{DB_NAME}`.`scope_mapping` AS sm
+    ON sm.`mdid`=md.`mdid`
+    WHERE sm.`scope` IN ("{'", "'.join(token_model.permissions)}")
+    AND md.`category_id`=%s
+    AND md.`indicator_id`=%s
+    AND md.`srid`=%s
+    AND md.`trid`=%s
+    ORDER BY md.`dt` ASC
     """
     args = [category_id, indicator_id, srid, trid]
     (column_names, result) = await db.run(sql, args, pool=pool)
@@ -273,9 +276,14 @@ async def run_query(
     # subtracting 1 here because BETWEEN in the SQL includes the end date
     end_date = start_date + step * (query_parameters.duration - 1)
 
+    logger.warn("TODO: check permissions", token_model=token_model)
+
     sql = f"""
     SELECT * FROM `{DB_NAME}`.`metadata` AS md
-    WHERE md.`category_id`=%s
+    LEFT JOIN `{DB_NAME}`.`scope_mapping` AS sm
+    ON sm.mdid=md.mdid
+    WHERE sm.scope IN ("{'", "'.join(token_model.permissions)}")
+    AND md.`category_id`=%s
     AND md.`indicator_id`=%s
     AND md.`srid`=%s
     AND md.`trid`=%s
@@ -392,7 +400,5 @@ async def run_query(
         max=max_value if max_value != -math.inf else None,
         data_by_date=dict(sorted(data_by_date.items())),
     )
-
-    logger.warn("TODO: check permissions", token_model=token_model)
 
     return new_result
