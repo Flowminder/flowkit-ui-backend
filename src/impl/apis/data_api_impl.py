@@ -278,7 +278,16 @@ async def run_query(
 
     logger.warn("TODO: check permissions", token_model=token_model)
 
-    sql = f"""
+    sql = (
+        f"""SELECT * FROM `{DB_NAME}`.`metadata` AS md
+    WHERE md.`category_id`=%s
+    AND md.`indicator_id`=%s
+    AND md.`srid`=%s
+    AND md.`trid`=%s
+    AND md.`dt` BETWEEN %s AND %s
+    ORDER BY md.`dt` ASC"""
+        if "admin" in token_model.permissions
+        else f"""
     SELECT * FROM `{DB_NAME}`.`metadata` AS md
     LEFT JOIN `{DB_NAME}`.`scope_mapping` AS sm
     ON sm.mdid=md.mdid
@@ -290,6 +299,7 @@ async def run_query(
     AND md.`dt` BETWEEN %s AND %s
     ORDER BY md.`dt` ASC
     """
+    )
     args = [
         query_parameters.category_id,
         query_parameters.indicator_id,
