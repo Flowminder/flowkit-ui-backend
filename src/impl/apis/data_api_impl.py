@@ -185,7 +185,16 @@ async def get_time_range(
 
     date_format = temporal_resolutions[0].date_format
 
-    sql = f"""
+    sql = (
+        f"""SELECT DISTINCT md.`dt`, md.`min_value`, md.`max_value`
+    FROM `{DB_NAME}`.`metadata` AS md
+    WHERE md.`category_id`=%s
+    AND md.`indicator_id`=%s
+    AND md.`srid`=%s
+    AND md.`trid`=%s
+    ORDER BY md.`dt` ASC"""
+        if "admin" in token_model.permissions
+        else f"""
     SELECT DISTINCT md.`dt`, md.`min_value`, md.`max_value`
     FROM `{DB_NAME}`.`metadata` AS md
     LEFT JOIN `{DB_NAME}`.`scope_mapping` AS sm
@@ -197,6 +206,7 @@ async def get_time_range(
     AND md.`trid`=%s
     ORDER BY md.`dt` ASC
     """
+    )
     args = [category_id, indicator_id, srid, trid]
     (column_names, result) = await db.run(sql, args, pool=pool)
     logger.debug(f"Found {len(result)} datasets")
