@@ -17,6 +17,7 @@ from xmlrpc.client import boolean
 from http import HTTPStatus
 from aiomysql import Pool
 from pydantic import BaseModel
+from flowkit_ui_backend.models.extra_models import TokenModel
 from flowkit_ui_backend.impl.util import util
 
 
@@ -174,6 +175,7 @@ async def select_data(
     fields: Optional[List[str]] = None,
     table_name_override: str = None,
     pool: Pool = None,
+    token_model: TokenModel = None,
 ) -> List[BaseModel]:
     if id_key is not None and (ids is None or len(ids) == 0):
         raise HTTPException(
@@ -197,6 +199,29 @@ async def select_data(
     if fields is not None:
         fields_string = "`, `".join([str(field) for field in fields])
         select_query = select_query.replace("SELECT *", f"SELECT `{fields_string}`")
+
+    # permissions apply to these objects
+    object_mapping_ids = {
+        "metadata": "mdid",
+        "category": "category_id",
+        "indicator": "indicator_id",
+        "spatial_resolution": "srid",
+        "temporal_resolution": "trid",
+    }
+    if token_model is not None and table_name in object_mapping_ids.keys():
+        id_key = object_mapping_ids[table_name]
+        # get all IDs for objects of this type that are permissible for the token
+        permissible_ids_query = f"""SELECT md.`{id_key}` FROM `{os.getenv("DB_NAME")}`.`metadata` AS md
+        LEFT JOIN `{os.getenv("DB_NAME")}`.`scope_mapping` AS sm
+        ON sm.mdid=md.mdid
+        WHERE sm.scope IN ("{'", "'.join(token_model.permissions)}")
+        GROUP BY md.`{id_key}`"""
+        permissible_ids = []
+        async with pool.acquire() as conn, conn.cursor() as cursor:
+            await cursor.execute(permissible_ids_query)
+            permissible_ids = [i[0] for i in await cursor.fetchall()]
+        ids = permissible_ids if ids is None else list(set(ids) & set(permissible_ids))
+        logger.debug("filtering...", id_key=id_key, ids=ids, permissible_ids=permissible_ids)
 
     if id_key is not None and ids is not None and len(ids) > 0:
         ids_string = "', '".join([str(the_id) for the_id in ids])
