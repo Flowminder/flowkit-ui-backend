@@ -245,8 +245,9 @@ async def get_time_range(
     )
     args = [category_id, indicator_id, srid, trid]
     (column_names, result) = await db.run(sql, args, pool=pool)
-    logger.debug(f"Found {len(result)} datasets")
+    logger.debug(f"Found {len(result)} datasets", result=result)
 
+    logger.debug(f"Formatting dates...", date_format=date_format)
     dates = [row[0].strftime(date_format) for row in result]
     min_value = min([row[1] for row in result]) if len(result) > 0 else None
     max_value = max([row[2] for row in result]) if len(result) > 0 else None

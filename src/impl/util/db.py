@@ -208,6 +208,7 @@ async def select_data(
         "spatial_resolution": "srid",
         "temporal_resolution": "trid",
     }
+    actual_ids = ids
     if token_model is not None and table_name in object_mapping_ids.keys():
         id_key = object_mapping_ids[table_name]
         # get all IDs for objects of this type that are permissible for the token
@@ -219,17 +220,22 @@ async def select_data(
         permissible_ids = []
         async with pool.acquire() as conn, conn.cursor() as cursor:
             await cursor.execute(permissible_ids_query)
-            permissible_ids = [i[0] for i in await cursor.fetchall()]
-        ids = permissible_ids if ids is None else list(set(ids) & set(permissible_ids))
-        logger.debug("filtering...", id_key=id_key, ids=ids, permissible_ids=permissible_ids)
+            permissible_ids = [str(i[0]) for i in await cursor.fetchall()]
+        logger.debug(
+            "Filtering IDs based on permissions...",
+            id_key=id_key,
+            ids=ids,
+            permissible_ids=permissible_ids,
+        )
+        actual_ids = permissible_ids if ids is None else list(set(ids) & set(permissible_ids))
 
-    if id_key is not None and ids is not None and len(ids) > 0:
-        ids_string = "', '".join([str(the_id) for the_id in ids])
+    if id_key is not None and actual_ids is not None and len(actual_ids) > 0:
+        ids_string = "', '".join([str(the_id) for the_id in actual_ids])
         # yes, this is not 100% safe but apparently you cannot parametrise column names :(
         # TODO: maybe switch to another library that *does* support it?
         select_query = select_query.replace("WHERE 1", f"WHERE `{id_key}` IN ('{ids_string}')")
 
-    logger.debug("Before query")
+    logger.debug("Before query", select_query=select_query)
 
     async with pool.acquire() as conn, conn.cursor() as cursor:
         await cursor.execute(select_query)
