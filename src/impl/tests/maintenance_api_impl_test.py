@@ -22,7 +22,7 @@ from flowkit_ui_backend.models.spatial_resolution import SpatialResolution
 from flowkit_ui_backend.models.temporal_resolution import TemporalResolution
 
 
-token_bearerAuth = TokenModel(sub="Bob")
+token_bearerAuth = TokenModel(sub="Bob", permissions=[])
 
 # some simple test objects
 dp = DataProvider(name="foo")
