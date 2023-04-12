@@ -522,7 +522,6 @@ async def add_scope_mapping(
     pool: Pool = None,
     token_model: TokenModel = None,
 ) -> None:
-
     if scope_mapping is None or scope_mapping.scope is None or scope_mapping.mdid is None:
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST, detail=f"Scope mapping {scope_mapping} is invalid"
