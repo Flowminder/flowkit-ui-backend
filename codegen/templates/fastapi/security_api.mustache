@@ -100,7 +100,7 @@ async def get_token_{{name}}(
     if not valid:
         raise PermissionError(f"Invalid token: Required permissions {security_scopes.scopes} not present")
 
-    return TokenModel(sub=claims['sub'], permissions=claims['permissions'])
+    return TokenModel(sub=claims['sub'], permissions=claims['scope'].split(" "))
 
 
 def validate_scope_{{name}}(
