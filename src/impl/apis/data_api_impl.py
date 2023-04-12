@@ -37,13 +37,13 @@ DEFAULT_NUM_BINS = 7
 DB_NAME = os.getenv("DB_NAME")
 
 
-async def list_categories(pool: Pool, token_model: TokenModel = None) -> Optional[Categories]:
+async def list_categories(pool: Pool, token_model: TokenModel) -> Optional[Categories]:
     logger.warn("TODO: check permissions", token_model=token_model.permissions)
     categories = await db.select_data(base_model=Category, pool=pool, token_model=token_model)
     return Categories(categories=categories)
 
 
-async def get_category(category_id: str, pool: Pool, token_model: TokenModel = None) -> Category:
+async def get_category(category_id: str, pool: Pool, token_model: TokenModel) -> Category:
     categories = await db.select_data(
         base_model=Category,
         pool=pool,
@@ -56,12 +56,12 @@ async def get_category(category_id: str, pool: Pool, token_model: TokenModel = N
     return categories[0]
 
 
-async def list_indicators(pool: Pool, token_model: TokenModel = None) -> Optional[Indicators]:
+async def list_indicators(pool: Pool, token_model: TokenModel) -> Optional[Indicators]:
     indicators = await db.select_data(base_model=Indicator, pool=pool, token_model=token_model)
     return Indicators(indicators=indicators)
 
 
-async def get_indicator(indicator_id: str, pool: Pool, token_model: TokenModel = None) -> Indicator:
+async def get_indicator(indicator_id: str, pool: Pool, token_model: TokenModel) -> Indicator:
     indicators = await db.select_data(
         base_model=Indicator,
         pool=pool,
@@ -75,7 +75,7 @@ async def get_indicator(indicator_id: str, pool: Pool, token_model: TokenModel =
 
 
 async def get_indicators_for_category(
-    category_id: str, pool: Pool, token_model: TokenModel = None
+    category_id: str, pool: Pool, token_model: TokenModel
 ) -> Optional[Indicators]:
     indicators = await db.select_data(
         base_model=Indicator,
@@ -88,7 +88,7 @@ async def get_indicators_for_category(
 
 
 async def list_spatial_resolutions(
-    pool: Pool, token_model: TokenModel = None
+    pool: Pool, token_model: TokenModel
 ) -> Optional[SpatialResolutions]:
     spatial_resolutions = await db.select_data(
         base_model=SpatialResolution,
@@ -100,7 +100,7 @@ async def list_spatial_resolutions(
 
 
 async def get_spatial_resolution(
-    srid: int, pool: Pool, token_model: TokenModel = None
+    srid: int, pool: Pool, token_model: TokenModel
 ) -> SpatialResolution:
     spatial_resolutions = await db.select_data(
         base_model=SpatialResolution,
@@ -115,7 +115,7 @@ async def get_spatial_resolution(
 
 
 async def get_spatial_resolutions_for_category(
-    category_id: str, pool: Pool, token_model: TokenModel = None
+    category_id: str, pool: Pool, token_model: TokenModel
 ) -> Optional[SpatialResolutions]:
     metadata = await db.select_data(
         base_model=Metadata,
@@ -144,7 +144,7 @@ async def get_spatial_resolutions_for_category(
 
 
 async def list_temporal_resolutions(
-    pool: Pool, token_model: TokenModel = None
+    pool: Pool, token_model: TokenModel
 ) -> Optional[TemporalResolutions]:
     temporal_resolutions = await db.select_data(
         base_model=TemporalResolution, pool=pool, token_model=token_model
@@ -153,7 +153,7 @@ async def list_temporal_resolutions(
 
 
 async def get_temporal_resolution(
-    trid: int, pool: Pool, token_model: TokenModel = None
+    trid: int, pool: Pool, token_model: TokenModel
 ) -> TemporalResolution:
     temporal_resolutions = await db.select_data(
         base_model=TemporalResolution,
@@ -170,7 +170,7 @@ async def get_temporal_resolution(
 
 
 async def get_temporal_resolutions_for_category(
-    category_id: str, pool: Pool, token_model: TokenModel = None
+    category_id: str, pool: Pool, token_model: TokenModel
 ) -> Optional[TemporalResolutions]:
     metadata = await db.select_data(
         base_model=Metadata,
@@ -199,7 +199,7 @@ async def get_time_range(
     srid: int,
     trid: int,
     pool: Pool,
-    token_model: TokenModel = None,
+    token_model: TokenModel,
 ) -> TimeRange:
     # get temporal resolution to know how to format the spatial entities
     temporal_resolutions = await db.select_data(
@@ -270,10 +270,7 @@ async def get_time_range(
 
 
 async def run_query(
-    query_parameters: QueryParameters,
-    pool: Pool,
-    mdids_only: bool = False,
-    token_model: TokenModel = None,
+    query_parameters: QueryParameters, pool: Pool, token_model: TokenModel, mdids_only: bool = False
 ) -> QueryResult:
     # get category to find which data table to use
     logger.debug("Get category object")

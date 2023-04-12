@@ -67,7 +67,7 @@ async def test_list_categories_empty(mocker):
         side_effect=[[]],
     )
 
-    result = await data_api_impl.list_categories(pool=await get_pool())
+    result = await data_api_impl.list_categories(pool=await get_pool(), token_model=None)
     assert result == Categories(categories=[])
 
 
@@ -100,7 +100,7 @@ async def test_list_indicators_empty(mocker):
         side_effect=[[]],
     )
 
-    result = await data_api_impl.list_indicators(pool=await get_pool())
+    result = await data_api_impl.list_indicators(pool=await get_pool(), token_model=None)
     assert result == Indicators(indicators=[])
 
 
@@ -111,7 +111,7 @@ async def test_get_indicator(mocker):
         side_effect=[[ind]],
     )
 
-    result = await data_api_impl.get_indicator("foo", pool=await get_pool())
+    result = await data_api_impl.get_indicator("foo", pool=await get_pool(), token_model=None)
     assert result == ind
 
 
@@ -123,7 +123,7 @@ async def test_get_indicator_invalid(mocker):
     )
 
     with pytest.raises(HTTPException):
-        await data_api_impl.get_indicator("foo", pool=await get_pool())
+        await data_api_impl.get_indicator("foo", pool=await get_pool(), token_model=None)
 
 
 @pytest.mark.asyncio
@@ -133,7 +133,9 @@ async def test_get_indicators_for_category(mocker):
         side_effect=[[ind, ind]],
     )
 
-    result = await data_api_impl.get_indicators_for_category("foo", pool=await get_pool())
+    result = await data_api_impl.get_indicators_for_category(
+        "foo", pool=await get_pool(), token_model=None
+    )
     # TODO: add meaningful tests
 
 
@@ -326,7 +328,9 @@ async def test_run_query_unknown_query_type(mocker):
             start_date="2022-03-17",
             duration=1,
         )
-        await data_api_impl.run_query(query_parameters=query_parameters, pool=await get_pool())
+        await data_api_impl.run_query(
+            query_parameters=query_parameters, pool=await get_pool(), token_model=None
+        )
 
 
 @pytest.mark.asyncio
@@ -390,7 +394,9 @@ async def test_run_query_no_metadata(mocker):
         duration=1,
     )
     with pytest.raises(HTTPException):
-        await data_api_impl.run_query(query_parameters=query_parameters, pool=await get_pool())
+        await data_api_impl.run_query(
+            query_parameters=query_parameters, pool=await get_pool(), token_model=None
+        )
 
 
 @pytest.mark.asyncio

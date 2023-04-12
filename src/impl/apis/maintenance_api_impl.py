@@ -251,7 +251,7 @@ async def update_setup(config: Config, pool: Pool, token_model: TokenModel = Non
     # special case Indicator: need to delete data tables
     for indicator_id in indicators:
         try:
-            indicator = await data_api_impl.get_indicator(indicator_id, pool=pool)
+            indicator = await data_api_impl.get_indicator(indicator_id, pool=pool, token_model=None)
             if indicator is not None:
                 await delete_indicator(indicator_id, pool=pool)
         except HTTPException as e:
@@ -293,7 +293,7 @@ async def delete_setup(pool: Pool, token_model: TokenModel = None) -> None:
     await db.delete_data(base_model=DataProvider, pool=pool)
 
     # special case Indicator: need to delete data tables
-    indicators = await data_api_impl.list_indicators(pool=pool)
+    indicators = await data_api_impl.list_indicators(pool=pool, token_model=None)
     logger.debug("after list indicators", indicators=indicators)
     for indicator in indicators.indicators:
         try:
