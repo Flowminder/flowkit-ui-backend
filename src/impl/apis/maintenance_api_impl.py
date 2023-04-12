@@ -36,7 +36,7 @@ DB_NAME = os.getenv("DB_NAME")
 
 async def create_data_provider(
     data_provider: DataProvider,
-    pool: Pool = None,
+    pool: Pool,
     token_model: TokenModel = None,
 ) -> Tuple[DataProvider, int]:
     return await db.add_resource_with_unique_id(
@@ -45,7 +45,7 @@ async def create_data_provider(
 
 
 async def create_category(
-    category: Category, pool: Pool = None, token_model: TokenModel = None
+    category: Category, pool: Pool, token_model: TokenModel = None
 ) -> Tuple[Category, int]:
     return await db.add_resource_with_unique_id(
         resource=category, base_model=Category, id_key="category_id", pool=pool
@@ -53,10 +53,10 @@ async def create_category(
 
 
 async def create_indicator(
-    indicator: Indicator, pool: Pool = None, token_model: TokenModel = None
+    indicator: Indicator, pool: Pool, token_model: TokenModel = None
 ) -> Tuple[Indicator, int]:
     categories = await db.select_data(
-        base_model=Category, id_key="category_id", ids=[indicator.category_id], pool=pool
+        base_model=Category, pool=pool, id_key="category_id", ids=[indicator.category_id]
     )
     if categories is None or len(categories) <= 0:
         raise HTTPException(
@@ -78,7 +78,7 @@ async def create_indicator(
 
 async def create_spatial_resolution(
     spatial_resolution: SpatialResolution,
-    pool: Pool = None,
+    pool: Pool,
     token_model: TokenModel = None,
 ) -> Tuple[SpatialResolution, int]:
     return await db.add_resource_with_unique_id(
@@ -88,7 +88,7 @@ async def create_spatial_resolution(
 
 async def create_temporal_resolution(
     temporal_resolution: TemporalResolution,
-    pool: Pool = None,
+    pool: Pool,
     token_model: TokenModel = None,
 ) -> Tuple[TemporalResolution, int]:
     return await db.add_resource_with_unique_id(
@@ -99,7 +99,7 @@ async def create_temporal_resolution(
 async def update_data_provider(
     dpid: int,
     data_provider: DataProvider,
-    pool: Pool = None,
+    pool: Pool,
     token_model: TokenModel = None,
 ) -> None:
     return await db.update_resource_with_unique_id(
@@ -110,7 +110,7 @@ async def update_data_provider(
 async def update_category(
     category_id: str,
     category: Category,
-    pool: Pool = None,
+    pool: Pool,
     token_model: TokenModel = None,
 ) -> None:
     return await db.update_resource_with_unique_id(
@@ -125,7 +125,7 @@ async def update_category(
 async def update_indicator(
     indicator_id: str,
     indicator: Indicator,
-    pool: Pool = None,
+    pool: Pool,
     token_model: TokenModel = None,
 ) -> None:
     return await db.update_resource_with_unique_id(
@@ -140,7 +140,7 @@ async def update_indicator(
 async def update_spatial_resolution(
     srid: int,
     spatial_resolution: SpatialResolution,
-    pool: Pool = None,
+    pool: Pool,
     token_model: TokenModel = None,
 ) -> None:
     return await db.update_resource_with_unique_id(
@@ -155,7 +155,7 @@ async def update_spatial_resolution(
 async def update_temporal_resolution(
     trid: str,
     temporal_resolution: TemporalResolution,
-    pool: Pool = None,
+    pool: Pool,
     token_model: TokenModel = None,
 ) -> None:
     return await db.update_resource_with_unique_id(
@@ -167,25 +167,19 @@ async def update_temporal_resolution(
     )
 
 
-async def delete_data_provider(
-    dpid: int, pool: Pool = None, token_model: TokenModel = None
-) -> None:
-    await db.delete_data(base_model=DataProvider, id_key="dpid", ids=[dpid], pool=pool)
+async def delete_data_provider(dpid: int, pool: Pool, token_model: TokenModel = None) -> None:
+    await db.delete_data(base_model=DataProvider, pool=pool, ids=[dpid], id_key="dpid")
     return None
 
 
-async def delete_category(
-    category_id: str, pool: Pool = None, token_model: TokenModel = None
-) -> None:
-    await db.delete_data(base_model=Category, id_key="category_id", ids=[category_id], pool=pool)
+async def delete_category(category_id: str, pool: Pool, token_model: TokenModel = None) -> None:
+    await db.delete_data(base_model=Category, pool=pool, ids=[category_id], id_key="category_id")
     return None
 
 
-async def delete_indicator(
-    indicator_id: str, pool: Pool = None, token_model: TokenModel = None
-) -> None:
+async def delete_indicator(indicator_id: str, pool: Pool, token_model: TokenModel = None) -> None:
     indicators = await db.select_data(
-        base_model=Indicator, id_key="indicator_id", ids=[indicator_id], pool=pool
+        base_model=Indicator, pool=pool, id_key="indicator_id", ids=[indicator_id]
     )
     if indicators is None or len(indicators) <= 0:
         raise HTTPException(
@@ -194,7 +188,7 @@ async def delete_indicator(
         )
 
     categories = await db.select_data(
-        base_model=Category, id_key="category_id", ids=[indicators[0].category_id], pool=pool
+        base_model=Category, pool=pool, id_key="category_id", ids=[indicators[0].category_id]
     )
     if categories in [None, []]:
         raise HTTPException(
@@ -202,7 +196,7 @@ async def delete_indicator(
             detail=f"Category '{indicators[0].category_id}' for indicator '{indicator_id}' not found",
         )
 
-    await db.delete_data(base_model=Indicator, id_key="indicator_id", ids=[indicator_id], pool=pool)
+    await db.delete_data(base_model=Indicator, pool=pool, ids=[indicator_id], id_key="indicator_id")
 
     base_table_name = (
         "single_location_data" if categories[0].type == "single_location" else "flow_data"
@@ -221,27 +215,23 @@ async def delete_indicator(
     return None
 
 
-async def delete_spatial_resolution(
-    srid: int, pool: Pool = None, token_model: TokenModel = None
-) -> None:
-    await db.delete_data(base_model=SpatialResolution, id_key="srid", ids=[srid], pool=pool)
+async def delete_spatial_resolution(srid: int, pool: Pool, token_model: TokenModel = None) -> None:
+    await db.delete_data(base_model=SpatialResolution, pool=pool, ids=[srid], id_key="srid")
     return None
 
 
-async def delete_temporal_resolution(
-    trid: int, pool: Pool = None, token_model: TokenModel = None
-) -> None:
-    await db.delete_data(base_model=TemporalResolution, id_key="trid", ids=[trid], pool=pool)
+async def delete_temporal_resolution(trid: int, pool: Pool, token_model: TokenModel = None) -> None:
+    await db.delete_data(base_model=TemporalResolution, pool=pool, ids=[trid], id_key="trid")
     return None
 
 
-async def replace_setup(config: Config, pool: Pool = None, token_model: TokenModel = None) -> None:
+async def replace_setup(config: Config, pool: Pool, token_model: TokenModel = None) -> None:
     await delete_setup(pool=pool)
     await update_setup(config, pool=pool)
     return None
 
 
-async def update_setup(config: Config, pool: Pool = None, token_model: TokenModel = None) -> None:
+async def update_setup(config: Config, pool: Pool, token_model: TokenModel = None) -> None:
     # serialise the boundary data so it can go into the db
     spatial_resolutions = []
     for sr in config.spatial_resolutions:
@@ -255,8 +245,8 @@ async def update_setup(config: Config, pool: Pool = None, token_model: TokenMode
     indicators = [i.indicator_id for i in config.indicators if i.indicator_id]
     srids = [sr.srid for sr in config.spatial_resolutions if sr.srid]
     trids = [tr.trid for tr in config.temporal_resolutions if tr.trid]
-    await db.delete_data(base_model=Language, id_key="lid", ids=lids, pool=pool)
-    await db.delete_data(base_model=DataProvider, id_key="dpid", ids=dpids, pool=pool)
+    await db.delete_data(base_model=Language, pool=pool, ids=lids, id_key="lid")
+    await db.delete_data(base_model=DataProvider, pool=pool, ids=dpids, id_key="dpid")
 
     # special case Indicator: need to delete data tables
     for indicator_id in indicators:
@@ -273,16 +263,16 @@ async def update_setup(config: Config, pool: Pool = None, token_model: TokenMode
                 detail="Failed to delete existing indicator",
             )
 
-    await db.delete_data(base_model=Category, id_key="category_id", ids=categories, pool=pool)
-    await db.delete_data(base_model=SpatialResolution, id_key="srid", ids=srids, pool=pool)
-    await db.delete_data(base_model=TemporalResolution, id_key="trid", ids=trids, pool=pool)
+    await db.delete_data(base_model=Category, pool=pool, ids=categories, id_key="category_id")
+    await db.delete_data(base_model=SpatialResolution, pool=pool, ids=srids, id_key="srid")
+    await db.delete_data(base_model=TemporalResolution, pool=pool, ids=trids, id_key="trid")
     # add all data
-    await db.insert_data(base_model=Language, id_key="lid", data=config.languages, pool=pool)
+    await db.insert_data(base_model=Language, pool=pool, id_key="lid", data=config.languages)
     await db.insert_data(
-        base_model=DataProvider, id_key="dpid", data=config.data_providers, pool=pool
+        base_model=DataProvider, pool=pool, id_key="dpid", data=config.data_providers
     )
     await db.insert_data(
-        base_model=Category, id_key="category_id", data=config.categories, pool=pool
+        base_model=Category, pool=pool, id_key="category_id", data=config.categories
     )
 
     # special case Indicator: need to create data tables
@@ -290,15 +280,15 @@ async def update_setup(config: Config, pool: Pool = None, token_model: TokenMode
         await create_indicator(indicator, pool=pool)
 
     await db.insert_data(
-        base_model=SpatialResolution, id_key="srid", data=spatial_resolutions, pool=pool
+        base_model=SpatialResolution, pool=pool, id_key="srid", data=spatial_resolutions
     )
     await db.insert_data(
-        base_model=TemporalResolution, id_key="trid", data=config.temporal_resolutions, pool=pool
+        base_model=TemporalResolution, pool=pool, id_key="trid", data=config.temporal_resolutions
     )
     return None
 
 
-async def delete_setup(pool: Pool = None, token_model: TokenModel = None) -> None:
+async def delete_setup(pool: Pool, token_model: TokenModel = None) -> None:
     await db.delete_data(base_model=Language, pool=pool)
     await db.delete_data(base_model=DataProvider, pool=pool)
 
@@ -325,19 +315,19 @@ async def delete_setup(pool: Pool = None, token_model: TokenModel = None) -> Non
 
 
 async def create_dataset(
-    dataset: Dataset, pool: Pool = None, token_model: TokenModel = None
+    dataset: Dataset, pool: Pool, token_model: TokenModel = None
 ) -> Tuple[None, int]:
-    return await add_dataset(dataset, overwrite=False, pool=pool)
+    return await add_dataset(dataset, pool=pool, overwrite=False)
 
 
 async def update_dataset(
-    dataset: Dataset, pool: Pool = None, token_model: TokenModel = None
+    dataset: Dataset, pool: Pool, token_model: TokenModel = None
 ) -> Tuple[None, int]:
-    return await add_dataset(dataset, overwrite=True, pool=pool)
+    return await add_dataset(dataset, pool=pool, overwrite=True)
 
 
 async def check_dataset_exists(
-    dataset: Dataset, pool: Pool = None, token_model: TokenModel = None
+    dataset: Dataset, pool: Pool, token_model: TokenModel = None
 ) -> List[str]:
     sql = f"""
     SELECT md.mdid FROM `{DB_NAME}`.`metadata` AS md
@@ -354,16 +344,14 @@ async def check_dataset_exists(
         "trid": dataset.metadata.trid,
         "dt": dataset.metadata.dt,
     }
-    (column_names, result) = await db.run(sql, props, pool=pool)
+    (column_names, result) = await db.run(sql, pool=pool, args=props)
     if result is not None and len(result) > 0:
         logger.debug(f"Found existing dataset{'' if len(result)==1 else 's'}", num=len(result))
 
     return [str(row[0]) for row in result]
 
 
-async def delete_dataset(
-    dataset: Dataset, pool: Pool = None, token_model: TokenModel = None
-) -> None:
+async def delete_dataset(dataset: Dataset, pool: Pool, token_model: TokenModel = None) -> None:
     mdids = await check_dataset_exists(dataset, pool=pool)
     if len(mdids) > 0:
         existing_mdids = ",".join(mdids)
@@ -404,10 +392,7 @@ async def delete_dataset(
 
 
 async def add_dataset(
-    dataset: Dataset,
-    overwrite: bool = False,
-    pool: Pool = None,
-    token_model: TokenModel = None,
+    dataset: Dataset, pool: Pool, overwrite: bool = False, token_model: TokenModel = None
 ) -> Tuple[None, int]:
     if dataset.data_input is None or len(dataset.data_input) <= 0:
         raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="No data to ingest")
@@ -435,7 +420,7 @@ async def add_dataset(
 
     # since we're only adding a single metadata object here, mdid will be set
     mdid = await db.insert_data(
-        base_model=Metadata, id_key="mdid", data=[dataset.metadata], pool=pool
+        base_model=Metadata, pool=pool, id_key="mdid", data=[dataset.metadata]
     )
 
     logger.debug(f"Converting data to appropriate data type...", data_type=dataset.data_type)
@@ -464,8 +449,7 @@ async def add_dataset(
 
     # Get table template from db and adapt. This includes the partitioning which was added during the provisioning.
     (column_names, result) = await db.run(
-        f"SHOW CREATE TABLE {DB_NAME}.`{base_table_name}`;",
-        pool=pool,
+        f"SHOW CREATE TABLE {DB_NAME}.`{base_table_name}`;", pool=pool
     )
     if result is None:
         raise HTTPException(
@@ -487,10 +471,10 @@ async def add_dataset(
     logger.debug(f"Inserting data...")
     await db.insert_data(
         base_model=type(data_input[0]),
+        pool=pool,
         data=data_input,
         bulk=True,
         table_name_override=table_name,
-        pool=pool,
     )
 
     return None, return_status_code
@@ -498,7 +482,7 @@ async def add_dataset(
 
 async def check_scope_mapping_exists(
     scope_mapping: ScopeMapping,
-    pool: Pool = None,
+    pool: Pool,
     token_model: TokenModel = None,
 ) -> List[str]:
     sql = f"""
@@ -507,7 +491,7 @@ async def check_scope_mapping_exists(
     AND sm.`mdid`=%(mdid)s
     """
     props = {"scope": scope_mapping.scope, "mdid": scope_mapping.mdid}
-    (column_names, result) = await db.run(sql, props, pool=pool)
+    (column_names, result) = await db.run(sql, pool=pool, args=props)
     if result is not None and len(result) > 0:
         logger.debug(
             f"Found existing scope mapping{'' if len(result)==1 else 's'}", num=len(result)
@@ -517,10 +501,7 @@ async def check_scope_mapping_exists(
 
 
 async def add_scope_mapping(
-    scope_mapping: ScopeMapping,
-    overwrite: bool = False,
-    pool: Pool = None,
-    token_model: TokenModel = None,
+    scope_mapping: ScopeMapping, pool: Pool, overwrite: bool = False, token_model: TokenModel = None
 ) -> None:
     if scope_mapping is None or scope_mapping.scope is None or scope_mapping.mdid is None:
         raise HTTPException(
@@ -538,19 +519,14 @@ async def add_scope_mapping(
     else:
         return_status_code = HTTPStatus.CREATED
 
-    await db.insert_data(
-        base_model=ScopeMapping,
-        data=[scope_mapping],
-        bulk=False,
-        pool=pool,
-    )
+    await db.insert_data(base_model=ScopeMapping, pool=pool, data=[scope_mapping], bulk=False)
 
     return None, return_status_code
 
 
 async def delete_scope_mapping(
     scope_mapping: ScopeMapping,
-    pool: Pool = None,
+    pool: Pool,
     token_model: TokenModel = None,
 ) -> None:
     ids = await check_scope_mapping_exists(scope_mapping, pool=pool)

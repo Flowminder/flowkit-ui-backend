@@ -169,7 +169,7 @@ async def test_add_indices_wrong_category_type(mocker):
         side_effect=[(None, None), (None, None), (None, None)],
     )
 
-    await db.add_indices(category_type="foo", pool=await get_pool())
+    await db.add_indices(pool=await get_pool(), category_type="foo")
     # TODO: add meaningful tests
 
 
@@ -195,7 +195,7 @@ async def test_drop_indices(mocker):
         side_effect=[(None, None)],
     )
 
-    await db.drop_indices(category_type="single_location", pool=await get_pool())
+    await db.drop_indices(pool=await get_pool(), category_type="single_location")
     # TODO: add meaningful tests
 
 
@@ -206,7 +206,7 @@ async def test_drop_indices_wrong_category_type(mocker):
         side_effect=[(None, None), (None, None), (None, None)],
     )
 
-    await db.drop_indices(category_type="foo", pool=await get_pool())
+    await db.drop_indices(pool=await get_pool(), category_type="foo")
     # TODO: add meaningful tests
 
 
@@ -332,7 +332,7 @@ async def test_insert_data():
 @pytest.mark.asyncio
 async def test_update_data_no_id_key():
     with pytest.raises(Exception):
-        await db.update_data(base_model=DataProvider, id_key=None, pool=await get_pool())
+        await db.update_data(base_model=DataProvider, pool=await get_pool(), id_key=None)
 
 
 @pytest.mark.asyncio

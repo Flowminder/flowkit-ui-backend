@@ -29,7 +29,7 @@ PERSISTENT_FIRST_RUN = f"/home/{os.getenv('APP_DIR')}/FIRST_RUN"
 INDICES = {"metadata": "dt", "single_location_data": "mdid", "flow_data": "mdid"}
 
 
-async def provision_db(pool: Pool = None) -> boolean:
+async def provision_db(pool: Pool) -> boolean:
     # can't use env vars as they are reset whenever the dev server reloads
     if os.path.isfile(PERSISTENT_FIRST_RUN):
         logger.debug("This is a subsequent run. Skipping provisioning... ")
@@ -75,7 +75,7 @@ async def provision_db(pool: Pool = None) -> boolean:
     return False
 
 
-async def get_index(table: str, column: str, pool: Pool = None) -> str:
+async def get_index(table: str, column: str, pool: Pool) -> str:
     (columns_names, result) = await run(
         f"SHOW INDEXES FROM `{os.getenv('DB_NAME')}`.`{table}` WHERE `Column_name`='{column}'",
         pool=pool,
@@ -88,7 +88,7 @@ async def get_index(table: str, column: str, pool: Pool = None) -> str:
     return index_name
 
 
-async def add_index(table: str, column: str, pool: Pool = None) -> str:
+async def add_index(table: str, column: str, pool: Pool) -> str:
     index_name = f"index_{table}_{column}"
     logger.debug(f"Adding index `{index_name}` to table `{table}`, column {column}...")
     await run(
@@ -99,14 +99,14 @@ async def add_index(table: str, column: str, pool: Pool = None) -> str:
     return index_name
 
 
-async def drop_index(table: str, column: str, pool: Pool = None):
+async def drop_index(table: str, column: str, pool: Pool):
     index_name = f"index_{table}_{column}"
     logger.debug(f"Dropping index `{index_name}`...")
     await run(f"DROP INDEX `{index_name}` ON `{os.getenv('DB_NAME')}`.`{table}`", pool=pool)
     logger.debug("Done.")
 
 
-async def add_indices(category_type: str = None, pool: Pool = None):
+async def add_indices(pool: Pool, category_type: str = None):
     for table in INDICES:
         if (category_type is not None) and (
             (table == "single_location_data" and category_type != "single_location")
@@ -118,7 +118,7 @@ async def add_indices(category_type: str = None, pool: Pool = None):
             await add_index(table=table, column=INDICES[table], pool=pool)
 
 
-async def drop_indices(category_type: str = None, pool: Pool = None):
+async def drop_indices(pool: Pool, category_type: str = None):
     for table in INDICES:
         if (category_type is not None) and (
             (table == "single_location_data" and category_type != "single_location")
@@ -137,9 +137,7 @@ async def load_prepared_sql(base_model: BaseModel, query_type: str) -> str:
         return re.compile(r"^" + re.escape(query_type) + r".*", re.MULTILINE).findall(contents)[0]
 
 
-async def run(
-    sql: str, args: Optional[list] = None, pool: Pool = None
-) -> Tuple[List[str], List[tuple]]:
+async def run(sql: str, pool: Pool, args: Optional[list] = None) -> Tuple[List[str], List[tuple]]:
     async with pool.acquire() as conn, conn.cursor() as cursor:
         if args is not None:
             await cursor.execute(sql, args=args)
@@ -154,7 +152,7 @@ async def run(
     return (column_names, result)
 
 
-async def run_script(script_path: str, pool: Pool = None) -> boolean:
+async def run_script(script_path: str, pool: Pool) -> boolean:
     success = False
     try:
         async with aiofiles.open(script_path) as script:
@@ -170,11 +168,11 @@ async def run_script(script_path: str, pool: Pool = None) -> boolean:
 
 async def select_data(
     base_model: BaseModel,
+    pool: Pool,
     id_key: Optional[str] = None,
-    ids: Optional[List[str]] = None,
     fields: Optional[List[str]] = None,
     table_name_override: str = None,
-    pool: Pool = None,
+    ids: Optional[List[str]] = None,
     token_model: TokenModel = None,
 ) -> List[BaseModel]:
     if id_key is not None and (ids is None or len(ids) == 0):
@@ -288,11 +286,11 @@ async def select_data(
 
 async def insert_data(
     base_model: BaseModel,
+    pool: Pool,
     id_key: Optional[str] = None,
     data: List[object] = [],
     bulk: boolean = False,
     table_name_override: Optional[str] = None,
-    pool: Pool = None,
 ) -> Optional[int]:
     insert_query = await load_prepared_sql(base_model, "INSERT")
 
@@ -323,7 +321,7 @@ async def insert_data(
     line_sep = "\n"
     all_values = []
     for d in data:
-        d = await util.add_translation(d, props, pool=pool)
+        d = await util.add_translation(d, pool=pool, props=props)
         d = util.serialise_props(d, props)
 
         # get property values in the correct order
@@ -400,10 +398,10 @@ async def insert_data(
 
 async def update_data(
     base_model: BaseModel,
-    id_key: str = None,
+    pool: Pool,
     id_value: object = None,
     resource: BaseModel = None,
-    pool: Pool = None,
+    id_key: str = None,
 ):
     if id_key is None:
         raise Exception("ID key not given, can't update without it.")
@@ -415,7 +413,7 @@ async def update_data(
     matches = re.compile(r"`[a-zA-Z_]+` = %s").findall(update_query)
     props = [prop.replace("`", "").replace(" = %s", "") for prop in matches]
 
-    resource = await util.add_translation(resource, props, pool=pool)
+    resource = await util.add_translation(resource, pool=pool, props=props)
     resource = util.serialise_props(resource, props)
 
     # get property values in the correct order
@@ -431,10 +429,7 @@ async def update_data(
 
 
 async def delete_data(
-    base_model: BaseModel,
-    id_key: Optional[str] = None,
-    ids: Optional[List[str]] = None,
-    pool: Pool = None,
+    base_model: BaseModel, pool: Pool, ids: Optional[List[str]] = None, id_key: Optional[str] = None
 ):
     # Clear db
     delete_query = await load_prepared_sql(base_model, "DELETE")
@@ -456,7 +451,7 @@ async def delete_data(
 
 # insert a new object into the db or return an existing one
 async def add_resource_with_unique_id(
-    resource: BaseModel, base_model: BaseModel, id_key: str, pool: Pool = None
+    resource: BaseModel, base_model: BaseModel, id_key: str, pool: Pool
 ) -> Tuple[BaseModel, int]:
     ids = (
         [getattr(resource, id_key)]
@@ -465,7 +460,7 @@ async def add_resource_with_unique_id(
     )
     try:
         existing_resource = await select_data(
-            base_model=base_model, id_key=id_key if ids is not None else None, ids=ids, pool=pool
+            base_model=base_model, pool=pool, id_key=id_key if ids is not None else None, ids=ids
         )
         if existing_resource not in [None, []]:
             return existing_resource[0], HTTPStatus.SEE_OTHER
@@ -473,16 +468,16 @@ async def add_resource_with_unique_id(
         if e.status_code != HTTPStatus.NOT_FOUND:
             raise (e)
 
-    await insert_data(base_model=base_model, id_key=id_key, data=[resource], pool=pool)
+    await insert_data(base_model=base_model, pool=pool, id_key=id_key, data=[resource])
     new_resource = await select_data(
-        base_model=base_model, id_key=id_key if ids is not None else None, ids=ids, pool=pool
+        base_model=base_model, pool=pool, id_key=id_key if ids is not None else None, ids=ids
     )
     return new_resource[0], HTTPStatus.CREATED
 
 
 # update an existing resource or throw an error
 async def update_resource_with_unique_id(
-    resource: BaseModel, base_model: BaseModel, id_key: str, id_value: object, pool: Pool = None
+    resource: BaseModel, base_model: BaseModel, id_key: str, id_value: object, pool: Pool
 ):
     # cannot change ID!
     if getattr(resource, id_key) != id_value:
@@ -492,7 +487,7 @@ async def update_resource_with_unique_id(
         )
 
     existing_resource = await select_data(
-        base_model=base_model, id_key=id_key, ids=[getattr(resource, id_key)], pool=pool
+        base_model=base_model, pool=pool, id_key=id_key, ids=[getattr(resource, id_key)]
     )
     if len(existing_resource) == 0:
         raise HTTPException(
@@ -502,7 +497,7 @@ async def update_resource_with_unique_id(
 
     try:
         await update_data(
-            base_model=base_model, id_key=id_key, id_value=id_value, resource=resource, pool=pool
+            base_model=base_model, pool=pool, id_value=id_value, resource=resource, id_key=id_key
         )
     except Exception as e:
         raise HTTPException(

@@ -73,17 +73,17 @@ async def test_add_translation(mocker):
 
     # no translation
     cat = Category(category_id="foo", type="single_location", label="foo")
-    result = await util.add_translation(resource=cat, props=["label"])
+    result = await util.add_translation(resource=cat, pool=None, props=["label"])
     assert getattr(result, "translation") is None
 
     # empty translation
     cat = Category(category_id="foo", type="single_location", label="foo", label_ba=None)
-    result = await util.add_translation(resource=cat, props=["label"])
+    result = await util.add_translation(resource=cat, pool=None, props=["label"])
     assert getattr(result, "translation") is None
 
     # existing translation
     cat = Category(category_id="foo", type="single_location", label="foo", label_ba="bar")
-    result = await util.add_translation(resource=cat, props=["label"])
+    result = await util.add_translation(resource=cat, pool=None, props=["label"])
     assert getattr(result, "translation") == '{"ba": {"label": "bar"}}'
 
 

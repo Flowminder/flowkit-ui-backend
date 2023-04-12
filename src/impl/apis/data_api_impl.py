@@ -37,22 +37,18 @@ DEFAULT_NUM_BINS = 7
 DB_NAME = os.getenv("DB_NAME")
 
 
-async def list_categories(
-    pool: Pool = None, token_model: TokenModel = None
-) -> Optional[Categories]:
+async def list_categories(pool: Pool, token_model: TokenModel = None) -> Optional[Categories]:
     logger.warn("TODO: check permissions", token_model=token_model.permissions)
     categories = await db.select_data(base_model=Category, pool=pool, token_model=token_model)
     return Categories(categories=categories)
 
 
-async def get_category(
-    category_id: str, pool: Pool = None, token_model: TokenModel = None
-) -> Category:
+async def get_category(category_id: str, pool: Pool, token_model: TokenModel = None) -> Category:
     categories = await db.select_data(
         base_model=Category,
+        pool=pool,
         id_key="category_id",
         ids=[category_id],
-        pool=pool,
         token_model=token_model,
     )
     if len(categories) == 0:
@@ -60,21 +56,17 @@ async def get_category(
     return categories[0]
 
 
-async def list_indicators(
-    pool: Pool = None, token_model: TokenModel = None
-) -> Optional[Indicators]:
+async def list_indicators(pool: Pool, token_model: TokenModel = None) -> Optional[Indicators]:
     indicators = await db.select_data(base_model=Indicator, pool=pool, token_model=token_model)
     return Indicators(indicators=indicators)
 
 
-async def get_indicator(
-    indicator_id: str, pool: Pool = None, token_model: TokenModel = None
-) -> Indicator:
+async def get_indicator(indicator_id: str, pool: Pool, token_model: TokenModel = None) -> Indicator:
     indicators = await db.select_data(
         base_model=Indicator,
+        pool=pool,
         id_key="indicator_id",
         ids=[indicator_id],
-        pool=pool,
         token_model=token_model,
     )
     if len(indicators) == 0:
@@ -83,39 +75,38 @@ async def get_indicator(
 
 
 async def get_indicators_for_category(
-    category_id: str, pool: Pool = None, token_model: TokenModel = None
+    category_id: str, pool: Pool, token_model: TokenModel = None
 ) -> Optional[Indicators]:
     indicators = await db.select_data(
         base_model=Indicator,
+        pool=pool,
         id_key="category_id",
         ids=[category_id],
-        pool=pool,
         token_model=token_model,
     )
     return Indicators(indicators=indicators)
 
 
 async def list_spatial_resolutions(
-    pool: Pool = None, token_model: TokenModel = None
+    pool: Pool, token_model: TokenModel = None
 ) -> Optional[SpatialResolutions]:
     spatial_resolutions = await db.select_data(
         base_model=SpatialResolution,
-        # leave out the actual boundary - that will be retrieved individually
-        fields=["srid", "label", "index", "description", "translation"],
         pool=pool,
+        fields=["srid", "label", "index", "description", "translation"],
         token_model=token_model,
     )
     return SpatialResolutions(spatial_resolutions=spatial_resolutions)
 
 
 async def get_spatial_resolution(
-    srid: int, pool: Pool = None, token_model: TokenModel = None
+    srid: int, pool: Pool, token_model: TokenModel = None
 ) -> SpatialResolution:
     spatial_resolutions = await db.select_data(
         base_model=SpatialResolution,
+        pool=pool,
         id_key="srid",
         ids=[str(srid)],
-        pool=pool,
         token_model=token_model,
     )
     if len(spatial_resolutions) == 0:
@@ -124,13 +115,13 @@ async def get_spatial_resolution(
 
 
 async def get_spatial_resolutions_for_category(
-    category_id: str, pool: Pool = None, token_model: TokenModel = None
+    category_id: str, pool: Pool, token_model: TokenModel = None
 ) -> Optional[SpatialResolutions]:
     metadata = await db.select_data(
         base_model=Metadata,
+        pool=pool,
         id_key="category_id",
         ids=[category_id],
-        pool=pool,
         token_model=token_model,
     )
     srids = list(set([str(md.srid) for md in metadata]))
@@ -138,10 +129,10 @@ async def get_spatial_resolutions_for_category(
     try:
         spatial_resolutions = await db.select_data(
             base_model=SpatialResolution,
-            id_key="srid",
-            ids=srids,
-            fields=["srid", "label", "index", "description", "translation"],
             pool=pool,
+            id_key="srid",
+            fields=["srid", "label", "index", "description", "translation"],
+            ids=srids,
         )
     except HTTPException as e:
         if e.status_code != 404:
@@ -153,7 +144,7 @@ async def get_spatial_resolutions_for_category(
 
 
 async def list_temporal_resolutions(
-    pool: Pool = None, token_model: TokenModel = None
+    pool: Pool, token_model: TokenModel = None
 ) -> Optional[TemporalResolutions]:
     temporal_resolutions = await db.select_data(
         base_model=TemporalResolution, pool=pool, token_model=token_model
@@ -162,13 +153,13 @@ async def list_temporal_resolutions(
 
 
 async def get_temporal_resolution(
-    trid: int, pool: Pool = None, token_model: TokenModel = None
+    trid: int, pool: Pool, token_model: TokenModel = None
 ) -> TemporalResolution:
     temporal_resolutions = await db.select_data(
         base_model=TemporalResolution,
+        pool=pool,
         id_key="trid",
         ids=[str(trid)],
-        pool=pool,
         token_model=token_model,
     )
     if len(temporal_resolutions) == 0:
@@ -179,19 +170,19 @@ async def get_temporal_resolution(
 
 
 async def get_temporal_resolutions_for_category(
-    category_id: str, pool: Pool = None, token_model: TokenModel = None
+    category_id: str, pool: Pool, token_model: TokenModel = None
 ) -> Optional[TemporalResolutions]:
     metadata = await db.select_data(
         base_model=Metadata,
+        pool=pool,
         id_key="category_id",
         ids=[category_id],
-        pool=pool,
         token_model=token_model,
     )
     trids = list(set([str(md.trid) for md in metadata]))
     try:
         temporal_resolutions = await db.select_data(
-            base_model=TemporalResolution, id_key="trid", ids=trids, pool=pool
+            base_model=TemporalResolution, pool=pool, id_key="trid", ids=trids
         )
     except HTTPException as e:
         if e.status_code != 404:
@@ -207,15 +198,15 @@ async def get_time_range(
     indicator_id: str,
     srid: int,
     trid: int,
-    pool: Pool = None,
+    pool: Pool,
     token_model: TokenModel = None,
 ) -> TimeRange:
     # get temporal resolution to know how to format the spatial entities
     temporal_resolutions = await db.select_data(
         base_model=TemporalResolution,
+        pool=pool,
         id_key="trid",
         ids=[str(trid)],
-        pool=pool,
         token_model=token_model,
     )
 
@@ -244,7 +235,7 @@ async def get_time_range(
     """
     )
     args = [category_id, indicator_id, srid, trid]
-    (column_names, result) = await db.run(sql, args, pool=pool)
+    (column_names, result) = await db.run(sql, pool=pool, args=args)
     logger.debug(f"Found {len(result)} datasets", result=result)
 
     logger.debug(f"Formatting dates...", date_format=date_format)
@@ -280,17 +271,17 @@ async def get_time_range(
 
 async def run_query(
     query_parameters: QueryParameters,
+    pool: Pool,
     mdids_only: bool = False,
-    pool: Pool = None,
     token_model: TokenModel = None,
 ) -> QueryResult:
     # get category to find which data table to use
     logger.debug("Get category object")
     categories = await db.select_data(
         base_model=Category,
+        pool=pool,
         id_key="category_id",
         ids=[query_parameters.category_id],
-        pool=pool,
         token_model=token_model,
     )
     category = categories[0]
@@ -307,9 +298,9 @@ async def run_query(
     logger.debug("Get temporal resolution object")
     temporal_resolutions = await db.select_data(
         base_model=TemporalResolution,
+        pool=pool,
         id_key="trid",
         ids=[str(query_parameters.trid)],
-        pool=pool,
         token_model=token_model,
     )
     tr = temporal_resolutions[0]
@@ -363,7 +354,7 @@ async def run_query(
         end_date.format("YYYY-MM-DD HH:mm:ss"),
     ]
     logger.debug("Running metadata query", sql=sql, args=args)
-    (column_names, result) = await db.run(sql, args, pool=pool)
+    (column_names, result) = await db.run(sql, pool=pool, args=args)
     logger.debug("Finished running metadata query")
     if not result:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="No metadata found")
