@@ -270,7 +270,7 @@ async def get_time_range(
 
 
 async def run_query(
-    query_parameters: QueryParameters, pool: Pool, token_model: TokenModel, mdids_only: bool = False
+    query_parameters: QueryParameters, pool: Pool, token_model: TokenModel
 ) -> QueryResult:
     # get category to find which data table to use
     logger.debug("Get category object")
