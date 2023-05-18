@@ -181,22 +181,10 @@ async def select_data(
             detail=f"No data found for {base_model.__name__} with {id_key} {ids}",
         )
 
-    select_query = await load_prepared_sql(base_model, "SELECT")
-
     # determine table name - conveniently it's the same as the python module name for the data type
-    table_name = base_model.__module__.split(".")[-1]
-    if table_name_override is not None:
-        logger.debug(
-            "Replacing table for select query",
-            table_name=table_name,
-            table_name_override=table_name_override,
-        )
-        select_query = select_query.replace(table_name, table_name_override)
-        table_name = table_name_override
-
-    if fields is not None:
-        fields_string = "`, `".join([str(field) for field in fields])
-        select_query = select_query.replace("SELECT *", f"SELECT `{fields_string}`")
+    table_name = table_name_override if table_name_override is not None else base_model.__module__.split(".")[-1]
+    fields_string = ", ".join(f"`{field}`" for field in fields) if fields is not None else "*"
+    select_query = f"SELECT {fields_string} FROM `{os.getenv('DB_NAME')}`.`{table_name}`"
 
     # permissions apply to these objects
     object_mapping_ids = {
@@ -210,12 +198,12 @@ async def select_data(
     if token_model is not None and table_name in object_mapping_ids.keys():
         id_key = object_mapping_ids[table_name]
         # get all IDs for objects of this type that are permissible for the token
-        permissible_ids_query = f"""SELECT md.`{id_key}` FROM `{os.getenv("DB_NAME")}`.`metadata` AS md
+        permissible_ids_query = f"""
+        SELECT md.`{id_key}` FROM `{os.getenv("DB_NAME")}`.`metadata` AS md
         LEFT JOIN `{os.getenv("DB_NAME")}`.`scope_mapping` AS sm
         ON sm.mdid=md.mdid
         WHERE sm.scope IN ("{'", "'.join(token_model.permissions)}")
         GROUP BY md.`{id_key}`"""
-        permissible_ids = []
         async with pool.acquire() as conn, conn.cursor() as cursor:
             await cursor.execute(permissible_ids_query)
             permissible_ids = [str(i[0]) for i in await cursor.fetchall()]
@@ -231,7 +219,7 @@ async def select_data(
         ids_string = "', '".join([str(the_id) for the_id in actual_ids])
         # yes, this is not 100% safe but apparently you cannot parametrise column names :(
         # TODO: maybe switch to another library that *does* support it?
-        select_query = select_query.replace("WHERE 1", f"WHERE `{id_key}` IN ('{ids_string}')")
+        select_query = f"{select_query} WHERE `{id_key}` IN ('{ids_string}')"
 
     logger.debug("Before query", select_query=select_query)
 
