@@ -43,9 +43,6 @@ md = Metadata(
 )
 
 
-
-
-
 @pytest.mark.asyncio
 async def test_list_categories_empty(mocker, fresh_pool, token_model):
     mocker.patch(
@@ -179,9 +176,7 @@ async def test_get_spatial_resolutions_for_category_error(mocker, fresh_pool):
     )
 
     with pytest.raises(HTTPException):
-        await data_api_impl.get_spatial_resolutions_for_category(
-            category_id="foo", pool=fresh_pool
-        )
+        await data_api_impl.get_spatial_resolutions_for_category(category_id="foo", pool=fresh_pool)
 
 
 @pytest.mark.asyncio

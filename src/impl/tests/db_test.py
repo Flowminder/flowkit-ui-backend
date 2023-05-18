@@ -21,8 +21,6 @@ languages = [
 ]
 
 
-
-
 # TODO: struggling with mocking async mysql connection
 def get_mock_pool():
     mock_cursor = MagicMock()

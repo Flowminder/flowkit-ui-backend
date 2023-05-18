@@ -19,8 +19,6 @@ DPS = DataProviders(
 )
 
 
-
-
 @pytest.mark.asyncio
 async def test_get_setup(mocker, fresh_pool):
     languages = [

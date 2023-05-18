@@ -58,8 +58,6 @@ ds = Dataset(
 )
 
 
-
-
 @pytest.mark.asyncio
 async def test_create_data_provider(mocker, fresh_pool):
     mocker.patch(
@@ -67,9 +65,7 @@ async def test_create_data_provider(mocker, fresh_pool):
         side_effect=[(dp, HTTPStatus.CREATED)],
     )
 
-    content, status_code = await maintenance_api_impl.create_data_provider(
-        dp, pool=fresh_pool
-    )
+    content, status_code = await maintenance_api_impl.create_data_provider(dp, pool=fresh_pool)
     assert status_code == HTTPStatus.CREATED
     assert type(content) == DataProvider
     assert content == dp
@@ -142,9 +138,7 @@ async def test_create_spatial_resolution(mocker, fresh_pool):
         side_effect=[(sr, HTTPStatus.CREATED)],
     )
 
-    content, status_code = await maintenance_api_impl.create_spatial_resolution(
-        sr, pool=fresh_pool
-    )
+    content, status_code = await maintenance_api_impl.create_spatial_resolution(sr, pool=fresh_pool)
     assert status_code == HTTPStatus.CREATED
     assert type(content) == SpatialResolution
     assert content == sr
@@ -220,9 +214,7 @@ async def test_update_indicator_success(mocker, fresh_pool):
         side_effect=[None],
     )
 
-    result = await maintenance_api_impl.update_indicator(
-        ind.indicator_id, ind, pool=fresh_pool
-    )
+    result = await maintenance_api_impl.update_indicator(ind.indicator_id, ind, pool=fresh_pool)
     assert result is None
 
 
@@ -244,9 +236,7 @@ async def test_update_spatial_resolution_success(mocker, fresh_pool):
         side_effect=[None],
     )
 
-    result = await maintenance_api_impl.update_spatial_resolution(
-        sr.srid, sr, pool=fresh_pool
-    )
+    result = await maintenance_api_impl.update_spatial_resolution(sr.srid, sr, pool=fresh_pool)
     assert result is None
 
 
@@ -268,9 +258,7 @@ async def test_update_temporal_resolution_success(mocker, fresh_pool):
         side_effect=[None],
     )
 
-    result = await maintenance_api_impl.update_temporal_resolution(
-        tr.trid, tr, pool=fresh_pool
-    )
+    result = await maintenance_api_impl.update_temporal_resolution(tr.trid, tr, pool=fresh_pool)
     assert result is None
 
 
