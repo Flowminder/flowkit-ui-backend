@@ -5,8 +5,6 @@ import structlog
 import math
 import pendulum
 import os
-import cProfile
-import pstats
 from typing import Optional
 from fastapi import HTTPException
 from aiomysql import Pool
@@ -273,15 +271,7 @@ async def run_query(
     query_parameters: QueryParameters, pool: Pool, token_model: TokenModel
 ) -> QueryResult:
     # get category to find which data table to use
-    logger.debug("Get category object")
-    categories = await db.select_data(
-        base_model=Category,
-        pool=pool,
-        id_key="category_id",
-        ids=[query_parameters.category_id],
-        token_model=token_model,
-    )
-    category = categories[0]
+    category = await get_category(query_parameters.category_id, token_model=token_model, pool=pool)
     # make sure to amend table name for data tables
     base_table_name = f"{category.type}_data"
     table_name = f"{base_table_name}_{query_parameters.indicator_id}"
@@ -292,24 +282,13 @@ async def run_query(
     )
 
     # get temporal resolution to know how to format the spatial entities
-    logger.debug("Get temporal resolution object")
-    temporal_resolutions = await db.select_data(
-        base_model=TemporalResolution,
-        pool=pool,
-        id_key="trid",
-        ids=[str(query_parameters.trid)],
-        token_model=token_model,
-    )
-    tr = temporal_resolutions[0]
-
+    tr = await get_temporal_resolution(query_parameters.trid, token_model=token_model, pool=pool)
     if (
-        len(categories) == 0
-        or len(temporal_resolutions) == 0
-        or categories[0].type not in ["single_location", "flow"]
+        category.type not in ["single_location", "flow"]
     ):
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
-            detail="Could not find category or temporal resolution",
+            detail="Could not find category",
         )
 
     # filter by date
@@ -381,12 +360,8 @@ async def run_query(
     min_value = math.inf
     max_value = -math.inf
     async with pool.acquire() as conn, conn.cursor() as cursor:
-        with cProfile.Profile() as pr:
-            await cursor.execute(select_query)
-        stats = pstats.Stats(pr)
-        stats.sort_stats(pstats.SortKey.TIME)
-        stats.print_stats(10)
-        # await cursor.execute(select_query)
+        await cursor.execute(select_query)
+
         column_names = [i[0] for i in cursor.description]
         logger.debug("Executed query", column_names=column_names)
         if "data" not in column_names:
@@ -405,37 +380,33 @@ async def run_query(
             destination_index = column_names.index("destination")
         done = False
         num_rows = 0
-        with cProfile.Profile() as pr:
-            while not done:
-                row = await cursor.fetchone()
-                if row is not None:
-                    num_rows += 1
-                    # adjust the global min/max if necessary
-                    min_value = min([row[data_index], min_value])
-                    max_value = max([row[data_index], max_value])
+        while not done:
+            row = await cursor.fetchone()
+            if row is not None:
+                num_rows += 1
+                # adjust the global min/max if necessary
+                min_value = min([row[data_index], min_value])
+                max_value = max([row[data_index], max_value])
 
-                    this_date = mdid_to_date[str(row[mdid_index])].strftime(tr.date_format)
-                    data_by_date.setdefault(this_date, {})
-                    value = util.num(str(row[data_index]))
+                this_date = mdid_to_date[str(row[mdid_index])].strftime(tr.date_format)
+                data_by_date.setdefault(this_date, {})
+                value = util.num(str(row[data_index]))
 
-                    if is_single_value:
-                        data_by_date[this_date][row[spatial_unit_id_index]] = value
-                    elif is_flow:
-                        data_by_date[this_date].setdefault(row[origin_index], {})
-                        if value is not None:
-                            data_by_date[this_date][row[origin_index]][
-                                row[destination_index]
-                            ] = value
-                    else:
-                        raise HTTPException(
-                            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-                            detail="Cannot find spatial unit in data",
-                        )
+                if is_single_value:
+                    data_by_date[this_date][row[spatial_unit_id_index]] = value
+                elif is_flow:
+                    data_by_date[this_date].setdefault(row[origin_index], {})
+                    if value is not None:
+                        data_by_date[this_date][row[origin_index]][
+                            row[destination_index]
+                        ] = value
                 else:
-                    done = True
-        stats = pstats.Stats(pr)
-        stats.sort_stats(pstats.SortKey.TIME)
-        stats.print_stats(10)
+                    raise HTTPException(
+                        status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+                        detail="Cannot find spatial unit in data",
+                    )
+            else:
+                done = True
     logger.debug(
         "Finished running data query",
         num_results=num_rows,
