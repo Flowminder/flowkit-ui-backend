@@ -47,13 +47,13 @@ md = Metadata(
 
 
 @pytest.mark.asyncio
-async def test_list_categories_empty(mocker, fresh_pool):
+async def test_list_categories_empty(mocker, fresh_pool, token_model):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
         side_effect=[[]],
     )
 
-    result = await data_api_impl.list_categories(pool=fresh_pool, token_model=None)
+    result = await data_api_impl.list_categories(pool=fresh_pool, token_model=token_model)
     assert result == Categories(categories=[])
 
 
@@ -80,47 +80,47 @@ async def test_get_category_invalid(mocker, fresh_pool):
 
 
 @pytest.mark.asyncio
-async def test_list_indicators_empty(mocker, fresh_pool):
+async def test_list_indicators_empty(mocker, fresh_pool, token_model):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
         side_effect=[[]],
     )
 
-    result = await data_api_impl.list_indicators(pool=fresh_pool, token_model=None)
+    result = await data_api_impl.list_indicators(pool=fresh_pool, token_model=token_model)
     assert result == Indicators(indicators=[])
 
 
 @pytest.mark.asyncio
-async def test_get_indicator(mocker, fresh_pool):
+async def test_get_indicator(mocker, fresh_pool, token_model):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
         side_effect=[[ind]],
     )
 
-    result = await data_api_impl.get_indicator("foo", pool=fresh_pool, token_model=None)
+    result = await data_api_impl.get_indicator("foo", pool=fresh_pool, token_model=token_model)
     assert result == ind
 
 
 @pytest.mark.asyncio
-async def test_get_indicator_invalid(mocker, fresh_pool):
+async def test_get_indicator_invalid(mocker, fresh_pool, token_model):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
         side_effect=[[]],
     )
 
     with pytest.raises(HTTPException):
-        await data_api_impl.get_indicator("foo", pool=fresh_pool, token_model=None)
+        await data_api_impl.get_indicator("foo", pool=fresh_pool, token_model=token_model)
 
 
 @pytest.mark.asyncio
-async def test_get_indicators_for_category(mocker, fresh_pool):
+async def test_get_indicators_for_category(mocker, fresh_pool, token_model):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
         side_effect=[[ind, ind]],
     )
 
     result = await data_api_impl.get_indicators_for_category(
-        "foo", pool=fresh_pool, token_model=None
+        "foo", pool=fresh_pool, token_model=token_model
     )
     # TODO: add meaningful tests
 
@@ -294,7 +294,7 @@ async def test_get_time_range(mocker, fresh_pool):
 
 
 @pytest.mark.asyncio
-async def test_run_query_unknown_query_type(mocker, fresh_pool):
+async def test_run_query_unknown_query_type(mocker, fresh_pool, token_model):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
         side_effect=[[cat], [tr]],
@@ -315,7 +315,7 @@ async def test_run_query_unknown_query_type(mocker, fresh_pool):
             duration=1,
         )
         await data_api_impl.run_query(
-            query_parameters=query_parameters, pool=fresh_pool, token_model=None
+            query_parameters=query_parameters, pool=fresh_pool, token_model=token_model
         )
 
 
@@ -361,7 +361,7 @@ async def test_run_query(mocker, fresh_pool):
 
 
 @pytest.mark.asyncio
-async def test_run_query_no_metadata(mocker, fresh_pool):
+async def test_run_query_no_metadata(mocker, fresh_pool, token_model):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
         side_effect=[[cat], [tr], [SingleLocationData(mdid=1, spatial_unit_id="foo", data=1.23)]],
@@ -381,7 +381,7 @@ async def test_run_query_no_metadata(mocker, fresh_pool):
     )
     with pytest.raises(HTTPException):
         await data_api_impl.run_query(
-            query_parameters=query_parameters, pool=fresh_pool, token_model=None
+            query_parameters=query_parameters, pool=fresh_pool, token_model=token_model
         )
 
 
