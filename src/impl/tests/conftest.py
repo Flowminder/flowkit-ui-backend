@@ -3,6 +3,7 @@ import pytest_asyncio
 import aiomysql
 import asyncio
 import os
+from flowkit_ui_backend.models.extra_models import TokenModel
 
 @pytest_asyncio.fixture
 async def fresh_pool():
@@ -29,3 +30,15 @@ async def fresh_pool():
     finally:
         pool.close()
         await pool.wait_closed()
+
+
+@pytest.fixture
+def token_model():
+    """
+
+    Returns
+    -------
+    TokenModel
+        A token model with no permissions
+    """
+    return TokenModel(sub="test_subject", permissions=[])
