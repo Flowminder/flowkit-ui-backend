@@ -3,9 +3,6 @@
 
 import pytest
 import datetime
-import asyncio
-import aiomysql
-import os
 from http import HTTPStatus
 from fastapi import HTTPException
 from flowkit_ui_backend.impl.apis import maintenance_api_impl
@@ -61,29 +58,17 @@ ds = Dataset(
 )
 
 
-# helper function to get a pool without an app
-async def get_pool():
-    return await aiomysql.create_pool(
-        host=os.getenv("CONTAINER_NAME_DB"),
-        port=int(os.getenv("DB_PORT_CONTAINER")),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PW"),
-        db=os.getenv("DB_NAME"),
-        loop=asyncio.get_event_loop(),
-        autocommit=True,
-        local_infile=True,
-    )
 
 
 @pytest.mark.asyncio
-async def test_create_data_provider(mocker):
+async def test_create_data_provider(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.util.db.add_resource_with_unique_id",
         side_effect=[(dp, HTTPStatus.CREATED)],
     )
 
     content, status_code = await maintenance_api_impl.create_data_provider(
-        dp, pool=await get_pool()
+        dp, pool=fresh_pool
     )
     assert status_code == HTTPStatus.CREATED
     assert type(content) == DataProvider
@@ -91,20 +76,20 @@ async def test_create_data_provider(mocker):
 
 
 @pytest.mark.asyncio
-async def test_create_category(mocker):
+async def test_create_category(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.util.db.add_resource_with_unique_id",
         side_effect=[(cat, HTTPStatus.CREATED)],
     )
 
-    content, status_code = await maintenance_api_impl.create_category(cat, pool=await get_pool())
+    content, status_code = await maintenance_api_impl.create_category(cat, pool=fresh_pool)
     assert status_code == HTTPStatus.CREATED
     assert type(content) == Category
     assert content == cat
 
 
 @pytest.mark.asyncio
-async def test_create_indicator_success(mocker):
+async def test_create_indicator_success(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.util.db.select_data",
         side_effect=[[cat]],
@@ -118,24 +103,24 @@ async def test_create_indicator_success(mocker):
         side_effect=[(None, [("table_name", "CREATE TABLE...")]), (None, None)],
     )
 
-    content, status_code = await maintenance_api_impl.create_indicator(ind, pool=await get_pool())
+    content, status_code = await maintenance_api_impl.create_indicator(ind, pool=fresh_pool)
     assert status_code == HTTPStatus.CREATED
     assert content == ind
 
 
 @pytest.mark.asyncio
-async def test_create_indicator_category_exists(mocker):
+async def test_create_indicator_category_exists(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.util.db.select_data",
         side_effect=[None],
     )
 
     with pytest.raises(HTTPException):
-        await maintenance_api_impl.create_indicator(ind, pool=await get_pool())
+        await maintenance_api_impl.create_indicator(ind, pool=fresh_pool)
 
 
 @pytest.mark.asyncio
-async def test_create_indicator_indicator_exists(mocker):
+async def test_create_indicator_indicator_exists(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.util.db.select_data",
         side_effect=[[cat]],
@@ -145,20 +130,20 @@ async def test_create_indicator_indicator_exists(mocker):
         side_effect=[(ind, HTTPStatus.SEE_OTHER)],
     )
 
-    result, status = await maintenance_api_impl.create_indicator(ind, pool=await get_pool())
+    result, status = await maintenance_api_impl.create_indicator(ind, pool=fresh_pool)
     assert status == HTTPStatus.SEE_OTHER
     assert result == ind
 
 
 @pytest.mark.asyncio
-async def test_create_spatial_resolution(mocker):
+async def test_create_spatial_resolution(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.util.db.add_resource_with_unique_id",
         side_effect=[(sr, HTTPStatus.CREATED)],
     )
 
     content, status_code = await maintenance_api_impl.create_spatial_resolution(
-        sr, pool=await get_pool()
+        sr, pool=fresh_pool
     )
     assert status_code == HTTPStatus.CREATED
     assert type(content) == SpatialResolution
@@ -166,14 +151,14 @@ async def test_create_spatial_resolution(mocker):
 
 
 @pytest.mark.asyncio
-async def test_create_temporal_resolution(mocker):
+async def test_create_temporal_resolution(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.util.db.add_resource_with_unique_id",
         side_effect=[(tr, HTTPStatus.CREATED)],
     )
 
     content, status_code = await maintenance_api_impl.create_temporal_resolution(
-        tr, pool=await get_pool()
+        tr, pool=fresh_pool
     )
     assert status_code == HTTPStatus.CREATED
     assert type(content) == TemporalResolution
@@ -181,20 +166,20 @@ async def test_create_temporal_resolution(mocker):
 
 
 @pytest.mark.asyncio
-async def test_update_data_provider_success(mocker):
+async def test_update_data_provider_success(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.update_resource_with_unique_id",
         side_effect=[None],
     )
 
     result = await maintenance_api_impl.update_data_provider(
-        1, DataProvider(dpid=1, name="bar"), pool=await get_pool()
+        1, DataProvider(dpid=1, name="bar"), pool=fresh_pool
     )
     assert result is None
 
 
 @pytest.mark.asyncio
-async def test_update_data_provider_failure(mocker):
+async def test_update_data_provider_failure(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.update_resource_with_unique_id",
         side_effect=[HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="Error")],
@@ -202,128 +187,128 @@ async def test_update_data_provider_failure(mocker):
 
     with pytest.raises(HTTPException):
         await maintenance_api_impl.update_data_provider(
-            1, DataProvider(dpid=1, name="bar"), pool=await get_pool()
+            1, DataProvider(dpid=1, name="bar"), pool=fresh_pool
         )
 
 
 @pytest.mark.asyncio
-async def test_update_category_success(mocker):
+async def test_update_category_success(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.update_resource_with_unique_id",
         side_effect=[None],
     )
 
-    result = await maintenance_api_impl.update_category(cat.category_id, cat, pool=await get_pool())
+    result = await maintenance_api_impl.update_category(cat.category_id, cat, pool=fresh_pool)
     assert result is None
 
 
 @pytest.mark.asyncio
-async def test_update_category_failure(mocker):
+async def test_update_category_failure(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.update_resource_with_unique_id",
         side_effect=[HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="Error")],
     )
 
     with pytest.raises(HTTPException):
-        await maintenance_api_impl.update_category(cat.category_id, cat, pool=await get_pool())
+        await maintenance_api_impl.update_category(cat.category_id, cat, pool=fresh_pool)
 
 
 @pytest.mark.asyncio
-async def test_update_indicator_success(mocker):
+async def test_update_indicator_success(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.update_resource_with_unique_id",
         side_effect=[None],
     )
 
     result = await maintenance_api_impl.update_indicator(
-        ind.indicator_id, ind, pool=await get_pool()
+        ind.indicator_id, ind, pool=fresh_pool
     )
     assert result is None
 
 
 @pytest.mark.asyncio
-async def test_update_indicator_failure(mocker):
+async def test_update_indicator_failure(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.update_resource_with_unique_id",
         side_effect=[HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="Error")],
     )
 
     with pytest.raises(HTTPException):
-        await maintenance_api_impl.update_indicator(ind.indicator_id, ind, pool=await get_pool())
+        await maintenance_api_impl.update_indicator(ind.indicator_id, ind, pool=fresh_pool)
 
 
 @pytest.mark.asyncio
-async def test_update_spatial_resolution_success(mocker):
+async def test_update_spatial_resolution_success(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.update_resource_with_unique_id",
         side_effect=[None],
     )
 
     result = await maintenance_api_impl.update_spatial_resolution(
-        sr.srid, sr, pool=await get_pool()
+        sr.srid, sr, pool=fresh_pool
     )
     assert result is None
 
 
 @pytest.mark.asyncio
-async def test_update_spatial_resolution_failure(mocker):
+async def test_update_spatial_resolution_failure(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.update_resource_with_unique_id",
         side_effect=[HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="Error")],
     )
 
     with pytest.raises(HTTPException):
-        await maintenance_api_impl.update_spatial_resolution(sr.srid, sr, pool=await get_pool())
+        await maintenance_api_impl.update_spatial_resolution(sr.srid, sr, pool=fresh_pool)
 
 
 @pytest.mark.asyncio
-async def test_update_temporal_resolution_success(mocker):
+async def test_update_temporal_resolution_success(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.update_resource_with_unique_id",
         side_effect=[None],
     )
 
     result = await maintenance_api_impl.update_temporal_resolution(
-        tr.trid, tr, pool=await get_pool()
+        tr.trid, tr, pool=fresh_pool
     )
     assert result is None
 
 
 @pytest.mark.asyncio
-async def test_update_temporal_resolution_failure(mocker):
+async def test_update_temporal_resolution_failure(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.update_resource_with_unique_id",
         side_effect=[HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="Error")],
     )
 
     with pytest.raises(HTTPException):
-        await maintenance_api_impl.update_temporal_resolution(tr.trid, tr, pool=await get_pool())
+        await maintenance_api_impl.update_temporal_resolution(tr.trid, tr, pool=fresh_pool)
 
 
 @pytest.mark.asyncio
-async def test_delete_data_provider(mocker):
+async def test_delete_data_provider(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.delete_data",
         side_effect=[None],
     )
 
-    result = await maintenance_api_impl.delete_data_provider("1", pool=await get_pool())
+    result = await maintenance_api_impl.delete_data_provider("1", pool=fresh_pool)
     assert result is None
 
 
 @pytest.mark.asyncio
-async def test_delete_category(mocker):
+async def test_delete_category(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.delete_data",
         side_effect=[None],
     )
 
-    result = await maintenance_api_impl.delete_category("foo", pool=await get_pool())
+    result = await maintenance_api_impl.delete_category("foo", pool=fresh_pool)
     assert result is None
 
 
 @pytest.mark.asyncio
-async def test_delete_indicator_success(mocker):
+async def test_delete_indicator_success(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.util.db.select_data",
         side_effect=[[ind], [cat]],
@@ -337,34 +322,34 @@ async def test_delete_indicator_success(mocker):
         side_effect=[(None, None), (None, None)],
     )
 
-    result = await maintenance_api_impl.delete_indicator("foo", pool=await get_pool())
+    result = await maintenance_api_impl.delete_indicator("foo", pool=fresh_pool)
     assert result is None
 
 
 @pytest.mark.asyncio
-async def test_delete_indicator_indicator_doesnt_exist(mocker):
+async def test_delete_indicator_indicator_doesnt_exist(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.util.db.select_data",
         side_effect=[[ind], []],
     )
 
     with pytest.raises(HTTPException):
-        await maintenance_api_impl.delete_indicator("foo.bar", pool=await get_pool())
+        await maintenance_api_impl.delete_indicator("foo.bar", pool=fresh_pool)
 
 
 @pytest.mark.asyncio
-async def test_delete_indicator_category_doesnt_exist(mocker):
+async def test_delete_indicator_category_doesnt_exist(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.util.db.select_data",
         side_effect=[[]],
     )
 
     with pytest.raises(HTTPException):
-        await maintenance_api_impl.delete_indicator("foo.foo", pool=await get_pool())
+        await maintenance_api_impl.delete_indicator("foo.foo", pool=fresh_pool)
 
 
 @pytest.mark.asyncio
-async def test_delete_indicator_failed_to_drop_table(mocker):
+async def test_delete_indicator_failed_to_drop_table(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.util.db.select_data",
         side_effect=[[ind], [cat]],
@@ -379,33 +364,33 @@ async def test_delete_indicator_failed_to_drop_table(mocker):
     )
 
     with pytest.raises(HTTPException):
-        await maintenance_api_impl.delete_indicator("bar", pool=await get_pool())
+        await maintenance_api_impl.delete_indicator("bar", pool=fresh_pool)
 
 
 @pytest.mark.asyncio
-async def test_delete_spatial_resolution(mocker):
+async def test_delete_spatial_resolution(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.delete_data",
         side_effect=[None],
     )
 
-    result = await maintenance_api_impl.delete_spatial_resolution("1", pool=await get_pool())
+    result = await maintenance_api_impl.delete_spatial_resolution("1", pool=fresh_pool)
     assert result is None
 
 
 @pytest.mark.asyncio
-async def test_delete_temporal_resolution(mocker):
+async def test_delete_temporal_resolution(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.delete_data",
         side_effect=[None],
     )
 
-    result = await maintenance_api_impl.delete_temporal_resolution("1", pool=await get_pool())
+    result = await maintenance_api_impl.delete_temporal_resolution("1", pool=fresh_pool)
     assert result is None
 
 
 @pytest.mark.asyncio
-async def test_replace_setup(mocker):
+async def test_replace_setup(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.delete_data",
         side_effect=[None, None, None, None, None, None, None, None, None, None, None],
@@ -440,12 +425,12 @@ async def test_replace_setup(mocker):
         temporal_resolutions=[],
         boundaries=[],
     )
-    result = await maintenance_api_impl.replace_setup(config, pool=await get_pool())
+    result = await maintenance_api_impl.replace_setup(config, pool=fresh_pool)
     assert result is None
 
 
 @pytest.mark.asyncio
-async def test_update_setup_no_indicator(mocker):
+async def test_update_setup_no_indicator(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.delete_data",
         side_effect=[None, None, None, None, None],
@@ -479,12 +464,12 @@ async def test_update_setup_no_indicator(mocker):
         spatial_resolutions=[sr],
         temporal_resolutions=[tr],
     )
-    result = await maintenance_api_impl.update_setup(config, pool=await get_pool())
+    result = await maintenance_api_impl.update_setup(config, pool=fresh_pool)
     assert result is None
 
 
 @pytest.mark.asyncio
-async def test_update_setup_indicator_exists(mocker):
+async def test_update_setup_indicator_exists(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.delete_data",
         side_effect=[None, None, None, None, None, None],
@@ -518,12 +503,12 @@ async def test_update_setup_indicator_exists(mocker):
         spatial_resolutions=[sr],
         temporal_resolutions=[tr],
     )
-    result = await maintenance_api_impl.update_setup(config, pool=await get_pool())
+    result = await maintenance_api_impl.update_setup(config, pool=fresh_pool)
     assert result is None
 
 
 @pytest.mark.asyncio
-async def test_update_setup_indicator_error(mocker):
+async def test_update_setup_indicator_error(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.delete_data",
         side_effect=[None, None],
@@ -542,11 +527,11 @@ async def test_update_setup_indicator_error(mocker):
         temporal_resolutions=[tr],
     )
     with pytest.raises(HTTPException):
-        await maintenance_api_impl.update_setup(config, pool=await get_pool())
+        await maintenance_api_impl.update_setup(config, pool=fresh_pool)
 
 
 @pytest.mark.asyncio
-async def test_delete_setup_error(mocker):
+async def test_delete_setup_error(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.delete_data",
         side_effect=[None, None, None, None, None, None],
@@ -560,12 +545,12 @@ async def test_delete_setup_error(mocker):
         side_effect=[HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR)],
     )
 
-    result = await maintenance_api_impl.delete_setup(pool=await get_pool())
+    result = await maintenance_api_impl.delete_setup(pool=fresh_pool)
     assert result is None
 
 
 @pytest.mark.asyncio
-async def test_delete_setup_with_indicators(mocker):
+async def test_delete_setup_with_indicators(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.delete_data",
         side_effect=[None, None, None, None, None, None],
@@ -579,12 +564,12 @@ async def test_delete_setup_with_indicators(mocker):
         side_effect=[(None, None), (None, None)],
     )
 
-    result = await maintenance_api_impl.delete_setup(pool=await get_pool())
+    result = await maintenance_api_impl.delete_setup(pool=fresh_pool)
     assert result is None
 
 
 @pytest.mark.asyncio
-async def test_delete_setup_no_indicators(mocker):
+async def test_delete_setup_no_indicators(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.delete_data",
         side_effect=[None, None, None, None, None],
@@ -594,12 +579,12 @@ async def test_delete_setup_no_indicators(mocker):
         side_effect=[[]],
     )
 
-    result = await maintenance_api_impl.delete_setup(pool=await get_pool())
+    result = await maintenance_api_impl.delete_setup(pool=fresh_pool)
     assert result is None
 
 
 @pytest.mark.asyncio
-async def test_create_dataset_no_data():
+async def test_create_dataset_no_data(fresh_pool):
     with pytest.raises(HTTPException):
         await maintenance_api_impl.create_dataset(
             Dataset(
@@ -609,12 +594,12 @@ async def test_create_dataset_no_data():
                     revision="rev", category_id="foo", indicator_id="foo.bar", srid=1, trid=1
                 ),
             ),
-            pool=await get_pool(),
+            pool=fresh_pool,
         )
 
 
 @pytest.mark.asyncio
-async def test_create_dataset_wrong_type():
+async def test_create_dataset_wrong_type(fresh_pool):
     with pytest.raises(HTTPException):
         await maintenance_api_impl.create_dataset(
             Dataset(
@@ -624,12 +609,12 @@ async def test_create_dataset_wrong_type():
                     revision="rev", category_id="foo", indicator_id="foo.bar", srid=1, trid=1
                 ),
             ),
-            pool=await get_pool(),
+            pool=fresh_pool,
         )
 
 
 @pytest.mark.asyncio
-async def test_create_dataset(mocker):
+async def test_create_dataset(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.util.db.run",
         side_effect=[
@@ -650,18 +635,18 @@ async def test_create_dataset(mocker):
         side_effect=[1, None],
     )
 
-    content, status = await maintenance_api_impl.create_dataset(dataset=ds, pool=await get_pool())
+    content, status = await maintenance_api_impl.create_dataset(dataset=ds, pool=fresh_pool)
     assert content is None
     assert status == HTTPStatus.CREATED
 
     # now it exists we run it again and it should return the existing one
-    content, status = await maintenance_api_impl.create_dataset(dataset=ds, pool=await get_pool())
+    content, status = await maintenance_api_impl.create_dataset(dataset=ds, pool=fresh_pool)
     assert content is None
     assert status == HTTPStatus.NO_CONTENT
 
 
 @pytest.mark.asyncio
-async def test_update_dataset(mocker):
+async def test_update_dataset(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.util.db.run",
         side_effect=[
@@ -694,11 +679,11 @@ async def test_update_dataset(mocker):
         side_effect=[1, None, 1, None],
     )
 
-    content, status = await maintenance_api_impl.update_dataset(ds, pool=await get_pool())
+    content, status = await maintenance_api_impl.update_dataset(ds, pool=fresh_pool)
     assert content is None
     assert status == HTTPStatus.CREATED
 
-    content, status = await maintenance_api_impl.update_dataset(ds, pool=await get_pool())
+    content, status = await maintenance_api_impl.update_dataset(ds, pool=fresh_pool)
     assert content is None
     # status should always be CREATED because update deletes existing datasets and replaces them
     assert status == HTTPStatus.CREATED
