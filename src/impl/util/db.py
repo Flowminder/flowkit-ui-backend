@@ -11,7 +11,7 @@ import typing
 import aiofiles
 from fastapi import HTTPException
 from typing import List, Tuple, Optional
-from time import sleep
+from asyncio import sleep
 from pathlib import Path
 from xmlrpc.client import boolean
 from http import HTTPStatus

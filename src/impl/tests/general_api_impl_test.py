@@ -20,7 +20,7 @@ DPS = DataProviders(
 
 
 @pytest.mark.asyncio
-async def test_get_setup(mocker, fresh_pool):
+async def test_get_setup(mocker, provisioned_db):
     languages = [
         Language(lid=1, code="FO", name="Foo", flag="foo.svg", default=True),
         Language(lid=2, code="BA", name="Bar", flag="bar.svg", default=False),
@@ -32,7 +32,7 @@ async def test_get_setup(mocker, fresh_pool):
         side_effect=[languages, DPS.data_providers],
     )
 
-    result = await general_api_impl.get_setup(pool=fresh_pool)
+    result = await general_api_impl.get_setup(pool=provisioned_db)
 
     assert type(result) == Config
     assert len(result.data_providers) == 2
@@ -40,39 +40,39 @@ async def test_get_setup(mocker, fresh_pool):
 
 
 @pytest.mark.asyncio
-async def test_list_data_providers(mocker, fresh_pool):
+async def test_list_data_providers(mocker, provisioned_db):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.general_api_impl.db.select_data",
         return_value=DPS.data_providers,
     )
 
-    result = await general_api_impl.list_data_providers(pool=fresh_pool)
+    result = await general_api_impl.list_data_providers(pool=provisioned_db)
     assert len(result.data_providers) == 2
 
 
 @pytest.mark.asyncio
-async def test_get_data_provider_invalid(mocker, fresh_pool):
+async def test_get_data_provider_invalid(mocker, provisioned_db):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.general_api_impl.db.select_data",
         side_effect=[[]],
     )
 
     with pytest.raises(HTTPException):
-        await general_api_impl.get_data_provider(dpid=1, pool=fresh_pool)
+        await general_api_impl.get_data_provider(dpid=1, pool=provisioned_db)
 
 
 @pytest.mark.asyncio
-async def test_get_data_provider(mocker, fresh_pool):
+async def test_get_data_provider(mocker, provisioned_db):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.general_api_impl.db.select_data",
         return_value=[DPS.data_providers[0]],
     )
 
-    result = await general_api_impl.get_data_provider(dpid=1, pool=fresh_pool)
+    result = await general_api_impl.get_data_provider(dpid=1, pool=provisioned_db)
     assert result == DPS.data_providers[0]
 
 
 @pytest.mark.asyncio
-async def test_heartbeat(fresh_pool):
-    result = await general_api_impl.heartbeat(pool=fresh_pool)
+async def test_heartbeat(provisioned_db):
+    result = await general_api_impl.heartbeat(pool=provisioned_db)
     assert result.python_package == os.getenv("APP_NAME")
