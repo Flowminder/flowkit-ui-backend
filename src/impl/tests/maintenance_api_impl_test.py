@@ -138,7 +138,9 @@ async def test_create_spatial_resolution(mocker, provisioned_db):
         side_effect=[(sr, HTTPStatus.CREATED)],
     )
 
-    content, status_code = await maintenance_api_impl.create_spatial_resolution(sr, pool=provisioned_db)
+    content, status_code = await maintenance_api_impl.create_spatial_resolution(
+        sr, pool=provisioned_db
+    )
     assert status_code == HTTPStatus.CREATED
     assert type(content) == SpatialResolution
     assert content == sr

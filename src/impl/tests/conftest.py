@@ -34,6 +34,7 @@ async def fresh_pool():
         pool.close()
         await pool.wait_closed()
 
+
 @pytest_asyncio.fixture
 async def provisioned_db(fresh_pool, monkeypatch):
     monkeypatch.setenv("FORCE_DB_SETUP", "1")
@@ -48,12 +49,12 @@ async def provisioned_db(fresh_pool, monkeypatch):
             await cur.execute("CREATE DATABASE `flowkit_ui_backend`")
         pathlib.Path(PERSISTENT_FIRST_RUN).unlink(missing_ok=False)
 
+
 @pytest_asyncio.fixture
 async def populated_db(provisioned_db):
     print("Populating db")
     await run_script(str(pathlib.Path(__file__).parent / "test_data.sql"), pool=provisioned_db)
     yield provisioned_db
-
 
 
 @pytest.fixture

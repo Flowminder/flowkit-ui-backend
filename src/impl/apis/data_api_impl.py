@@ -283,9 +283,7 @@ async def run_query(
 
     # get temporal resolution to know how to format the spatial entities
     tr = await get_temporal_resolution(query_parameters.trid, token_model=token_model, pool=pool)
-    if (
-        category.type not in ["single_location", "flow"]
-    ):
+    if category.type not in ["single_location", "flow"]:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
             detail="Could not find category",
@@ -397,9 +395,7 @@ async def run_query(
                 elif is_flow:
                     data_by_date[this_date].setdefault(row[origin_index], {})
                     if value is not None:
-                        data_by_date[this_date][row[origin_index]][
-                            row[destination_index]
-                        ] = value
+                        data_by_date[this_date][row[origin_index]][row[destination_index]] = value
                 else:
                     raise HTTPException(
                         status_code=HTTPStatus.INTERNAL_SERVER_ERROR,

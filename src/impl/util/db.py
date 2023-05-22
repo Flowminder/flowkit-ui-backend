@@ -182,7 +182,11 @@ async def select_data(
         )
 
     # determine table name - conveniently it's the same as the python module name for the data type
-    table_name = table_name_override if table_name_override is not None else base_model.__module__.split(".")[-1]
+    table_name = (
+        table_name_override
+        if table_name_override is not None
+        else base_model.__module__.split(".")[-1]
+    )
     fields_string = ", ".join(f"`{field}`" for field in fields) if fields is not None else "*"
     select_query = f"SELECT {fields_string} FROM `{os.getenv('DB_NAME')}`.`{table_name}`"
 
