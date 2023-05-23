@@ -316,7 +316,7 @@ async def delete_setup(pool: Pool, token_model: TokenModel = None) -> None:
 
 async def create_dataset(
     dataset: Dataset, pool: Pool, token_model: TokenModel = None
-) -> Tuple[None, int]:
+) -> Tuple[int, int]:
     return await add_dataset(dataset, pool=pool, overwrite=False)
 
 
@@ -328,7 +328,21 @@ async def update_dataset(
 
 async def check_dataset_exists(
     dataset: Dataset, pool: Pool, token_model: TokenModel = None
-) -> List[str]:
+) -> int:
+    """
+
+    Parameters
+    ----------
+    dataset
+    pool
+    token_model
+
+    Returns
+    -------
+    int
+        Either the mdid of the dataset if it exists, or -1 if no matching dataset
+        could be found.
+    """
     sql = f"""
     SELECT md.mdid FROM `{DB_NAME}`.`metadata` AS md
     WHERE md.`category_id`=%(category_id)s
@@ -346,16 +360,19 @@ async def check_dataset_exists(
     }
     (column_names, result) = await db.run(sql, pool=pool, args=props)
     if result is not None and len(result) > 0:
-        logger.debug(f"Found existing dataset{'' if len(result)==1 else 's'}", num=len(result))
-
-    return [str(row[0]) for row in result]
+        logger.debug(f"Found existing dataset.")
+    elif len(result) > 1:
+        logger.error("Multiple ids for dataset.", ids=[res[0] for res in result], props=props)
+        raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail="Ambiguous dataset")
+    else:
+        return -1
+    return result[0][0]
 
 
 async def delete_dataset(dataset: Dataset, pool: Pool, token_model: TokenModel = None) -> None:
-    mdids = await check_dataset_exists(dataset, pool=pool)
-    if len(mdids) > 0:
-        existing_mdids = ",".join(mdids)
-        logger.debug(f"Deleting existing dataset{'' if len(mdids)==1 else 's'}", mdids=mdids)
+    mdid = await check_dataset_exists(dataset, pool=pool)
+    if mdid != -1:
+        logger.debug(f"Deleting existing dataset", mdids=mdid)
 
         # make sure to amend table name for data tables
         base_table_name = (
@@ -380,20 +397,20 @@ async def delete_dataset(dataset: Dataset, pool: Pool, token_model: TokenModel =
         if result[0][0] > 0:
             sql = f"""
             DELETE FROM `{DB_NAME}`.`{table_name}`
-            WHERE `mdid` IN ({existing_mdids})
+            WHERE `mdid`={mdid})
             """
             await db.run(sql=sql, pool=pool)
 
         sql = f"""
         DELETE FROM `{DB_NAME}`.`metadata`
-        WHERE `mdid` IN ({existing_mdids})
+        WHERE `mdid`={mdid})
         """
         await db.run(sql=sql, pool=pool)
 
 
 async def add_dataset(
     dataset: Dataset, pool: Pool, overwrite: bool = False, token_model: TokenModel = None
-) -> Tuple[None, int]:
+) -> Tuple[int, int]:
     if dataset.data_input is None or len(dataset.data_input) <= 0:
         raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="No data to ingest")
 
@@ -403,14 +420,13 @@ async def add_dataset(
             detail=f'Unknown data type "{dataset.data_type}"',
         )
 
-    return_status_code = HTTPStatus.NO_CONTENT
-    mdids = await check_dataset_exists(dataset, pool=pool)
-    if len(mdids) > 0:
+    mdid = await check_dataset_exists(dataset, pool=pool)
+    if mdid != -1:
         if overwrite:
             await delete_dataset(dataset, pool=pool)
             return_status_code = HTTPStatus.CREATED
         else:
-            return None, HTTPStatus.NO_CONTENT
+            return mdid, HTTPStatus.SEE_OTHER
     else:
         return_status_code = HTTPStatus.CREATED
 
@@ -477,14 +493,14 @@ async def add_dataset(
         table_name_override=table_name,
     )
 
-    return None, return_status_code
+    return mdid, return_status_code
 
 
 async def check_scope_mapping_exists(
     scope_mapping: ScopeMapping,
     pool: Pool,
     token_model: TokenModel = None,
-) -> List[str]:
+) -> int:
     sql = f"""
     SELECT sm.id FROM `{DB_NAME}`.`scope_mapping` AS sm
     WHERE sm.`scope`=%(scope)s
@@ -496,32 +512,36 @@ async def check_scope_mapping_exists(
         logger.debug(
             f"Found existing scope mapping{'' if len(result)==1 else 's'}", num=len(result)
         )
+    elif len(result) > 1:
+        raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=f"Ambiguous scope mapping for {scope_mapping}.")
+    else:
+        return -1
 
-    return [str(row[0]) for row in result]
+    return int(result[0][0])
 
 
 async def add_scope_mapping(
     scope_mapping: ScopeMapping, pool: Pool, overwrite: bool = False, token_model: TokenModel = None
-) -> None:
+) -> Tuple[int, int]:
     if scope_mapping is None or scope_mapping.scope is None or scope_mapping.mdid is None:
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST, detail=f"Scope mapping {scope_mapping} is invalid"
         )
 
     return_status_code = HTTPStatus.NO_CONTENT
-    scope_mappings = await check_scope_mapping_exists(scope_mapping, pool=pool)
-    if len(scope_mappings) > 0:
+    mapping_id = await check_scope_mapping_exists(scope_mapping, pool=pool)
+    if mapping_id != -1:
         if overwrite:
-            await delete_scope_mapping(scope_mappings, pool=pool)
+            await delete_scope_mapping(scope_mapping, pool=pool)
             return_status_code = HTTPStatus.CREATED
         else:
-            return None, HTTPStatus.NO_CONTENT
+            return mapping_id, HTTPStatus.SEE_OTHER
     else:
         return_status_code = HTTPStatus.CREATED
 
-    await db.insert_data(base_model=ScopeMapping, pool=pool, data=[scope_mapping], bulk=False)
+    mapping_id = await db.insert_data(base_model=ScopeMapping, pool=pool, data=[scope_mapping], bulk=False)
 
-    return None, return_status_code
+    return mapping_id, return_status_code
 
 
 async def delete_scope_mapping(
@@ -529,13 +549,11 @@ async def delete_scope_mapping(
     pool: Pool,
     token_model: TokenModel = None,
 ) -> None:
-    ids = await check_scope_mapping_exists(scope_mapping, pool=pool)
-    if len(ids) > 0:
-        existing_ids = ",".join(ids)
-        logger.debug(f"Deleting existing dataset{'' if len(ids)==1 else 's'}", ids=ids)
+    scope_id = await check_scope_mapping_exists(scope_mapping, pool=pool)
+    logger.debug("Deleting existing scope mapping", ids=scope_id)
 
-        sql = f"""
-        DELETE FROM `{DB_NAME}`.`scope_mapping`
-        WHERE `id` IN ({existing_ids})
-        """
-        await db.run(sql=sql, pool=pool)
+    sql = f"""
+    DELETE FROM `{DB_NAME}`.`scope_mapping`
+    WHERE `id`={scope_id}
+    """
+    await db.run(sql=sql, pool=pool)

@@ -626,12 +626,12 @@ async def test_create_dataset(mocker, provisioned_db):
     )
 
     content, status = await maintenance_api_impl.create_dataset(dataset=ds, pool=provisioned_db)
-    assert content is None
+    assert content == 1
     assert status == HTTPStatus.CREATED
 
     # now it exists we run it again and it should return the existing one
     content, status = await maintenance_api_impl.create_dataset(dataset=ds, pool=provisioned_db)
-    assert content is None
+    assert content == 1
     assert status == HTTPStatus.NO_CONTENT
 
 
@@ -670,10 +670,10 @@ async def test_update_dataset(mocker, provisioned_db):
     )
 
     content, status = await maintenance_api_impl.update_dataset(ds, pool=provisioned_db)
-    assert content is None
+    assert content == 1
     assert status == HTTPStatus.CREATED
 
     content, status = await maintenance_api_impl.update_dataset(ds, pool=provisioned_db)
-    assert content is None
+    assert content == 1
     # status should always be CREATED because update deletes existing datasets and replaces them
     assert status == HTTPStatus.CREATED

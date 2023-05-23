@@ -459,3 +459,12 @@ async def test_update_resource_with_unique_id_success(mocker, fresh_pool):
         resource=dp, base_model=DataProvider, id_key="dpid", id_value=1, pool=fresh_pool
     )
     assert result is None
+
+
+@pytest.mark.asyncio
+async def test_populate(populated_db):
+    async with populated_db.acquire() as conn:
+        cur = await conn.cursor()
+        await cur.execute("SELECT * FROM metadata")
+        print(await cur.fetchall())
+    assert False

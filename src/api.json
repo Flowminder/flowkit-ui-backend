@@ -1360,13 +1360,25 @@
                 }
             },
             "created": {
-                "description": "Created: The resource was created successfully."
+                "description": "Created: The resource was created successfully.",
+                "text/plain": {
+                    "schema": {
+                        "type": "integer",
+                        "example": 1
+                    }
+                }
             },
             "no_content": {
                 "description": "OK: The request was successful."
             },
             "see_other": {
-                "description": "See other: The resource already exists and is returned in the response."
+                "description": "See other: The resource already exists and is returned in the response.",
+                "text/plain": {
+                    "schema": {
+                        "type": "integer",
+                        "example": 1
+                    }
+                }
             },
             "bad_request": {
                 "description": "Bad Request: The request is malformed, incomplete or otherwise invalid."
