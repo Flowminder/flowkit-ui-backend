@@ -210,16 +210,7 @@ async def get_time_range(
 
     date_format = temporal_resolutions[0].date_format
 
-    sql = (
-        f"""SELECT DISTINCT md.`dt`, md.`min_value`, md.`max_value`
-    FROM `{DB_NAME}`.`metadata` AS md
-    WHERE md.`category_id`=%s
-    AND md.`indicator_id`=%s
-    AND md.`srid`=%s
-    AND md.`trid`=%s
-    ORDER BY md.`dt` ASC"""
-        if "admin" in token_model.permissions
-        else f"""
+    sql = f"""
     SELECT DISTINCT md.`dt`, md.`min_value`, md.`max_value`
     FROM `{DB_NAME}`.`metadata` AS md
     LEFT JOIN `{DB_NAME}`.`scope_mapping` AS sm
@@ -231,7 +222,6 @@ async def get_time_range(
     AND md.`trid`=%s
     ORDER BY md.`dt` ASC
     """
-    )
     args = [category_id, indicator_id, srid, trid]
     (column_names, result) = await db.run(sql, pool=pool, args=args)
     logger.debug(f"Found {len(result)} datasets", result=result)
@@ -296,16 +286,7 @@ async def run_query(
     # subtracting 1 here because BETWEEN in the SQL includes the end date
     end_date = start_date + step * (query_parameters.duration - 1)
 
-    sql = (
-        f"""SELECT * FROM `{DB_NAME}`.`metadata` AS md
-    WHERE md.`category_id`=%s
-    AND md.`indicator_id`=%s
-    AND md.`srid`=%s
-    AND md.`trid`=%s
-    AND md.`dt` BETWEEN %s AND %s
-    ORDER BY md.`dt` ASC"""
-        if "admin" in token_model.permissions
-        else f"""
+    sql = f"""
     SELECT * FROM `{DB_NAME}`.`metadata` AS md
     LEFT JOIN `{DB_NAME}`.`scope_mapping` AS sm
     ON sm.mdid=md.mdid
@@ -317,7 +298,6 @@ async def run_query(
     AND md.`dt` BETWEEN %s AND %s
     ORDER BY md.`dt` ASC
     """
-    )
     args = [
         query_parameters.category_id,
         query_parameters.indicator_id,

@@ -625,6 +625,11 @@ async def test_create_dataset(mocker, provisioned_db):
         side_effect=[1, None],
     )
 
+    mocker.patch(
+        "flowkit_ui_backend.impl.apis.maintenance_api_impl.add_scope_mapping",
+        side_effect=[1, 1],
+    )
+
     content, status = await maintenance_api_impl.create_dataset(dataset=ds, pool=provisioned_db)
     assert content == 1
     assert status == HTTPStatus.CREATED
@@ -632,7 +637,7 @@ async def test_create_dataset(mocker, provisioned_db):
     # now it exists we run it again and it should return the existing one
     content, status = await maintenance_api_impl.create_dataset(dataset=ds, pool=provisioned_db)
     assert content == 1
-    assert status == HTTPStatus.NO_CONTENT
+    assert status == HTTPStatus.SEE_OTHER
 
 
 @pytest.mark.asyncio
@@ -658,6 +663,8 @@ async def test_update_dataset(mocker, provisioned_db):
             (None, None),
             # delete metadata
             (None, None),
+            # delete scope mappings
+            (None, None),
             # show create table
             (None, [("single_location_data", "CREATE TABLE...")]),
             # run create table
@@ -667,6 +674,11 @@ async def test_update_dataset(mocker, provisioned_db):
     mocker.patch(
         "flowkit_ui_backend.impl.util.db.insert_data",
         side_effect=[1, None, 1, None],
+    )
+
+    mocker.patch(
+        "flowkit_ui_backend.impl.apis.maintenance_api_impl.add_scope_mapping",
+        side_effect=[1, 1],
     )
 
     content, status = await maintenance_api_impl.update_dataset(ds, pool=provisioned_db)

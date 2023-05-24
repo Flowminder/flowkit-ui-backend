@@ -219,7 +219,7 @@ async def select_data(
         )
         actual_ids = permissible_ids if ids is None else list(set(ids) & set(permissible_ids))
 
-    if id_key is not None and actual_ids is not None and len(actual_ids) > 0:
+    if id_key is not None and actual_ids is not None:
         ids_string = "', '".join([str(the_id) for the_id in actual_ids])
         # yes, this is not 100% safe but apparently you cannot parametrise column names :(
         # TODO: maybe switch to another library that *does* support it?

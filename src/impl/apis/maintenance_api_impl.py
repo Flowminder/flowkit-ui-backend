@@ -322,13 +322,11 @@ async def create_dataset(
 
 async def update_dataset(
     dataset: Dataset, pool: Pool, token_model: TokenModel = None
-) -> Tuple[None, int]:
+) -> Tuple[int, int]:
     return await add_dataset(dataset, pool=pool, overwrite=True)
 
 
-async def check_dataset_exists(
-    dataset: Dataset, pool: Pool, token_model: TokenModel = None
-) -> int:
+async def check_dataset_exists(dataset: Dataset, pool: Pool, token_model: TokenModel = None) -> int:
     """
 
     Parameters
@@ -363,7 +361,9 @@ async def check_dataset_exists(
         logger.debug(f"Found existing dataset.")
     elif len(result) > 1:
         logger.error("Multiple ids for dataset.", ids=[res[0] for res in result], props=props)
-        raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail="Ambiguous dataset")
+        raise HTTPException(
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail="Ambiguous dataset"
+        )
     else:
         return -1
     return result[0][0]
@@ -400,9 +400,22 @@ async def delete_dataset(dataset: Dataset, pool: Pool, token_model: TokenModel =
             WHERE `mdid`={mdid})
             """
             await db.run(sql=sql, pool=pool)
-
+        logger.debug(
+            "Deleting metadata",
+            mdid=mdid,
+        )
         sql = f"""
         DELETE FROM `{DB_NAME}`.`metadata`
+        WHERE `mdid`={mdid})
+        """
+        await db.run(sql=sql, pool=pool)
+        logger.debug(
+            "Deleting scope mappings",
+            mdid=mdid,
+        )
+        # Cleanup scope mappings
+        sql = f"""
+        DELETE FROM `{DB_NAME}`.`scope_mappings`
         WHERE `mdid`={mdid})
         """
         await db.run(sql=sql, pool=pool)
@@ -492,7 +505,10 @@ async def add_dataset(
         bulk=True,
         table_name_override=table_name,
     )
-
+    # TODO: this should really be more like 'for each default scope mapping in the provided config'
+    await add_scope_mapping(
+        ScopeMapping(mdid=mdid, scope="admin"), pool=pool, token_model=token_model
+    )
     return mdid, return_status_code
 
 
@@ -513,7 +529,10 @@ async def check_scope_mapping_exists(
             f"Found existing scope mapping{'' if len(result)==1 else 's'}", num=len(result)
         )
     elif len(result) > 1:
-        raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=f"Ambiguous scope mapping for {scope_mapping}.")
+        raise HTTPException(
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            detail=f"Ambiguous scope mapping for {scope_mapping}.",
+        )
     else:
         return -1
 
@@ -523,6 +542,10 @@ async def check_scope_mapping_exists(
 async def add_scope_mapping(
     scope_mapping: ScopeMapping, pool: Pool, overwrite: bool = False, token_model: TokenModel = None
 ) -> Tuple[int, int]:
+    logger.debug(
+        "Adding scope mapping",
+        scope_mapping=scope_mapping,
+    )
     if scope_mapping is None or scope_mapping.scope is None or scope_mapping.mdid is None:
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST, detail=f"Scope mapping {scope_mapping} is invalid"
@@ -531,16 +554,33 @@ async def add_scope_mapping(
     return_status_code = HTTPStatus.NO_CONTENT
     mapping_id = await check_scope_mapping_exists(scope_mapping, pool=pool)
     if mapping_id != -1:
+        logger.debug(
+            "Scope mapping already exists",
+            scope_mapping=scope_mapping,
+        )
         if overwrite:
+            logger.debug(
+                "Overwriting scope mapping",
+                scope_mapping=scope_mapping,
+            )
             await delete_scope_mapping(scope_mapping, pool=pool)
             return_status_code = HTTPStatus.CREATED
         else:
             return mapping_id, HTTPStatus.SEE_OTHER
     else:
         return_status_code = HTTPStatus.CREATED
-
-    mapping_id = await db.insert_data(base_model=ScopeMapping, pool=pool, data=[scope_mapping], bulk=False)
-
+    logger.debug(
+        "Creating scope mapping",
+        scope_mapping=scope_mapping,
+    )
+    mapping_id = await db.insert_data(
+        base_model=ScopeMapping, pool=pool, data=[scope_mapping], bulk=False
+    )
+    logger.debug(
+        "Created scope mapping",
+        scope_mapping=scope_mapping,
+        mapping_id=mapping_id,
+    )
     return mapping_id, return_status_code
 
 
