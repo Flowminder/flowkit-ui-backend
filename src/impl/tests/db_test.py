@@ -136,36 +136,11 @@ async def test_drop_index(mocker, fresh_pool):
 async def test_add_indices(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.util.db.run",
-        side_effect=[None, None, None],
+        side_effect=[None] * 10,
     )
-    mocker.patch(
-        "flowkit_ui_backend.impl.util.db.get_index",
-        side_effect=[None, None, None],
-    )
+    mocker.patch("flowkit_ui_backend.impl.util.db.get_index", side_effect=[None] * 10)
 
     await db.add_indices(pool=fresh_pool)
-    # TODO: add meaningful tests
-
-
-@pytest.mark.asyncio
-async def test_add_indices_wrong_category_type(mocker, fresh_pool):
-    mocker.patch(
-        "flowkit_ui_backend.impl.util.db.run",
-        side_effect=[(None, None), (None, None), (None, None)],
-    )
-
-    await db.add_indices(pool=fresh_pool, category_type="foo")
-    # TODO: add meaningful tests
-
-
-@pytest.mark.asyncio
-async def test_drop_indices_none(mocker, fresh_pool):
-    mocker.patch(
-        "flowkit_ui_backend.impl.util.db.run",
-        side_effect=[(None, None), (None, None), (None, None)],
-    )
-
-    await db.drop_indices(pool=fresh_pool)
     # TODO: add meaningful tests
 
 
@@ -173,25 +148,14 @@ async def test_drop_indices_none(mocker, fresh_pool):
 async def test_drop_indices(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.util.db.get_index",
-        side_effect=["baz", None, None],
+        side_effect=[None] * 4,
     )
     mocker.patch(
         "flowkit_ui_backend.impl.util.db.run",
         side_effect=[(None, None)],
     )
 
-    await db.drop_indices(pool=fresh_pool, category_type="single_location")
-    # TODO: add meaningful tests
-
-
-@pytest.mark.asyncio
-async def test_drop_indices_wrong_category_type(mocker, fresh_pool):
-    mocker.patch(
-        "flowkit_ui_backend.impl.util.db.run",
-        side_effect=[(None, None), (None, None), (None, None)],
-    )
-
-    await db.drop_indices(pool=fresh_pool, category_type="foo")
+    await db.drop_indices(pool=fresh_pool)
     # TODO: add meaningful tests
 
 

@@ -26,7 +26,12 @@ logger = structlog.get_logger("flowkit_ui_backend.log")
 
 SCHEMA_PATH = f"/home/{os.getenv('APP_DIR')}/src-generated/schema"
 PERSISTENT_FIRST_RUN = f"/home/{os.getenv('APP_DIR')}/FIRST_RUN"
-INDICES = {"metadata": "dt", "single_location_data": "mdid", "flow_data": "mdid"}
+INDICES = {
+    "metadata": ["dt", "mdid", "trid", "srid", "category_id", "indicator_id"],
+    "scope_mapping": ["mdid", "scope"],
+    "single_location_data": ["mdid"],
+    "flow_data": ["mdid"],
+}
 
 
 async def provision_db(pool: Pool) -> boolean:
@@ -106,25 +111,16 @@ async def drop_index(table: str, column: str, pool: Pool):
     logger.debug("Done.")
 
 
-async def add_indices(pool: Pool, category_type: str = None):
-    for table in INDICES:
-        if (category_type is not None) and (
-            (table == "single_location_data" and category_type != "single_location")
-            or (table == "flow_data" and category_type != "flow")
-        ):
-            continue
-        index_name = await get_index(table=table, column=INDICES[table], pool=pool)
-        if index_name is None:
-            await add_index(table=table, column=INDICES[table], pool=pool)
+async def add_indices(pool: Pool):
+    for table, index_list in INDICES.items():
+        for index in index_list:
+            index_name = await get_index(table=table, column=index, pool=pool)
+            if index_name is None:
+                await add_index(table=table, column=index, pool=pool)
 
 
-async def drop_indices(pool: Pool, category_type: str = None):
+async def drop_indices(pool: Pool):
     for table in INDICES:
-        if (category_type is not None) and (
-            (table == "single_location_data" and category_type != "single_location")
-            or (table == "flow_data" and category_type != "flow")
-        ):
-            continue
         index_name = await get_index(table=table, column=INDICES[table], pool=pool)
         if index_name is not None:
             await drop_index(table=table, column=INDICES[table], pool=pool)

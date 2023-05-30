@@ -1676,6 +1676,7 @@
                     "category_id": {
                         "description": "A machine-readable, unique category ID",
                         "type": "string",
+                        "maxLength": 255,
                         "example": "resident_metrics"
                     },
                     "type": {
@@ -1732,10 +1733,12 @@
                     "indicator_id": {
                         "description": "The name of the indicator",
                         "type": "string",
+                        "maxLength": 255,
                         "example": "resident_count"
                     },
                     "category_id": {
                         "description": "The category ID this indicator belongs to",
+                        "maxLength": 255,
                         "type": "string"
                     },
                     "order": {
@@ -1839,11 +1842,13 @@
                     },
                     "category_id": {
                         "description": "The identifier for the category that this metadata relates to",
-                        "type": "string"
+                        "type": "string",
+                        "maxLength": 255
                     },
                     "indicator_id": {
                         "description": "The identifier for the indicator that this metadata relates to",
-                        "type": "string"
+                        "type": "string",
+                        "maxLength": 255
                     },
                     "srid": {
                         "description": "The identifier for the spatial resolution that this aggregate relates to",
@@ -2173,11 +2178,13 @@
             "category_id": {
                 "description": "A unique category ID",
                 "type": "string",
+                "maxLength": 255,
                 "example": "residents_indicators_people"
             },
             "indicator_id": {
                 "description": "An indicator ID that's unique across categories. To achieve this, it is prefixed by the category ID and a . character.",
                 "type": "string",
+                "maxLength": 255,
                 "example": "residents_indicators_people.residents"
             },
             "srid": {
@@ -2360,6 +2367,7 @@
                     "scope": {
                         "description": "The scope ID as defined in the Auth0 security schema",
                         "type": "string",
+                        "maxLength": 128,
                         "readOnly": true
                     },
                     "mdid": {
