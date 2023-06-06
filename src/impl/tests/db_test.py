@@ -148,11 +148,11 @@ async def test_add_indices(mocker, fresh_pool):
 async def test_drop_indices(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.util.db.get_index",
-        side_effect=[None] * 4,
+        side_effect=[None] * 10,
     )
     mocker.patch(
         "flowkit_ui_backend.impl.util.db.run",
-        side_effect=[(None, None)],
+        side_effect=[(None, None)] * 10,
     )
 
     await db.drop_indices(pool=fresh_pool)

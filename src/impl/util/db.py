@@ -120,10 +120,11 @@ async def add_indices(pool: Pool):
 
 
 async def drop_indices(pool: Pool):
-    for table in INDICES:
-        index_name = await get_index(table=table, column=INDICES[table], pool=pool)
-        if index_name is not None:
-            await drop_index(table=table, column=INDICES[table], pool=pool)
+    for table, index_list in INDICES.items():
+        for index in index_list:
+            index_name = await get_index(table=table, column=index, pool=pool)
+            if index_name is not None:
+                await drop_index(table=table, column=index, pool=pool)
 
 
 async def load_prepared_sql(base_model: BaseModel, query_type: str) -> str:
