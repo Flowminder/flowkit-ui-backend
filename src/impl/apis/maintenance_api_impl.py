@@ -357,9 +357,9 @@ async def check_dataset_exists(dataset: Dataset, pool: Pool, token_model: TokenM
         "dt": dataset.metadata.dt,
     }
     (column_names, result) = await db.run(sql, pool=pool, args=props)
-    if result is not None and len(result) > 0:
+    if result is not None and len(result) == 1:
         logger.debug(f"Found existing dataset.")
-    elif len(result) > 1:
+    elif result is not None and len(result) > 1:
         logger.error("Multiple ids for dataset.", ids=[res[0] for res in result], props=props)
         raise HTTPException(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail="Ambiguous dataset"
@@ -524,11 +524,11 @@ async def check_scope_mapping_exists(
     """
     props = {"scope": scope_mapping.scope, "mdid": scope_mapping.mdid}
     (column_names, result) = await db.run(sql, pool=pool, args=props)
-    if result is not None and len(result) > 0:
+    if result is not None and len(result) == 1:
         logger.debug(
             f"Found existing scope mapping{'' if len(result)==1 else 's'}", num=len(result)
         )
-    elif len(result) > 1:
+    elif result is not None and len(result) > 1:
         raise HTTPException(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
             detail=f"Ambiguous scope mapping for {scope_mapping}.",
