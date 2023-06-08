@@ -9,6 +9,7 @@ from http import HTTPStatus
 from aiomysql import Pool
 from fastapi import HTTPException
 from dotenv import load_dotenv
+from flowkit_ui_backend.models.extra_models import TokenModel
 from flowkit_ui_backend.models.user_metadata import UserMetadata
 from auth0.v3.asyncify import asyncify
 from auth0.v3.management import Auth0
@@ -28,7 +29,7 @@ logger = structlog.get_logger("flowkit_ui_backend.log")
 # and use that to execute the request.
 
 
-async def get_user(uid: str, pool: Pool = None) -> UserMetadata:
+async def get_user(uid: str, pool: Pool = None, token_model: TokenModel = None) -> UserMetadata:
     user = await Auth0(
         os.getenv("AUTH0_DOMAIN"), await get_management_api_m2m_token()
     ).users.get_async(uid)
@@ -37,19 +38,24 @@ async def get_user(uid: str, pool: Pool = None) -> UserMetadata:
     return user
 
 
-async def update_user(uid: str, body: UserMetadata, pool: Pool = None) -> None:
+async def update_user(
+    uid: str,
+    body: UserMetadata,
+    pool: Pool = None,
+    token_model: TokenModel = None,
+) -> None:
     await Auth0(os.getenv("AUTH0_DOMAIN"), await get_management_api_m2m_token()).users.update_async(
         uid, {"user_metadata": body.dict()}
     )
 
 
-async def delete_user(uid: str, pool: Pool = None) -> None:
+async def delete_user(uid: str, pool: Pool = None, token_model: TokenModel = None) -> None:
     await Auth0(os.getenv("AUTH0_DOMAIN"), await get_management_api_m2m_token()).users.delete_async(
         uid
     )
 
 
-async def reset_password(email: str, pool: Pool = None) -> None:
+async def reset_password(email: str, pool: Pool = None, token_model: TokenModel = None) -> None:
     response = httpx.post(
         url=f"https://{os.getenv('AUTH0_DOMAIN')}/dbconnections/change_password",
         headers={"Content-Type": "application/json"},

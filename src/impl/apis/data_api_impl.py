@@ -5,22 +5,19 @@ import structlog
 import math
 import pendulum
 import os
-import cProfile
-import pstats
 from typing import Optional
 from fastapi import HTTPException
 from aiomysql import Pool
 from dateutil.relativedelta import relativedelta
 from http import HTTPStatus
 from dotenv import load_dotenv
+from flowkit_ui_backend.models.extra_models import TokenModel
 from flowkit_ui_backend.models.query_parameters import QueryParameters
 from flowkit_ui_backend.models.spatial_resolution import SpatialResolution
 from flowkit_ui_backend.models.spatial_resolutions import SpatialResolutions
 from flowkit_ui_backend.models.temporal_resolution import TemporalResolution
 from flowkit_ui_backend.models.temporal_resolutions import TemporalResolutions
 from flowkit_ui_backend.models.metadata import Metadata
-from flowkit_ui_backend.models.single_location_data import SingleLocationData
-from flowkit_ui_backend.models.flow_data import FlowData
 from flowkit_ui_backend.models.time_range import TimeRange
 from flowkit_ui_backend.models.category import Category
 from flowkit_ui_backend.models.categories import Categories
@@ -38,54 +35,77 @@ DEFAULT_NUM_BINS = 7
 DB_NAME = os.getenv("DB_NAME")
 
 
-async def list_categories(pool: Pool = None) -> Optional[Categories]:
-    categories = await db.select_data(base_model=Category, pool=pool)
+async def list_categories(pool: Pool, token_model: TokenModel) -> Optional[Categories]:
+    logger.warn("TODO: check permissions", token_model=token_model.permissions)
+    categories = await db.select_data(base_model=Category, pool=pool, token_model=token_model)
     return Categories(categories=categories)
 
 
-async def get_category(category_id: str, pool: Pool = None) -> Category:
+async def get_category(category_id: str, pool: Pool, token_model: TokenModel) -> Category:
     categories = await db.select_data(
-        base_model=Category, id_key="category_id", ids=[category_id], pool=pool
+        base_model=Category,
+        pool=pool,
+        id_key="category_id",
+        ids=[category_id],
+        token_model=token_model,
     )
     if len(categories) == 0:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Category not found")
     return categories[0]
 
 
-async def list_indicators(pool: Pool = None) -> Optional[Indicators]:
-    indicators = await db.select_data(base_model=Indicator, pool=pool)
+async def list_indicators(pool: Pool, token_model: TokenModel) -> Optional[Indicators]:
+    indicators = await db.select_data(base_model=Indicator, pool=pool, token_model=token_model)
     return Indicators(indicators=indicators)
 
 
-async def get_indicator(indicator_id: str, pool: Pool = None) -> Indicator:
+async def get_indicator(indicator_id: str, pool: Pool, token_model: TokenModel) -> Indicator:
     indicators = await db.select_data(
-        base_model=Indicator, id_key="indicator_id", ids=[indicator_id], pool=pool
+        base_model=Indicator,
+        pool=pool,
+        id_key="indicator_id",
+        ids=[indicator_id],
+        token_model=token_model,
     )
     if len(indicators) == 0:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Indicator not found")
     return indicators[0]
 
 
-async def get_indicators_for_category(category_id: str, pool: Pool = None) -> Optional[Indicators]:
+async def get_indicators_for_category(
+    category_id: str, pool: Pool, token_model: TokenModel
+) -> Optional[Indicators]:
     indicators = await db.select_data(
-        base_model=Indicator, id_key="category_id", ids=[category_id], pool=pool
+        base_model=Indicator,
+        pool=pool,
+        id_key="category_id",
+        ids=[category_id],
+        token_model=token_model,
     )
     return Indicators(indicators=indicators)
 
 
-async def list_spatial_resolutions(pool: Pool = None) -> Optional[SpatialResolutions]:
+async def list_spatial_resolutions(
+    pool: Pool, token_model: TokenModel
+) -> Optional[SpatialResolutions]:
     spatial_resolutions = await db.select_data(
         base_model=SpatialResolution,
-        # leave out the actual boundary - that will be retrieved individually
-        fields=["srid", "label", "index", "description", "translation"],
         pool=pool,
+        fields=["srid", "label", "index", "description", "translation"],
+        token_model=token_model,
     )
     return SpatialResolutions(spatial_resolutions=spatial_resolutions)
 
 
-async def get_spatial_resolution(srid: int, pool: Pool = None) -> SpatialResolution:
+async def get_spatial_resolution(
+    srid: int, pool: Pool, token_model: TokenModel
+) -> SpatialResolution:
     spatial_resolutions = await db.select_data(
-        base_model=SpatialResolution, id_key="srid", ids=[str(srid)], pool=pool
+        base_model=SpatialResolution,
+        pool=pool,
+        id_key="srid",
+        ids=[str(srid)],
+        token_model=token_model,
     )
     if len(spatial_resolutions) == 0:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Spatial resolution not found")
@@ -93,20 +113,24 @@ async def get_spatial_resolution(srid: int, pool: Pool = None) -> SpatialResolut
 
 
 async def get_spatial_resolutions_for_category(
-    category_id: str, pool: Pool = None
+    category_id: str, pool: Pool, token_model: TokenModel
 ) -> Optional[SpatialResolutions]:
     metadata = await db.select_data(
-        base_model=Metadata, id_key="category_id", ids=[category_id], pool=pool
+        base_model=Metadata,
+        pool=pool,
+        id_key="category_id",
+        ids=[category_id],
+        token_model=token_model,
     )
     srids = list(set([str(md.srid) for md in metadata]))
 
     try:
         spatial_resolutions = await db.select_data(
             base_model=SpatialResolution,
-            id_key="srid",
-            ids=srids,
-            fields=["srid", "label", "index", "description", "translation"],
             pool=pool,
+            id_key="srid",
+            fields=["srid", "label", "index", "description", "translation"],
+            ids=srids,
         )
     except HTTPException as e:
         if e.status_code != 404:
@@ -117,14 +141,24 @@ async def get_spatial_resolutions_for_category(
     return SpatialResolutions(spatial_resolutions=spatial_resolutions)
 
 
-async def list_temporal_resolutions(pool: Pool = None) -> Optional[TemporalResolutions]:
-    temporal_resolutions = await db.select_data(base_model=TemporalResolution, pool=pool)
+async def list_temporal_resolutions(
+    pool: Pool, token_model: TokenModel
+) -> Optional[TemporalResolutions]:
+    temporal_resolutions = await db.select_data(
+        base_model=TemporalResolution, pool=pool, token_model=token_model
+    )
     return TemporalResolutions(temporal_resolutions=temporal_resolutions)
 
 
-async def get_temporal_resolution(trid: int, pool: Pool = None) -> TemporalResolution:
+async def get_temporal_resolution(
+    trid: int, pool: Pool, token_model: TokenModel
+) -> TemporalResolution:
     temporal_resolutions = await db.select_data(
-        base_model=TemporalResolution, id_key="trid", ids=[str(trid)], pool=pool
+        base_model=TemporalResolution,
+        pool=pool,
+        id_key="trid",
+        ids=[str(trid)],
+        token_model=token_model,
     )
     if len(temporal_resolutions) == 0:
         raise HTTPException(
@@ -134,15 +168,19 @@ async def get_temporal_resolution(trid: int, pool: Pool = None) -> TemporalResol
 
 
 async def get_temporal_resolutions_for_category(
-    category_id: str, pool: Pool = None
+    category_id: str, pool: Pool, token_model: TokenModel
 ) -> Optional[TemporalResolutions]:
     metadata = await db.select_data(
-        base_model=Metadata, id_key="category_id", ids=[category_id], pool=pool
+        base_model=Metadata,
+        pool=pool,
+        id_key="category_id",
+        ids=[category_id],
+        token_model=token_model,
     )
     trids = list(set([str(md.trid) for md in metadata]))
     try:
         temporal_resolutions = await db.select_data(
-            base_model=TemporalResolution, id_key="trid", ids=trids, pool=pool
+            base_model=TemporalResolution, pool=pool, id_key="trid", ids=trids
         )
     except HTTPException as e:
         if e.status_code != 404:
@@ -154,28 +192,41 @@ async def get_temporal_resolutions_for_category(
 
 
 async def get_time_range(
-    category_id: str, indicator_id: str, srid: int, trid: int, pool: Pool = None
+    category_id: str,
+    indicator_id: str,
+    srid: int,
+    trid: int,
+    pool: Pool,
+    token_model: TokenModel,
 ) -> TimeRange:
     # get temporal resolution to know how to format the spatial entities
     temporal_resolutions = await db.select_data(
-        base_model=TemporalResolution, id_key="trid", ids=[str(trid)], pool=pool
+        base_model=TemporalResolution,
+        pool=pool,
+        id_key="trid",
+        ids=[str(trid)],
+        token_model=token_model,
     )
 
     date_format = temporal_resolutions[0].date_format
 
     sql = f"""
-    SELECT DISTINCT `dt`, `min_value`, `max_value`
-    FROM `{os.getenv('DB_NAME')}`.`metadata`
-    WHERE `category_id`=%s
-    AND `indicator_id`=%s
-    AND srid=%s
-    AND trid=%s
-    ORDER BY dt ASC
+    SELECT DISTINCT md.`dt`, md.`min_value`, md.`max_value`
+    FROM `{DB_NAME}`.`metadata` AS md
+    LEFT JOIN `{DB_NAME}`.`scope_mapping` AS sm
+    ON sm.`mdid`=md.`mdid`
+    WHERE sm.`scope` IN ("{'", "'.join(token_model.permissions)}")
+    AND md.`category_id`=%s
+    AND md.`indicator_id`=%s
+    AND md.`srid`=%s
+    AND md.`trid`=%s
+    ORDER BY md.`dt` ASC
     """
     args = [category_id, indicator_id, srid, trid]
-    (column_names, result) = await db.run(sql, args, pool=pool)
-    logger.debug(f"Found {len(result)} datasets")
+    (column_names, result) = await db.run(sql, pool=pool, args=args)
+    logger.debug(f"Found {len(result)} datasets", result=result)
 
+    logger.debug(f"Formatting dates...", date_format=date_format)
     dates = [row[0].strftime(date_format) for row in result]
     min_value = min([row[1] for row in result]) if len(result) > 0 else None
     max_value = max([row[2] for row in result]) if len(result) > 0 else None
@@ -206,13 +257,11 @@ async def get_time_range(
     return time_range
 
 
-async def run_query(query_parameters: QueryParameters, pool: Pool = None) -> QueryResult:
+async def run_query(
+    query_parameters: QueryParameters, pool: Pool, token_model: TokenModel
+) -> QueryResult:
     # get category to find which data table to use
-    logger.debug("Get category object")
-    categories = await db.select_data(
-        base_model=Category, id_key="category_id", ids=[query_parameters.category_id], pool=pool
-    )
-    category = categories[0]
+    category = await get_category(query_parameters.category_id, token_model=token_model, pool=pool)
     # make sure to amend table name for data tables
     base_table_name = f"{category.type}_data"
     table_name = f"{base_table_name}_{query_parameters.indicator_id}"
@@ -223,20 +272,11 @@ async def run_query(query_parameters: QueryParameters, pool: Pool = None) -> Que
     )
 
     # get temporal resolution to know how to format the spatial entities
-    logger.debug("Get temporal resolution object")
-    temporal_resolutions = await db.select_data(
-        base_model=TemporalResolution, id_key="trid", ids=[str(query_parameters.trid)], pool=pool
-    )
-    tr = temporal_resolutions[0]
-
-    if (
-        len(categories) == 0
-        or len(temporal_resolutions) == 0
-        or categories[0].type not in ["single_location", "flow"]
-    ):
+    tr = await get_temporal_resolution(query_parameters.trid, token_model=token_model, pool=pool)
+    if category.type not in ["single_location", "flow"]:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
-            detail="Could not find category or temporal resolution",
+            detail="Could not find category",
         )
 
     # filter by date
@@ -248,7 +288,10 @@ async def run_query(query_parameters: QueryParameters, pool: Pool = None) -> Que
 
     sql = f"""
     SELECT * FROM `{DB_NAME}`.`metadata` AS md
-    WHERE md.`category_id`=%s
+    LEFT JOIN `{DB_NAME}`.`scope_mapping` AS sm
+    ON sm.mdid=md.mdid
+    WHERE sm.scope IN ("{'", "'.join(token_model.permissions)}")
+    AND md.`category_id`=%s
     AND md.`indicator_id`=%s
     AND md.`srid`=%s
     AND md.`trid`=%s
@@ -265,12 +308,16 @@ async def run_query(query_parameters: QueryParameters, pool: Pool = None) -> Que
         end_date.format("YYYY-MM-DD HH:mm:ss"),
     ]
     logger.debug("Running metadata query", sql=sql, args=args)
-    (column_names, result) = await db.run(sql, args, pool=pool)
+    (column_names, result) = await db.run(sql, pool=pool, args=args)
     logger.debug("Finished running metadata query")
     if not result:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="No metadata found")
 
     mdids = [str(md[1]) for md in result]
+    # support getting mdids only
+    if query_parameters.mdids_only is True:
+        return QueryResult(mdids=mdids)
+
     mdid_to_date = {str(md[1]): md[8] for md in result}
     logger.debug(f"Found metadata objects, now getting data...", num=len(mdids))
 
@@ -291,12 +338,8 @@ async def run_query(query_parameters: QueryParameters, pool: Pool = None) -> Que
     min_value = math.inf
     max_value = -math.inf
     async with pool.acquire() as conn, conn.cursor() as cursor:
-        with cProfile.Profile() as pr:
-            await cursor.execute(select_query)
-        stats = pstats.Stats(pr)
-        stats.sort_stats(pstats.SortKey.TIME)
-        stats.print_stats(10)
-        # await cursor.execute(select_query)
+        await cursor.execute(select_query)
+
         column_names = [i[0] for i in cursor.description]
         logger.debug("Executed query", column_names=column_names)
         if "data" not in column_names:
@@ -315,37 +358,31 @@ async def run_query(query_parameters: QueryParameters, pool: Pool = None) -> Que
             destination_index = column_names.index("destination")
         done = False
         num_rows = 0
-        with cProfile.Profile() as pr:
-            while not done:
-                row = await cursor.fetchone()
-                if row is not None:
-                    num_rows += 1
-                    # adjust the global min/max if necessary
-                    min_value = min([row[data_index], min_value])
-                    max_value = max([row[data_index], max_value])
+        while not done:
+            row = await cursor.fetchone()
+            if row is not None:
+                num_rows += 1
+                # adjust the global min/max if necessary
+                min_value = min([row[data_index], min_value])
+                max_value = max([row[data_index], max_value])
 
-                    this_date = mdid_to_date[str(row[mdid_index])].strftime(tr.date_format)
-                    data_by_date.setdefault(this_date, {})
-                    value = util.num(str(row[data_index]))
+                this_date = mdid_to_date[str(row[mdid_index])].strftime(tr.date_format)
+                data_by_date.setdefault(this_date, {})
+                value = util.num(str(row[data_index]))
 
-                    if is_single_value:
-                        data_by_date[this_date][row[spatial_unit_id_index]] = value
-                    elif is_flow:
-                        data_by_date[this_date].setdefault(row[origin_index], {})
-                        if value is not None:
-                            data_by_date[this_date][row[origin_index]][
-                                row[destination_index]
-                            ] = value
-                    else:
-                        raise HTTPException(
-                            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-                            detail="Cannot find spatial unit in data",
-                        )
+                if is_single_value:
+                    data_by_date[this_date][row[spatial_unit_id_index]] = value
+                elif is_flow:
+                    data_by_date[this_date].setdefault(row[origin_index], {})
+                    if value is not None:
+                        data_by_date[this_date][row[origin_index]][row[destination_index]] = value
                 else:
-                    done = True
-        stats = pstats.Stats(pr)
-        stats.sort_stats(pstats.SortKey.TIME)
-        stats.print_stats(10)
+                    raise HTTPException(
+                        status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+                        detail="Cannot find spatial unit in data",
+                    )
+            else:
+                done = True
     logger.debug(
         "Finished running data query",
         num_results=num_rows,

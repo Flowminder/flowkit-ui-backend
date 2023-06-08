@@ -3,8 +3,6 @@
 
 import os
 import pytest
-import asyncio
-import aiomysql
 from fastapi import HTTPException
 from flowkit_ui_backend.impl.apis import general_api_impl
 from flowkit_ui_backend.models.data_providers import DataProviders
@@ -21,22 +19,8 @@ DPS = DataProviders(
 )
 
 
-# helper function to get a pool without an app
-async def get_pool():
-    return await aiomysql.create_pool(
-        host=os.getenv("CONTAINER_NAME_DB"),
-        port=int(os.getenv("DB_PORT_CONTAINER")),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PW"),
-        db=os.getenv("DB_NAME"),
-        loop=asyncio.get_event_loop(),
-        autocommit=True,
-        local_infile=True,
-    )
-
-
 @pytest.mark.asyncio
-async def test_get_setup(mocker):
+async def test_get_setup(mocker, provisioned_db):
     languages = [
         Language(lid=1, code="FO", name="Foo", flag="foo.svg", default=True),
         Language(lid=2, code="BA", name="Bar", flag="bar.svg", default=False),
@@ -48,7 +32,7 @@ async def test_get_setup(mocker):
         side_effect=[languages, DPS.data_providers],
     )
 
-    result = await general_api_impl.get_setup(pool=await get_pool())
+    result = await general_api_impl.get_setup(pool=provisioned_db)
 
     assert type(result) == Config
     assert len(result.data_providers) == 2
@@ -56,39 +40,39 @@ async def test_get_setup(mocker):
 
 
 @pytest.mark.asyncio
-async def test_list_data_providers(mocker):
+async def test_list_data_providers(mocker, provisioned_db):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.general_api_impl.db.select_data",
         return_value=DPS.data_providers,
     )
 
-    result = await general_api_impl.list_data_providers(pool=await get_pool())
+    result = await general_api_impl.list_data_providers(pool=provisioned_db)
     assert len(result.data_providers) == 2
 
 
 @pytest.mark.asyncio
-async def test_get_data_provider_invalid(mocker):
+async def test_get_data_provider_invalid(mocker, provisioned_db):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.general_api_impl.db.select_data",
         side_effect=[[]],
     )
 
     with pytest.raises(HTTPException):
-        await general_api_impl.get_data_provider(dpid=1, pool=await get_pool())
+        await general_api_impl.get_data_provider(dpid=1, pool=provisioned_db)
 
 
 @pytest.mark.asyncio
-async def test_get_data_provider(mocker):
+async def test_get_data_provider(mocker, provisioned_db):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.general_api_impl.db.select_data",
         return_value=[DPS.data_providers[0]],
     )
 
-    result = await general_api_impl.get_data_provider(dpid=1, pool=await get_pool())
+    result = await general_api_impl.get_data_provider(dpid=1, pool=provisioned_db)
     assert result == DPS.data_providers[0]
 
 
 @pytest.mark.asyncio
-async def test_heartbeat():
-    result = await general_api_impl.heartbeat(pool=await get_pool())
+async def test_heartbeat(provisioned_db):
+    result = await general_api_impl.heartbeat(pool=provisioned_db)
     assert result.python_package == os.getenv("APP_NAME")

@@ -184,7 +184,6 @@ build: --clean --codegen
 	$(info Running build...)
 	echo "Copying required files into generated code..."
 	cp ./src/.coveragerc ./src-generated/.coveragerc
-	cp ./src/conftest.py ./src-generated/conftest.py
 	cp ./src/impl/requirements.txt ./src-generated/requirements.txt
 	cp ./src/impl/dev-requirements.txt ./src-generated/dev-requirements.txt
 	cp ./.env ./src-generated/.env

@@ -22,7 +22,7 @@ load_dotenv()
 logger = structlog.get_logger("flowkit_ui_backend.log")
 
 
-async def get_setup(pool: Pool = None) -> Config:
+async def get_setup(pool: Pool) -> Config:
     languages = await db.select_data(base_model=Language, pool=pool)
     data_providers = await db.select_data(base_model=DataProvider, pool=pool)
 
@@ -38,21 +38,21 @@ async def get_setup(pool: Pool = None) -> Config:
     return config
 
 
-async def list_data_providers(pool: Pool = None) -> DataProviders:
+async def list_data_providers(pool: Pool) -> DataProviders:
     data_providers = await db.select_data(base_model=DataProvider, pool=pool)
     return DataProviders(data_providers=data_providers)
 
 
-async def get_data_provider(dpid: int, pool: Pool = None) -> DataProvider:
+async def get_data_provider(dpid: int, pool: Pool) -> DataProvider:
     data_providers = await db.select_data(
-        base_model=DataProvider, id_key="dpid", ids=[dpid], pool=pool
+        base_model=DataProvider, pool=pool, id_key="dpid", ids=[dpid]
     )
     if len(data_providers) == 0:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="No data providers found")
     return data_providers[0]
 
 
-async def heartbeat(pool: Pool = None) -> Heartbeat:
+async def heartbeat(pool: Pool) -> Heartbeat:
     logger.info("Request received, sending heartbeat...")
     heartbeat = Heartbeat(
         api_version=os.getenv("API_VERSION"),

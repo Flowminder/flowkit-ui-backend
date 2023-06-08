@@ -1065,6 +1065,51 @@
                     "503": { "$ref": "#/components/responses/service_unavailable" }
                 }
             }
+        },
+        "/scope_mapping": {
+            "post": {
+                "operationId": "add_scope_mapping",
+                "x-skip-test": {"reason":"Post tests are broken"},
+                "tags": ["maintenance"],
+                "description":"Add a scope mapping.",
+                "security": [{
+                    "auth0": ["write:data"]
+                }],
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/scope_mapping"
+                },
+                "responses": {
+                    "201": { "$ref": "#/components/responses/created" },
+                    "204": { "$ref": "#/components/responses/no_content" },
+                    "400": { "$ref": "#/components/responses/bad_request" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "404": { "$ref": "#/components/responses/not_found" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            },
+            "delete": {
+                "x-skip-test": {"reason": "This delete test is currently broken."},
+                "operationId": "delete_scope_mapping",
+                "tags": ["maintenance"],
+                "description":"Delete a scope mapping.",
+                "security": [{
+                    "auth0": ["write:data"]
+                }],
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/scope_mapping"
+                },
+                "responses": {
+                    "204": { "$ref": "#/components/responses/no_content" },
+                    "400": { "$ref": "#/components/responses/bad_request" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "404": { "$ref": "#/components/responses/not_found" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            }
         }
     },
     "components": {
@@ -1176,6 +1221,18 @@
                         "schema": {
                             "$ref": "#/components/schemas/dataset",
                             "x-body-name": "dataset"
+                        }
+                    }
+                }
+            },
+            "scope_mapping": {
+                "required": true,
+                "description": "A mapping between scopes and metadata IDs to signify what a scope gives access to",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/scope_mapping",
+                            "x-body-name": "scope_mapping"
                         }
                     }
                 }
@@ -1303,13 +1360,25 @@
                 }
             },
             "created": {
-                "description": "Created: The resource was created successfully."
+                "description": "Created: The resource was created successfully.",
+                "text/plain": {
+                    "schema": {
+                        "type": "integer",
+                        "example": 1
+                    }
+                }
             },
             "no_content": {
                 "description": "OK: The request was successful."
             },
             "see_other": {
-                "description": "See other: The resource already exists and is returned in the response."
+                "description": "See other: The resource already exists and is returned in the response.",
+                "text/plain": {
+                    "schema": {
+                        "type": "integer",
+                        "example": 1
+                    }
+                }
             },
             "bad_request": {
                 "description": "Bad Request: The request is malformed, incomplete or otherwise invalid."
@@ -1607,6 +1676,7 @@
                     "category_id": {
                         "description": "A machine-readable, unique category ID",
                         "type": "string",
+                        "maxLength": 255,
                         "example": "resident_metrics"
                     },
                     "type": {
@@ -1663,10 +1733,12 @@
                     "indicator_id": {
                         "description": "The name of the indicator",
                         "type": "string",
+                        "maxLength": 255,
                         "example": "resident_count"
                     },
                     "category_id": {
                         "description": "The category ID this indicator belongs to",
+                        "maxLength": 255,
                         "type": "string"
                     },
                     "order": {
@@ -1770,11 +1842,13 @@
                     },
                     "category_id": {
                         "description": "The identifier for the category that this metadata relates to",
-                        "type": "string"
+                        "type": "string",
+                        "maxLength": 255
                     },
                     "indicator_id": {
                         "description": "The identifier for the indicator that this metadata relates to",
-                        "type": "string"
+                        "type": "string",
+                        "maxLength": 255
                     },
                     "srid": {
                         "description": "The identifier for the spatial resolution that this aggregate relates to",
@@ -2104,11 +2178,13 @@
             "category_id": {
                 "description": "A unique category ID",
                 "type": "string",
+                "maxLength": 255,
                 "example": "residents_indicators_people"
             },
             "indicator_id": {
                 "description": "An indicator ID that's unique across categories. To achieve this, it is prefixed by the category ID and a . character.",
                 "type": "string",
+                "maxLength": 255,
                 "example": "residents_indicators_people.residents"
             },
             "srid": {
@@ -2149,6 +2225,11 @@
                         "minimum": 1,
                         "minLength": 1,
                         "maxLength": 4
+                    },
+                    "mdids_only": {
+                        "description": "If true don't return data, only metadata IDs",
+                        "type": "boolean",
+                        "default": false
                     }
                 }
             },
@@ -2167,7 +2248,17 @@
                     },
                     "data_by_date": {
                         "description": "All data for the requested category, indicator, spatial- and temporal resolution and time range. The response is an object the structure of which depends on whether the result is for a single value or a flow. The keys are always dates, corresponding to the date format of the requested spatial resolution. The values are objects where the keys are spatial entity identifiers. In the first case, the values are numeric. In the second case, the values are objects where the keys are spatial entity identifiers representing the destination of the flow (as opposed to the origin in the outer identifier) and the values are numeric.",
-                        "type": "object"
+                        "type": "object",
+                        "nullable": true
+                    },
+                    "mdids": {
+                        "description": "A set of metadata IDs representing the query result",
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "example": "123"
+                        },
+                        "nullable": true
                     }
                 },
                 "example": {
@@ -2264,6 +2355,31 @@
                     { "min": null, "max": -6, "width": "100%" },
                     { "min": 6, "max": null, "width": "100%" }
                 ]
+            },
+            "scope_mapping": {
+                "title": "Scope mapping",
+                "type": "object",
+                "description": "A mapping between scopes and metadata IDs to signify what a scope gives access to",
+                "required": [
+                    "scope", "mdid"
+                ],
+                "properties": {
+                    "scope": {
+                        "description": "The scope ID as defined in the Auth0 security schema",
+                        "type": "string",
+                        "maxLength": 128,
+                        "readOnly": true
+                    },
+                    "mdid": {
+                        "description": "The metadata ID that the scope gives access to",
+                        "type": "integer",
+                        "readOnly": true
+                    }
+                },
+                "example": {
+                    "scope": "read:free_data",
+                    "mdid": 1
+                }
             }
         }
     }

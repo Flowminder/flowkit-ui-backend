@@ -11,12 +11,13 @@ import typing
 import aiofiles
 from fastapi import HTTPException
 from typing import List, Tuple, Optional
-from time import sleep
+from asyncio import sleep
 from pathlib import Path
 from xmlrpc.client import boolean
 from http import HTTPStatus
 from aiomysql import Pool
 from pydantic import BaseModel
+from flowkit_ui_backend.models.extra_models import TokenModel
 from flowkit_ui_backend.impl.util import util
 
 
@@ -25,10 +26,15 @@ logger = structlog.get_logger("flowkit_ui_backend.log")
 
 SCHEMA_PATH = f"/home/{os.getenv('APP_DIR')}/src-generated/schema"
 PERSISTENT_FIRST_RUN = f"/home/{os.getenv('APP_DIR')}/FIRST_RUN"
-INDICES = {"metadata": "dt", "single_location_data": "mdid", "flow_data": "mdid"}
+INDICES = {
+    "metadata": ["dt", "mdid", "trid", "srid", "category_id", "indicator_id"],
+    "scope_mapping": ["mdid", "scope"],
+    "single_location_data": ["mdid"],
+    "flow_data": ["mdid"],
+}
 
 
-async def provision_db(pool: Pool = None) -> boolean:
+async def provision_db(pool: Pool) -> boolean:
     # can't use env vars as they are reset whenever the dev server reloads
     if os.path.isfile(PERSISTENT_FIRST_RUN):
         logger.debug("This is a subsequent run. Skipping provisioning... ")
@@ -74,7 +80,7 @@ async def provision_db(pool: Pool = None) -> boolean:
     return False
 
 
-async def get_index(table: str, column: str, pool: Pool = None) -> str:
+async def get_index(table: str, column: str, pool: Pool) -> str:
     (columns_names, result) = await run(
         f"SHOW INDEXES FROM `{os.getenv('DB_NAME')}`.`{table}` WHERE `Column_name`='{column}'",
         pool=pool,
@@ -87,7 +93,7 @@ async def get_index(table: str, column: str, pool: Pool = None) -> str:
     return index_name
 
 
-async def add_index(table: str, column: str, pool: Pool = None) -> str:
+async def add_index(table: str, column: str, pool: Pool) -> str:
     index_name = f"index_{table}_{column}"
     logger.debug(f"Adding index `{index_name}` to table `{table}`, column {column}...")
     await run(
@@ -98,35 +104,27 @@ async def add_index(table: str, column: str, pool: Pool = None) -> str:
     return index_name
 
 
-async def drop_index(table: str, column: str, pool: Pool = None):
+async def drop_index(table: str, column: str, pool: Pool):
     index_name = f"index_{table}_{column}"
     logger.debug(f"Dropping index `{index_name}`...")
     await run(f"DROP INDEX `{index_name}` ON `{os.getenv('DB_NAME')}`.`{table}`", pool=pool)
     logger.debug("Done.")
 
 
-async def add_indices(category_type: str = None, pool: Pool = None):
-    for table in INDICES:
-        if (category_type is not None) and (
-            (table == "single_location_data" and category_type != "single_location")
-            or (table == "flow_data" and category_type != "flow")
-        ):
-            continue
-        index_name = await get_index(table=table, column=INDICES[table], pool=pool)
-        if index_name is None:
-            await add_index(table=table, column=INDICES[table], pool=pool)
+async def add_indices(pool: Pool):
+    for table, index_list in INDICES.items():
+        for index in index_list:
+            index_name = await get_index(table=table, column=index, pool=pool)
+            if index_name is None:
+                await add_index(table=table, column=index, pool=pool)
 
 
-async def drop_indices(category_type: str = None, pool: Pool = None):
-    for table in INDICES:
-        if (category_type is not None) and (
-            (table == "single_location_data" and category_type != "single_location")
-            or (table == "flow_data" and category_type != "flow")
-        ):
-            continue
-        index_name = await get_index(table=table, column=INDICES[table], pool=pool)
-        if index_name is not None:
-            await drop_index(table=table, column=INDICES[table], pool=pool)
+async def drop_indices(pool: Pool):
+    for table, index_list in INDICES.items():
+        for index in index_list:
+            index_name = await get_index(table=table, column=index, pool=pool)
+            if index_name is not None:
+                await drop_index(table=table, column=index, pool=pool)
 
 
 async def load_prepared_sql(base_model: BaseModel, query_type: str) -> str:
@@ -136,9 +134,7 @@ async def load_prepared_sql(base_model: BaseModel, query_type: str) -> str:
         return re.compile(r"^" + re.escape(query_type) + r".*", re.MULTILINE).findall(contents)[0]
 
 
-async def run(
-    sql: str, args: Optional[list] = None, pool: Pool = None
-) -> Tuple[List[str], List[tuple]]:
+async def run(sql: str, pool: Pool, args: Optional[list] = None) -> Tuple[List[str], List[tuple]]:
     async with pool.acquire() as conn, conn.cursor() as cursor:
         if args is not None:
             await cursor.execute(sql, args=args)
@@ -153,7 +149,7 @@ async def run(
     return (column_names, result)
 
 
-async def run_script(script_path: str, pool: Pool = None) -> boolean:
+async def run_script(script_path: str, pool: Pool) -> boolean:
     success = False
     try:
         async with aiofiles.open(script_path) as script:
@@ -169,11 +165,12 @@ async def run_script(script_path: str, pool: Pool = None) -> boolean:
 
 async def select_data(
     base_model: BaseModel,
+    pool: Pool,
     id_key: Optional[str] = None,
-    ids: Optional[List[str]] = None,
     fields: Optional[List[str]] = None,
     table_name_override: str = None,
-    pool: Pool = None,
+    ids: Optional[List[str]] = None,
+    token_model: TokenModel = None,
 ) -> List[BaseModel]:
     if id_key is not None and (ids is None or len(ids) == 0):
         raise HTTPException(
@@ -181,30 +178,51 @@ async def select_data(
             detail=f"No data found for {base_model.__name__} with {id_key} {ids}",
         )
 
-    select_query = await load_prepared_sql(base_model, "SELECT")
-
     # determine table name - conveniently it's the same as the python module name for the data type
-    table_name = base_model.__module__.split(".")[-1]
-    if table_name_override is not None:
+    table_name = (
+        table_name_override
+        if table_name_override is not None
+        else base_model.__module__.split(".")[-1]
+    )
+    fields_string = ", ".join(f"`{field}`" for field in fields) if fields is not None else "*"
+    select_query = f"SELECT {fields_string} FROM `{os.getenv('DB_NAME')}`.`{table_name}`"
+
+    # permissions apply to these objects
+    object_mapping_ids = {
+        "metadata": "mdid",
+        "category": "category_id",
+        "indicator": "indicator_id",
+        "spatial_resolution": "srid",
+        "temporal_resolution": "trid",
+    }
+    actual_ids = ids
+    if token_model is not None and table_name in object_mapping_ids.keys():
+        id_key = object_mapping_ids[table_name]
+        # get all IDs for objects of this type that are permissible for the token
+        permissible_ids_query = f"""
+        SELECT md.`{id_key}` FROM `{os.getenv("DB_NAME")}`.`metadata` AS md
+        LEFT JOIN `{os.getenv("DB_NAME")}`.`scope_mapping` AS sm
+        ON sm.mdid=md.mdid
+        WHERE sm.scope IN ("{'", "'.join(token_model.permissions)}")
+        GROUP BY md.`{id_key}`"""
+        async with pool.acquire() as conn, conn.cursor() as cursor:
+            await cursor.execute(permissible_ids_query)
+            permissible_ids = [str(i[0]) for i in await cursor.fetchall()]
         logger.debug(
-            "Replacing table for select query",
-            table_name=table_name,
-            table_name_override=table_name_override,
+            "Filtering IDs based on permissions...",
+            id_key=id_key,
+            ids=ids,
+            permissible_ids=permissible_ids,
         )
-        select_query = select_query.replace(table_name, table_name_override)
-        table_name = table_name_override
+        actual_ids = permissible_ids if ids is None else list(set(ids) & set(permissible_ids))
 
-    if fields is not None:
-        fields_string = "`, `".join([str(field) for field in fields])
-        select_query = select_query.replace("SELECT *", f"SELECT `{fields_string}`")
-
-    if id_key is not None and ids is not None and len(ids) > 0:
-        ids_string = "', '".join([str(the_id) for the_id in ids])
+    if id_key is not None and actual_ids is not None:
+        ids_string = "', '".join([str(the_id) for the_id in actual_ids])
         # yes, this is not 100% safe but apparently you cannot parametrise column names :(
         # TODO: maybe switch to another library that *does* support it?
-        select_query = select_query.replace("WHERE 1", f"WHERE `{id_key}` IN ('{ids_string}')")
+        select_query = f"{select_query} WHERE `{id_key}` IN ('{ids_string}')"
 
-    logger.debug("Before query")
+    logger.debug("Before query", select_query=select_query)
 
     async with pool.acquire() as conn, conn.cursor() as cursor:
         await cursor.execute(select_query)
@@ -257,11 +275,11 @@ async def select_data(
 
 async def insert_data(
     base_model: BaseModel,
+    pool: Pool,
     id_key: Optional[str] = None,
     data: List[object] = [],
     bulk: boolean = False,
     table_name_override: Optional[str] = None,
-    pool: Pool = None,
 ) -> Optional[int]:
     insert_query = await load_prepared_sql(base_model, "INSERT")
 
@@ -292,7 +310,7 @@ async def insert_data(
     line_sep = "\n"
     all_values = []
     for d in data:
-        d = await util.add_translation(d, props, pool=pool)
+        d = await util.add_translation(d, pool=pool, props=props)
         d = util.serialise_props(d, props)
 
         # get property values in the correct order
@@ -369,10 +387,10 @@ async def insert_data(
 
 async def update_data(
     base_model: BaseModel,
-    id_key: str = None,
+    pool: Pool,
     id_value: object = None,
     resource: BaseModel = None,
-    pool: Pool = None,
+    id_key: str = None,
 ):
     if id_key is None:
         raise Exception("ID key not given, can't update without it.")
@@ -384,7 +402,7 @@ async def update_data(
     matches = re.compile(r"`[a-zA-Z_]+` = %s").findall(update_query)
     props = [prop.replace("`", "").replace(" = %s", "") for prop in matches]
 
-    resource = await util.add_translation(resource, props, pool=pool)
+    resource = await util.add_translation(resource, pool=pool, props=props)
     resource = util.serialise_props(resource, props)
 
     # get property values in the correct order
@@ -400,10 +418,7 @@ async def update_data(
 
 
 async def delete_data(
-    base_model: BaseModel,
-    id_key: Optional[str] = None,
-    ids: Optional[List[str]] = None,
-    pool: Pool = None,
+    base_model: BaseModel, pool: Pool, ids: Optional[List[str]] = None, id_key: Optional[str] = None
 ):
     # Clear db
     delete_query = await load_prepared_sql(base_model, "DELETE")
@@ -425,7 +440,7 @@ async def delete_data(
 
 # insert a new object into the db or return an existing one
 async def add_resource_with_unique_id(
-    resource: BaseModel, base_model: BaseModel, id_key: str, pool: Pool = None
+    resource: BaseModel, base_model: BaseModel, id_key: str, pool: Pool
 ) -> Tuple[BaseModel, int]:
     ids = (
         [getattr(resource, id_key)]
@@ -434,7 +449,7 @@ async def add_resource_with_unique_id(
     )
     try:
         existing_resource = await select_data(
-            base_model=base_model, id_key=id_key if ids is not None else None, ids=ids, pool=pool
+            base_model=base_model, pool=pool, id_key=id_key if ids is not None else None, ids=ids
         )
         if existing_resource not in [None, []]:
             return existing_resource[0], HTTPStatus.SEE_OTHER
@@ -442,16 +457,16 @@ async def add_resource_with_unique_id(
         if e.status_code != HTTPStatus.NOT_FOUND:
             raise (e)
 
-    await insert_data(base_model=base_model, id_key=id_key, data=[resource], pool=pool)
+    await insert_data(base_model=base_model, pool=pool, id_key=id_key, data=[resource])
     new_resource = await select_data(
-        base_model=base_model, id_key=id_key if ids is not None else None, ids=ids, pool=pool
+        base_model=base_model, pool=pool, id_key=id_key if ids is not None else None, ids=ids
     )
     return new_resource[0], HTTPStatus.CREATED
 
 
 # update an existing resource or throw an error
 async def update_resource_with_unique_id(
-    resource: BaseModel, base_model: BaseModel, id_key: str, id_value: object, pool: Pool = None
+    resource: BaseModel, base_model: BaseModel, id_key: str, id_value: object, pool: Pool
 ):
     # cannot change ID!
     if getattr(resource, id_key) != id_value:
@@ -461,7 +476,7 @@ async def update_resource_with_unique_id(
         )
 
     existing_resource = await select_data(
-        base_model=base_model, id_key=id_key, ids=[getattr(resource, id_key)], pool=pool
+        base_model=base_model, pool=pool, id_key=id_key, ids=[getattr(resource, id_key)]
     )
     if len(existing_resource) == 0:
         raise HTTPException(
@@ -471,7 +486,7 @@ async def update_resource_with_unique_id(
 
     try:
         await update_data(
-            base_model=base_model, id_key=id_key, id_value=id_value, resource=resource, pool=pool
+            base_model=base_model, pool=pool, id_value=id_value, resource=resource, id_key=id_key
         )
     except Exception as e:
         raise HTTPException(
