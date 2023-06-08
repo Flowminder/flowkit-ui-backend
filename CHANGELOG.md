@@ -8,16 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Fixed
+
+### Removed
+
+## [1.3.0]
+### Added
 - Access to datasets is now restricted based on the scopes present in the provided token.
 - Added new endpoint `scope_mapping` to mark and unmark a dataset as accessible with a scope.
 
 ### Changed
 - The `query` endpoint can now optionally return just the identifiers for datasets instead of complete datasets
 - `categories`, `indicators`, `temporal_resolutions`, `spatial_resolutions`, and `indicators_for_category` endpoints will only return items where the provided token permits access to at least one dataset.
-
-### Fixed
-
-### Removed
 
 ## [1.2.1]
 
