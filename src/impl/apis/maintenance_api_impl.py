@@ -529,11 +529,13 @@ async def check_scope_mapping_exists(
             f"Found existing scope mapping{'' if len(result)==1 else 's'}", num=len(result)
         )
     elif result is not None and len(result) > 1:
+        logger.debug(f"Ambiguous scope mapping.", mapping=scope_mapping, results=list(result))
         raise HTTPException(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
             detail=f"Ambiguous scope mapping for {scope_mapping}.",
         )
     else:
+        logger.debug(f"No existing scope mapping.", mapping=scope_mapping)
         return -1
 
     return int(result[0][0])
