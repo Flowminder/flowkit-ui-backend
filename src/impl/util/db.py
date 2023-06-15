@@ -205,6 +205,10 @@ async def select_data(
         ON sm.mdid=md.mdid
         WHERE sm.scope IN ("{'", "'.join(token_model.permissions)}")
         GROUP BY md.`{id_key}`"""
+        logger.debug(
+            "Querying for allowable ids",
+            query=permissible_ids_query,
+        )
         async with pool.acquire() as conn, conn.cursor() as cursor:
             await cursor.execute(permissible_ids_query)
             permissible_ids = [str(i[0]) for i in await cursor.fetchall()]
