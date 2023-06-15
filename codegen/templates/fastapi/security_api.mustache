@@ -100,7 +100,7 @@ async def get_token_{{name}}(
     if not valid:
         raise PermissionError(f"Invalid token: Required permissions {security_scopes.scopes} not present")
 
-    return TokenModel(sub=claims['sub'], permissions=claims['scope'].split(" "))
+    return TokenModel(sub=claims['sub'], permissions=claims['permissions'])
 
 
 def validate_scope_{{name}}(
@@ -117,7 +117,7 @@ def validate_scope_{{name}}(
     :rtype: bool
     """
 
-    token_scopes = claims['scope'].split(' ')
+    token_scopes = claims['permissions']
     valid = all(item in token_scopes for item in required_scopes)
     logger.debug(f"Validating scopes", valid=valid, required=required_scopes, received=token_scopes)
 
