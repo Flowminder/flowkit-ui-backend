@@ -397,7 +397,7 @@ async def delete_dataset(dataset: Dataset, pool: Pool, token_model: TokenModel =
         if result[0][0] > 0:
             sql = f"""
             DELETE FROM `{DB_NAME}`.`{table_name}`
-            WHERE `mdid`={mdid})
+            WHERE `mdid`={mdid}
             """
             await db.run(sql=sql, pool=pool)
         logger.debug(
@@ -406,7 +406,7 @@ async def delete_dataset(dataset: Dataset, pool: Pool, token_model: TokenModel =
         )
         sql = f"""
         DELETE FROM `{DB_NAME}`.`metadata`
-        WHERE `mdid`={mdid})
+        WHERE `mdid`={mdid}
         """
         await db.run(sql=sql, pool=pool)
         logger.debug(
@@ -416,7 +416,7 @@ async def delete_dataset(dataset: Dataset, pool: Pool, token_model: TokenModel =
         # Cleanup scope mappings
         sql = f"""
         DELETE FROM `{DB_NAME}`.`scope_mappings`
-        WHERE `mdid`={mdid})
+        WHERE `mdid`={mdid}
         """
         await db.run(sql=sql, pool=pool)
 
