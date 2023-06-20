@@ -415,7 +415,7 @@ async def delete_dataset(dataset: Dataset, pool: Pool, token_model: TokenModel =
         )
         # Cleanup scope mappings
         sql = f"""
-        DELETE FROM `{DB_NAME}`.`scope_mappings`
+        DELETE FROM `{DB_NAME}`.`scope_mapping`
         WHERE `mdid`={mdid}
         """
         await db.run(sql=sql, pool=pool)
