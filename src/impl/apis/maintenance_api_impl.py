@@ -526,7 +526,9 @@ async def check_scope_mapping_exists(
     (column_names, result) = await db.run(sql, pool=pool, args=props)
     if result is not None and len(result) == 1:
         logger.debug(
-            f"Found existing scope mapping{'' if len(result)==1 else 's'}", num=len(result)
+            f"Found existing scope mapping{'' if len(result)==1 else 's'}",
+            num=len(result),
+            results=result,
         )
     elif result is not None and len(result) > 1:
         logger.debug(f"Ambiguous scope mapping.", mapping=scope_mapping, results=list(result))
