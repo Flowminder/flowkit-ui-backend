@@ -7,7 +7,7 @@ import structlog
 import traceback
 from http import HTTPStatus
 from fastapi.responses import ORJSONResponse, JSONResponse
-
+from fastapi.encoders import jsonable_encoder
 from fastapi import (  # noqa: F401
     APIRouter,
     Body,
@@ -80,7 +80,7 @@ async def {{operationId}}(
         # default to status 200/204 but give the impl the option to define a different status code when returning content
         status_code = impl_result[1] if isinstance(impl_result, tuple) else None
         if content is not None:
-            return ORJSONResponse(status_code=status_code if status_code is not None else HTTPStatus.OK, content=content if type(content) == dict else content.dict())
+            return ORJSONResponse(status_code=status_code if status_code is not None else HTTPStatus.OK, content=jsonable_encoder(content))
         else:
             return Response(status_code=status_code if status_code is not None else HTTPStatus.NO_CONTENT)
 

@@ -197,7 +197,7 @@ async def select_data(
     }
     actual_ids = ids
     if token_model is not None and table_name in object_mapping_ids.keys():
-        id_key = object_mapping_ids[table_name]
+        id_key = object_mapping_ids[table_name] if id_key is None else id_key
         # get all IDs for objects of this type that are permissible for the token
         permissible_ids_query = f"""
         SELECT md.`{id_key}` FROM `{os.getenv("DB_NAME")}`.`metadata` AS md
@@ -205,6 +205,10 @@ async def select_data(
         ON sm.mdid=md.mdid
         WHERE sm.scope IN ("{'", "'.join(token_model.permissions)}")
         GROUP BY md.`{id_key}`"""
+        logger.debug(
+            "Querying for allowable ids",
+            query=permissible_ids_query,
+        )
         async with pool.acquire() as conn, conn.cursor() as cursor:
             await cursor.execute(permissible_ids_query)
             permissible_ids = [str(i[0]) for i in await cursor.fetchall()]

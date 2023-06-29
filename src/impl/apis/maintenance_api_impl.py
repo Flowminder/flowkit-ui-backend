@@ -397,7 +397,7 @@ async def delete_dataset(dataset: Dataset, pool: Pool, token_model: TokenModel =
         if result[0][0] > 0:
             sql = f"""
             DELETE FROM `{DB_NAME}`.`{table_name}`
-            WHERE `mdid`={mdid})
+            WHERE `mdid`={mdid}
             """
             await db.run(sql=sql, pool=pool)
         logger.debug(
@@ -406,7 +406,7 @@ async def delete_dataset(dataset: Dataset, pool: Pool, token_model: TokenModel =
         )
         sql = f"""
         DELETE FROM `{DB_NAME}`.`metadata`
-        WHERE `mdid`={mdid})
+        WHERE `mdid`={mdid}
         """
         await db.run(sql=sql, pool=pool)
         logger.debug(
@@ -415,8 +415,8 @@ async def delete_dataset(dataset: Dataset, pool: Pool, token_model: TokenModel =
         )
         # Cleanup scope mappings
         sql = f"""
-        DELETE FROM `{DB_NAME}`.`scope_mappings`
-        WHERE `mdid`={mdid})
+        DELETE FROM `{DB_NAME}`.`scope_mapping`
+        WHERE `mdid`={mdid}
         """
         await db.run(sql=sql, pool=pool)
 
@@ -526,7 +526,9 @@ async def check_scope_mapping_exists(
     (column_names, result) = await db.run(sql, pool=pool, args=props)
     if result is not None and len(result) == 1:
         logger.debug(
-            f"Found existing scope mapping{'' if len(result)==1 else 's'}", num=len(result)
+            f"Found existing scope mapping{'' if len(result)==1 else 's'}",
+            num=len(result),
+            results=result,
         )
     elif result is not None and len(result) > 1:
         logger.debug(f"Ambiguous scope mapping.", mapping=scope_mapping, results=list(result))

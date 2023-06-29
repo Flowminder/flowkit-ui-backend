@@ -52,9 +52,9 @@
             "type": "single_location",
             "order": 3,
             "flowgeek_url": "https://www.flowgeek.org/methods/calculating-mobility-indicators/presence-indicators/",
-            "label": "Presence",
+            "label": "[Experimental] Presence",
             "description": "Presence-class indicators describe short-term (daily) changes in the number of people who are present within each area.",
-            "label_fr": "Présence journalière",
+            "label_fr": "[Expérimental] Présence journalière",
             "description_fr": "Les indicateurs relatifs à la présence décrivent les variations à court terme du nombre de personnes présentes dans chaque zone."
         },
         {
@@ -62,9 +62,9 @@
             "type": "flow",
             "order": 4,
             "flowgeek_url": "https://www.flowgeek.org/methods/calculating-mobility-indicators/movement-indicators",
-            "label": "Movements",
+            "label": "[Experimental] Movements",
             "description": "Movements-class indicators describe short-term changes in the number of people who are travelling into, out of and between areas.",
-            "label_fr": "Mouvements journaliers",
+            "label_fr": "[Expérimental] Mouvements journaliers",
             "description_fr": "Les indicateurs relatifs aux mouvements décrivent les variations à court terme du nombre de personnes qui se déplacent vers, depuis et entre les zones."
         }
     ],
