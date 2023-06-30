@@ -15,6 +15,7 @@ from flowkit_ui_backend.models.scope_mapping import ScopeMapping
 from flowkit_ui_backend.models.query_parameters import QueryParameters
 from flowkit_ui_backend.impl.apis.data_api_impl import (
     run_query,
+    run_csv_query,
     list_categories,
     list_indicators,
     list_spatial_resolutions,
@@ -181,3 +182,38 @@ async def test_visible_with_mapping(populated_db):
     assert len(srs) == 1
     assert trs[0].trid == 2
     assert len(trs) == 1
+
+
+# This is in the Wrong Place, but hey
+@pytest.mark.asyncio
+async def test_csv_generation(populated_db):
+    params = QueryParameters(
+        category_id="residents",
+        indicator_id="residents.residents",
+        srid=3,
+        trid=2,
+        start_date="2020-02-01",
+        duration=3,
+        mdids_only=False,
+    )
+    await run_csv_query(
+        params, pool=populated_db, token_model=TokenModel(sub="TEST",
+                                                          permissions=["admin"])
+    )
+    
+@pytest.mark.asyncio
+async def test_flow_csv_generation(populated_db):
+
+    params = QueryParameters(
+        category_id="relocations",
+        indicator_id="relocations.relocations",
+        srid=3,
+        trid=2,
+        start_date="2020-02-01",
+        duration=3,
+        mdids_only=False,
+    )
+    await run_csv_query(
+        params, pool=populated_db, token_model=TokenModel(sub="TEST",
+                                                          permissions=["admin"])
+    )

@@ -400,3 +400,30 @@ async def run_query(
     )
 
     return new_result
+
+
+async def run_csv_query(
+    query_parameters: QueryParameters, pool: Pool, token_model: TokenModel
+) -> QueryResult:
+    result = await run_query(query_parameters, pool, token_model)
+    csv_rows = []
+    breakpoint()
+    for date, data in result.data_by_date.items():
+        for source_region, value in data.items():
+            if type(value) is dict:
+                for dest_region, flow_value in value.items():
+                    row = {
+                        "date": date,
+                        "origin_code": source_region,
+                        "destination_code": dest_region,
+                        "value": flow_value,
+                    }
+                    csv_rows.append(",".join(str(v) for v in row.values()))
+            else:
+                row = {"date": date, "area_code": source_region, "value": value}
+                csv_rows.append(",".join(str(v) for v in row.values()))
+    csv_body = "\n".join(csv_rows)
+    csv_header = ",".join(row.keys())
+    csv_out = "\n".join([csv_header, csv_body])
+    breakpoint()
+    return csv_out

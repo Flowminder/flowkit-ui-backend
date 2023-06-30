@@ -420,3 +420,18 @@ async def test_run_query_no_data(mocker, fresh_pool):
     )
     # with pytest.raises(HTTPException):
     #    await data_api_impl.run_query(query_parameters=query_parameters, pool=fresh_pool)
+
+
+@pytest.mark.asyncio
+async def test_produce_csv(mocker, fresh_pool):
+    query_parameters = QueryParameters(
+        category_id="foo",
+        indicator_id="foo.bar",
+        srid=1,
+        trid=1,
+        start_date="2022-03-17",
+        duration=1,
+    )
+
+    await data_api_impl.run_csv_query(query_parameters=query_parameters, pool=fresh_pool)
+

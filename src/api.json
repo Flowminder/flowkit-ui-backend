@@ -992,14 +992,14 @@
                 { "$ref": "#/components/parameters/trid" }
             ],
             "get": {
-                "operationId": "get_csv",
+                "operationId": "run_csv_query",
                 "tags": ["data"],
                 "description":"Retrieves a CSV serialisation of the requested data",
                 "security": [{
                     "auth0": ["read:free_data"]
                 }],
                 "responses": {
-                    "200": { "$ref": "#/components/responses/csv" },
+                    "200": { "$ref": "#/components/responses/csv_result" },
                     "400": { "$ref": "#/components/responses/bad_request" },
                     "401": { "$ref": "#/components/responses/unauthorized" },
                     "404": { "$ref": "#/components/responses/not_found" },
@@ -1040,6 +1040,38 @@
                 "x-skip-test": {"reason":"Post tests are broken"},
                 "tags": ["data"],
                 "description":"Run a query to get data from the database",
+                "security": [{
+                    "auth0": ["read:free_data"]
+                }],
+                "requestBody": {
+                    "required": true,
+                    "description": "The query parameters",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/query_parameters",
+                                "x-body-name": "query_parameters"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": { "$ref": "#/components/responses/csv_result" },
+                    "400": { "$ref": "#/components/responses/bad_request" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "404": { "$ref": "#/components/responses/not_found" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            }
+        },
+        "/csv": {
+            "post": {
+                "operationId": "run_csv",
+                "x-skip-test": {"reason":"Post tests are broken"},
+                "tags": ["data"],
+                "description":"Run a query to get data from the database, returned as CSV",
                 "security": [{
                     "auth0": ["read:free_data"]
                 }],
@@ -1329,7 +1361,7 @@
                     }
                 }
             },
-            "csv": {
+            "csv_result": {
                 "description": "OK: The results for this request were retrieved successfully.",
                 "content": {
                     "text/csv": {
