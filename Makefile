@@ -64,7 +64,7 @@ endif
 # print jupyter URL if it's running
 ifeq ($(JUPYTER_ENABLED),1)
     JUPYTER_TEXT:="Jupyter lab is running on http://127.0.0.1:$(JUPYTER_PORT)/lab?token=jupyter"
-	JUPYTER_RUN:=export JUPYTER_PORT=$(JUPYTER_PORT); export CONTAINER_USER=$(CONTAINER_USER); export UID=$(UID); export GID=$(GID); docker-compose -p $(APP_NAME) --env-file ./.env up -d jupyter
+	JUPYTER_RUN:=export JUPYTER_PORT=$(JUPYTER_PORT); export CONTAINER_USER=$(CONTAINER_USER); export UID=$(UID); export GID=$(GID); docker compose -p $(APP_NAME) --env-file ./.env up -d jupyter
 else
     JUPYTER_TEXT:=
 	JUPYTER_RUN:=
@@ -214,10 +214,10 @@ test:
 	$(eval SERVER_PORT_HOST:=$(shell echo $$(($(SERVER_PORT_HOST)+1))))
 	$(eval DB_PORT_HOST:=$(shell echo $$(($(DB_PORT_HOST)+1))))
 	export IMAGE_NAME_DB_ACTUAL=$(IMAGE_NAME_DB_ACTUAL); \
-		docker-compose -p $(APP_NAME_TEST) --env-file ./.env up -d --always-recreate-deps db
+		docker compose -p $(APP_NAME_TEST) --env-file ./.env up -d --always-recreate-deps db
 	while [ $$(docker inspect --format "{{json .State.Health.Status }}" $(CONTAINER_NAME_DB)) != "\"healthy\"" ]; do echo "Waiting for db..."; sleep 1; done
 		export IMAGE_NAME_ACTUAL=$(IMAGE_NAME_TEST_ACTUAL); \
-		docker-compose -p $(APP_NAME_TEST) --env-file ./.env run web \
+		docker compose -p $(APP_NAME_TEST) --env-file ./.env run web \
 			"python -m pytest $(SELECTED_TESTS) \
 			--disable-pytest-warnings -p no:warnings -vvvv \
 			-o log_cli=false --show-capture=all \
@@ -228,12 +228,12 @@ test:
 			--junit-xml=/home/$(APP_DIR)/test_results/results.xml \
 			/home/$(APP_DIR)/src-generated/tests /home/$(APP_DIR)/src-generated/src/$(PACKAGE_NAME)/impl/tests"; \
 		ERR=$$?; \
-		docker-compose -p $(APP_NAME_TEST) down ;\
+		docker compose -p $(APP_NAME_TEST) down ;\
 		exit $$ERR
 
 clear: 
 	$(info Clearing old containers...)
-	docker-compose -p $(APP_NAME) down
+	docker compose -p $(APP_NAME) down
 
 run: clear
 	$(info Running application...)
@@ -243,22 +243,22 @@ run: clear
 	echo $(JUPYTER_TEXT)
 	$(JUPYTER_RUN)
 	export IMAGE_NAME_DB_ACTUAL=$(IMAGE_NAME_DB_ACTUAL); \
-		docker-compose -p $(APP_NAME) --env-file ./.env up -d --always-recreate-deps db
+		docker compose -p $(APP_NAME) --env-file ./.env up -d --always-recreate-deps db
 	while [ $$(docker inspect --format "{{json .State.Health.Status }}" $(CONTAINER_NAME_DB)) != "\"healthy\"" ]; do echo "Waiting for db..."; sleep 1; done
 		export IMAGE_NAME_ACTUAL=$(IMAGE_NAME_ACTUAL); \
-		docker-compose -p $(APP_NAME) --env-file ./.env run --name $(APP_NAME) --service-ports --entrypoint="" web bash -c \
+		docker compose -p $(APP_NAME) --env-file ./.env run --name $(APP_NAME) --service-ports --entrypoint="" web bash -c \
 		"cd ./src; \
 		uvicorn $(PACKAGE_NAME).main:app $(RELOAD) --host 0.0.0.0 --port $(SERVER_PORT_CONTAINER);"
 
 ingest:
 	$(info Running ingestion script to populate database...)
-	export JUPYTER_PORT=$(JUPYTER_PORT); export CONTAINER_USER=$(CONTAINER_USER); export UID=$(UID); export GID=$(GID); docker-compose -p $(APP_NAME) --env-file ./.env run jupyter bash -c "pip install httpx pandas; cd /home/$(CONTAINER_USER); jupyter nbconvert --to script PopulateDatabase.ipynb; cat PopulateDatabase.py | grep -v get_ipython > run.py; python run.py; rm PopulateDatabase.py run.py"
+	export JUPYTER_PORT=$(JUPYTER_PORT); export CONTAINER_USER=$(CONTAINER_USER); export UID=$(UID); export GID=$(GID); docker compose -p $(APP_NAME) --env-file ./.env run jupyter bash -c "pip install httpx pandas; cd /home/$(CONTAINER_USER); jupyter nbconvert --to script PopulateDatabase.ipynb; cat PopulateDatabase.py | grep -v get_ipython > run.py; python run.py; rm PopulateDatabase.py run.py"
 
 lint:
 	$(info Linting source code...)
-	docker-compose -p $(APP_NAME)_lint down
+	docker compose -p $(APP_NAME)_lint down
 	export IMAGE_NAME_ACTUAL=$(IMAGE_NAME_ACTUAL); \
-	docker-compose -p $(APP_NAME)_lint --env-file ./.env run --name $(APP_NAME)_lint --service-ports --entrypoint="" web bash -c \
+	docker compose -p $(APP_NAME)_lint --env-file ./.env run --name $(APP_NAME)_lint --service-ports --entrypoint="" web bash -c \
 	"pip install black; black /home/$(APP_DIR)/src/impl"
 
 stop: clear
