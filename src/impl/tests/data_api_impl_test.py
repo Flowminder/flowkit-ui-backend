@@ -18,6 +18,7 @@ from flowkit_ui_backend.models.indicator import Indicator
 from flowkit_ui_backend.models.metadata import Metadata
 from flowkit_ui_backend.models.spatial_resolution import SpatialResolution
 from flowkit_ui_backend.models.temporal_resolution import TemporalResolution
+from flowkit_ui_backend.models.extra_models import TokenModel
 
 
 # some simple test objects
@@ -422,16 +423,34 @@ async def test_run_query_no_data(mocker, fresh_pool):
     #    await data_api_impl.run_query(query_parameters=query_parameters, pool=fresh_pool)
 
 
+# This is in the Wrong Place, but hey
 @pytest.mark.asyncio
-async def test_produce_csv(mocker, fresh_pool):
-    query_parameters = QueryParameters(
-        category_id="foo",
-        indicator_id="foo.bar",
-        srid=1,
-        trid=1,
-        start_date="2022-03-17",
-        duration=1,
+async def test_csv_generation(populated_db):
+    params = QueryParameters(
+        category_id="residents",
+        indicator_id="residents.residents",
+        srid=3,
+        trid=2,
+        start_date="2020-02-01",
+        duration=3,
+        mdids_only=False,
+    )
+    await data_api_impl.run_csv_query(
+        params, pool=populated_db, token_model=TokenModel(sub="TEST", permissions=["admin"])
     )
 
-    await data_api_impl.run_csv_query(query_parameters=query_parameters, pool=fresh_pool)
 
+@pytest.mark.asyncio
+async def test_flow_csv_generation(populated_db):
+    params = QueryParameters(
+        category_id="relocations",
+        indicator_id="relocations.relocations",
+        srid=3,
+        trid=2,
+        start_date="2020-02-01",
+        duration=3,
+        mdids_only=False,
+    )
+    await data_api_impl.run_csv_query(
+        params, pool=populated_db, token_model=TokenModel(sub="TEST", permissions=["admin"])
+    )
