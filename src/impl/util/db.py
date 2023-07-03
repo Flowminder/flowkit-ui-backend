@@ -107,7 +107,9 @@ async def add_index(table: str, column: str, pool: Pool) -> str:
 async def drop_index(table: str, column: str, pool: Pool):
     index_name = f"index_{table}_{column}"
     logger.debug(f"Dropping index `{index_name}`...")
-    await run(f"DROP INDEX `{index_name}` ON `{os.getenv('DB_NAME')}`.`{table}`", pool=pool)
+    await run(
+        f"DROP INDEX `{index_name}` ON `{os.getenv('DB_NAME')}`.`{table}`", pool=pool
+    )
     logger.debug("Done.")
 
 
@@ -131,10 +133,14 @@ async def load_prepared_sql(base_model: BaseModel, query_type: str) -> str:
     queries_dir = f"{SCHEMA_PATH}/Model"
     async with aiofiles.open(f"{queries_dir}/{base_model.__name__}.sql") as f:
         contents = await f.read()
-        return re.compile(r"^" + re.escape(query_type) + r".*", re.MULTILINE).findall(contents)[0]
+        return re.compile(r"^" + re.escape(query_type) + r".*", re.MULTILINE).findall(
+            contents
+        )[0]
 
 
-async def run(sql: str, pool: Pool, args: Optional[list] = None) -> Tuple[List[str], List[tuple]]:
+async def run(
+    sql: str, pool: Pool, args: Optional[list] = None
+) -> Tuple[List[str], List[tuple]]:
     async with pool.acquire() as conn, conn.cursor() as cursor:
         if args is not None:
             await cursor.execute(sql, args=args)
@@ -184,8 +190,12 @@ async def select_data(
         if table_name_override is not None
         else base_model.__module__.split(".")[-1]
     )
-    fields_string = ", ".join(f"`{field}`" for field in fields) if fields is not None else "*"
-    select_query = f"SELECT {fields_string} FROM `{os.getenv('DB_NAME')}`.`{table_name}`"
+    fields_string = (
+        ", ".join(f"`{field}`" for field in fields) if fields is not None else "*"
+    )
+    select_query = (
+        f"SELECT {fields_string} FROM `{os.getenv('DB_NAME')}`.`{table_name}`"
+    )
 
     # permissions apply to these objects
     object_mapping_ids = {
@@ -218,7 +228,9 @@ async def select_data(
             ids=ids,
             permissible_ids=permissible_ids,
         )
-        actual_ids = permissible_ids if ids is None else list(set(ids) & set(permissible_ids))
+        actual_ids = (
+            permissible_ids if ids is None else list(set(ids) & set(permissible_ids))
+        )
 
     if id_key is not None and actual_ids is not None:
         ids_string = "', '".join([str(the_id) for the_id in actual_ids])
@@ -263,10 +275,15 @@ async def select_data(
         # first get all fields from the base model,
         # then their position in the sql result and finally
         # the value from the result set at that position
-        obj_init_dict = dict((f, row[column_names.index(f)]) for f in fields if f in column_names)
+        obj_init_dict = dict(
+            (f, row[column_names.index(f)]) for f in fields if f in column_names
+        )
         # special treatment for lists/dicts: deserialise str to JSON
         for k in obj_init_dict:
-            if typing.get_origin(actual_types[k]) in [list, dict] and obj_init_dict[k] is not None:
+            if (
+                typing.get_origin(actual_types[k]) in [list, dict]
+                and obj_init_dict[k] is not None
+            ):
                 obj_init_dict[k] = json.loads(obj_init_dict[k])
         obj = base_model(**obj_init_dict)
         restored_obj = util.restore_translation(obj)
@@ -346,9 +363,13 @@ async def insert_data(
                 LINES TERMINATED BY '{line_sep}'
                 (`{'`,`'.join(props)}`)
                 """
-                logger.debug("Executing LOAD DATA", source=tmpfile.name, target=table_name)
+                logger.debug(
+                    "Executing LOAD DATA", source=tmpfile.name, target=table_name
+                )
                 await cursor.execute(sql)
-                logger.debug("Executed LOAD DATA", source=tmpfile.name, target=table_name)
+                logger.debug(
+                    "Executed LOAD DATA", source=tmpfile.name, target=table_name
+                )
 
         elif len(all_values) == 1:
             await cursor.execute(insert_query, all_values[0])
@@ -372,9 +393,7 @@ async def insert_data(
             update_query = update_query.split(" SET", 1)[0]
             # should trigger an error if replaced
             escaped_id_key = id_key if id_key.isidentifier() else None
-            update_query = (
-                f"{update_query} SET `{escaped_id_key}`=`id` WHERE `{escaped_id_key}` IS NULL"
-            )
+            update_query = f"{update_query} SET `{escaped_id_key}`=`id` WHERE `{escaped_id_key}` IS NULL"
             await cursor.execute(update_query)
             # logger.debug("Done")
             logger.debug(
@@ -418,11 +437,16 @@ async def update_data(
         all_values.append(id_value)
         update_query = update_query.replace("WHERE 1", f"WHERE `{id_key}`=%s")
         await cursor.execute(update_query, all_values)
-        logger.debug(f"Updated {cursor.rowcount} row(s) in the {base_model.__name__} table")
+        logger.debug(
+            f"Updated {cursor.rowcount} row(s) in the {base_model.__name__} table"
+        )
 
 
 async def delete_data(
-    base_model: BaseModel, pool: Pool, ids: Optional[List[str]] = None, id_key: Optional[str] = None
+    base_model: BaseModel,
+    pool: Pool,
+    ids: Optional[List[str]] = None,
+    id_key: Optional[str] = None,
 ):
     # Clear db
     delete_query = await load_prepared_sql(base_model, "DELETE")
@@ -433,13 +457,17 @@ async def delete_data(
             ids_string = "', '".join([str(the_id) for the_id in ids])
             # yes, this is not 100% safe but apparently you cannot parametrise column names :(
             # TODO: maybe switch to another library that *does* support it?
-            delete_query = delete_query.replace("WHERE 1", f"WHERE `{id_key}` IN (%(ids_string)s)")
+            delete_query = delete_query.replace(
+                "WHERE 1", f"WHERE `{id_key}` IN (%(ids_string)s)"
+            )
             await cursor.execute(delete_query, {"ids_string": ids_string})
         else:
             logger.debug(f"Deleting all data...", table=base_model.__name__)
             await cursor.execute(delete_query)
 
-        logger.debug(f"Finished deleting.", table=base_model.__name__, num_rows=cursor.rowcount)
+        logger.debug(
+            f"Finished deleting.", table=base_model.__name__, num_rows=cursor.rowcount
+        )
 
 
 # insert a new object into the db or return an existing one
@@ -453,7 +481,10 @@ async def add_resource_with_unique_id(
     )
     try:
         existing_resource = await select_data(
-            base_model=base_model, pool=pool, id_key=id_key if ids is not None else None, ids=ids
+            base_model=base_model,
+            pool=pool,
+            id_key=id_key if ids is not None else None,
+            ids=ids,
         )
         if existing_resource not in [None, []]:
             return existing_resource[0], HTTPStatus.SEE_OTHER
@@ -463,14 +494,21 @@ async def add_resource_with_unique_id(
 
     await insert_data(base_model=base_model, pool=pool, id_key=id_key, data=[resource])
     new_resource = await select_data(
-        base_model=base_model, pool=pool, id_key=id_key if ids is not None else None, ids=ids
+        base_model=base_model,
+        pool=pool,
+        id_key=id_key if ids is not None else None,
+        ids=ids,
     )
     return new_resource[0], HTTPStatus.CREATED
 
 
 # update an existing resource or throw an error
 async def update_resource_with_unique_id(
-    resource: BaseModel, base_model: BaseModel, id_key: str, id_value: object, pool: Pool
+    resource: BaseModel,
+    base_model: BaseModel,
+    id_key: str,
+    id_value: object,
+    pool: Pool,
 ):
     # cannot change ID!
     if getattr(resource, id_key) != id_value:
@@ -490,7 +528,11 @@ async def update_resource_with_unique_id(
 
     try:
         await update_data(
-            base_model=base_model, pool=pool, id_value=id_value, resource=resource, id_key=id_key
+            base_model=base_model,
+            pool=pool,
+            id_value=id_value,
+            resource=resource,
+            id_key=id_key,
         )
     except Exception as e:
         raise HTTPException(

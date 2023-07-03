@@ -21,7 +21,10 @@ from flowkit_ui_backend.impl.apis.data_api_impl import (
     list_spatial_resolutions,
     list_temporal_resolutions,
 )
-from flowkit_ui_backend.impl.apis.maintenance_api_impl import create_dataset, add_scope_mapping
+from flowkit_ui_backend.impl.apis.maintenance_api_impl import (
+    create_dataset,
+    add_scope_mapping,
+)
 from flowkit_ui_backend.models.dataset import Dataset
 from flowkit_ui_backend.models.data_input import DataInput
 from flowkit_ui_backend.models.metadata import Metadata
@@ -132,7 +135,8 @@ async def test_empty_hidden(populated_db):
     ]
     lister_results = [
         await lister(
-            pool=populated_db, token_model=TokenModel(sub="TEST", permissions=["test_scope"])
+            pool=populated_db,
+            token_model=TokenModel(sub="TEST", permissions=["test_scope"]),
         )
         for lister in listers
     ]
@@ -156,22 +160,26 @@ async def test_visible_with_mapping(populated_db):
 
     categories = (
         await list_categories(
-            pool=populated_db, token_model=TokenModel(sub="TEST", permissions=["test_scope"])
+            pool=populated_db,
+            token_model=TokenModel(sub="TEST", permissions=["test_scope"]),
         )
     ).categories
     indicators = (
         await list_indicators(
-            pool=populated_db, token_model=TokenModel(sub="TEST", permissions=["test_scope"])
+            pool=populated_db,
+            token_model=TokenModel(sub="TEST", permissions=["test_scope"]),
         )
     ).indicators
     srs = (
         await list_spatial_resolutions(
-            pool=populated_db, token_model=TokenModel(sub="TEST", permissions=["test_scope"])
+            pool=populated_db,
+            token_model=TokenModel(sub="TEST", permissions=["test_scope"]),
         )
     ).spatial_resolutions
     trs = (
         await list_temporal_resolutions(
-            pool=populated_db, token_model=TokenModel(sub="TEST", permissions=["test_scope"])
+            pool=populated_db,
+            token_model=TokenModel(sub="TEST", permissions=["test_scope"]),
         )
     ).temporal_resolutions
     assert categories[0].category_id == "residents"
@@ -182,5 +190,3 @@ async def test_visible_with_mapping(populated_db):
     assert len(srs) == 1
     assert trs[0].trid == 2
     assert len(trs) == 1
-
-

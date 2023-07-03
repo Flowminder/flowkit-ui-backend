@@ -5,7 +5,11 @@ import asyncio
 import os
 import pathlib
 from flowkit_ui_backend.models.extra_models import TokenModel
-from flowkit_ui_backend.impl.util.db import provision_db, run_script, PERSISTENT_FIRST_RUN
+from flowkit_ui_backend.impl.util.db import (
+    provision_db,
+    run_script,
+    PERSISTENT_FIRST_RUN,
+)
 
 
 @pytest_asyncio.fixture
@@ -53,7 +57,9 @@ async def provisioned_db(fresh_pool, monkeypatch):
 @pytest_asyncio.fixture
 async def populated_db(provisioned_db):
     print("Populating db")
-    await run_script(str(pathlib.Path(__file__).parent / "test_data.sql"), pool=provisioned_db)
+    await run_script(
+        str(pathlib.Path(__file__).parent / "test_data.sql"), pool=provisioned_db
+    )
     yield provisioned_db
 
 
