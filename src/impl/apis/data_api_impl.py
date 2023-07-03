@@ -407,7 +407,6 @@ async def run_csv_query(
 ) -> QueryResult:
     result = await run_query(query_parameters, pool, token_model)
     csv_rows = []
-    breakpoint()
     for date, data in result.data_by_date.items():
         for source_region, value in data.items():
             if type(value) is dict:
@@ -425,5 +424,4 @@ async def run_csv_query(
     csv_body = "\n".join(csv_rows)
     csv_header = ",".join(row.keys())
     csv_out = "\n".join([csv_header, csv_body])
-    breakpoint()
     return csv_out

@@ -1032,7 +1032,7 @@
                     }
                 },
                 "responses": {
-                    "200": { "$ref": "#/components/responses/csv_result" },
+                    "200": { "$ref": "#/components/responses/query_result" },
                     "400": { "$ref": "#/components/responses/bad_request" },
                     "401": { "$ref": "#/components/responses/unauthorized" },
                     "404": { "$ref": "#/components/responses/not_found" },
@@ -1064,7 +1064,7 @@
                     }
                 },
                 "responses": {
-                    "200": { "$ref": "#/components/responses/query_result" },
+                    "200": { "$ref": "#/components/responses/csv_result" },
                     "400": { "$ref": "#/components/responses/bad_request" },
                     "401": { "$ref": "#/components/responses/unauthorized" },
                     "404": { "$ref": "#/components/responses/not_found" },
