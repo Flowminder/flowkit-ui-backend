@@ -403,10 +403,18 @@ async def run_query(
 
 
 async def run_csv_query(
-    query_parameters: QueryParameters, pool: Pool, token_model: TokenModel
+    query_parameters: QueryParameters, pool: Pool, token_model: TokenModel,
+    language: str= "en"
 ) -> QueryResult:
+    logger.debug(
+        "Running query to populate csv",
+        query_parameters= query_parameters,
+    )
     result = await run_query(query_parameters, pool, token_model)
     csv_rows = []
+    logger.debug(
+        "Populating csv"
+    )
     for date, data in result.data_by_date.items():
         for source_region, value in data.items():
             if type(value) is dict:
@@ -414,14 +422,44 @@ async def run_csv_query(
                     row = {
                         "date": date,
                         "origin_code": source_region,
+                        "origin_label": await get_code_label(source_region,
+                                                       language,
+                                                      query_parameters.srid,
+                                                       pool),
                         "destination_code": dest_region,
-                        "value": flow_value,
+                        "destination_label": await get_code_label(dest_region,
+                                                            language,
+                                                           query_parameters.srid,
+                                                           pool),
+                        "value": flow_value
                     }
                     csv_rows.append(",".join(str(v) for v in row.values()))
             else:
-                row = {"date": date, "area_code": source_region, "value": value}
+                row = {"date": date, "area_code": source_region,
+                       "area_label":await get_code_label(source_region, language,
+                                                   query_parameters.srid,
+                                                   pool),
+                       "value": value}
                 csv_rows.append(",".join(str(v) for v in row.values()))
     csv_body = "\n".join(csv_rows)
     csv_header = ",".join(row.keys())
     csv_out = "\n".join([csv_header, csv_body])
     return csv_out
+
+async def get_code_label(code, language, srid, pool):
+    query = """
+    SELECT boundaries
+    FROM spatial_resolution
+    WHERE srid=%s
+    """
+    (column_names, result) = await db.run(query, pool=pool, args=[srid])
+    boundary_blob = result[0][0]
+    breakpoint()
+    geometries = boundary_blob['objects']['admin2']['geometries']
+    labels = [region['properties']
+              for region
+              in geometries]
+    this_region = [foo for foo in labels if code in foo.values()][0]
+    
+
+
