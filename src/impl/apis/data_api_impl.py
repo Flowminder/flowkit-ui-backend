@@ -428,7 +428,7 @@ def region_to_csv(region_data: Dict[str, Dict[str, float]]) -> str:
     return csv_out
 
 
-def flows_to_csv(flow_data):
+def flows_to_csv(flow_data: Dict[str, Dict[str, Dict[str, float]]]) -> str:
     csv_rows = []
     for date, data in flow_data.items():
         for source_region, value in data.items():
