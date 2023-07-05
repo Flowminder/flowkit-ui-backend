@@ -5,7 +5,7 @@ import structlog
 import math
 import pendulum
 import os
-from typing import Optional
+from typing import Optional, Dict
 from fastapi import HTTPException
 from aiomysql import Pool
 from dateutil.relativedelta import relativedelta
