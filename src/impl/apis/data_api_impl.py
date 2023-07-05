@@ -7,6 +7,7 @@ import pendulum
 import os
 from typing import Optional, Dict
 from fastapi import HTTPException
+from fastapi.responses import PlainTextResponse
 from aiomysql import Pool
 from dateutil.relativedelta import relativedelta
 from http import HTTPStatus
@@ -407,14 +408,15 @@ async def run_csv_query(
 ) -> QueryResult:
     result = await run_query(query_parameters, pool, token_model)
     if query_parameters.category_id.lower() in ["residents", "presence"]:
-        return region_to_csv(result.data_by_date)
+        out = region_to_csv(result.data_by_date)
     elif query_parameters.category_id.lower() in ["relocations", "movements"]:
-        return flows_to_csv(result.data_by_date)
+        out = flows_to_csv(result.data_by_date)
     else:
         raise HTTPException(
             status_code=HTTPStatus.NOT_IMPLEMENTED,
             detail=f"CSV not yet implemented for {query_parameters.category_id.lower()}",
         )
+    return out
 
 
 def region_to_csv(region_data: Dict[str, Dict[str, float]]) -> str:
@@ -424,7 +426,7 @@ def region_to_csv(region_data: Dict[str, Dict[str, float]]) -> str:
             row = {"date": date, "area_code": source_region, "value": value}
             csv_rows.append(",".join(str(v) for v in row.values()))
     csv_header = ",".join(row.keys())
-    csv_out = "\n".join((csv_header, *csv_rows))
+    csv_out = "\r\n".join((csv_header, *csv_rows))
     return csv_out
 
 
@@ -441,5 +443,5 @@ def flows_to_csv(flow_data: Dict[str, Dict[str, Dict[str, float]]]) -> str:
                 }
                 csv_rows.append(",".join(str(v) for v in row.values()))
     csv_header = ",".join(row.keys())
-    csv_out = "\n".join((csv_header, *csv_rows))
+    csv_out = "\r\n".join((csv_header, *csv_rows))
     return csv_out

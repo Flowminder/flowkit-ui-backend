@@ -443,7 +443,7 @@ async def test_csv_generation(populated_db):
         pool=populated_db,
         token_model=TokenModel(sub="TEST", permissions=["admin"]),
     )
-    assert out.split("\n")[0].split(",") == ["date", "area_code", "value"]
+    assert out.split("\r\n")[0].split(",") == ["date", "area_code", "value"]
 
 
 @pytest.mark.asyncio
@@ -462,4 +462,4 @@ async def test_flow_csv_generation(populated_db):
         pool=populated_db,
         token_model=TokenModel(sub="TEST", permissions=["admin"]),
     )
-    assert out.split("\n")[0].split(",") == ["date", "origin_code", "destination_code", "value"]
+    assert out.split("\r\n")[0].split(",") == ["date", "origin_code", "destination_code", "value"]
