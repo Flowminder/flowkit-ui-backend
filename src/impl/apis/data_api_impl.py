@@ -408,7 +408,7 @@ async def run_csv_query(
     result = await run_query(query_parameters, pool, token_model)
     if query_parameters.category_id.lower() in ["residents", "presence"]:
         return region_to_csv(result.data_by_date)
-    elif query_parameters.category_id.lower() in ["relocation", "movements"]:
+    elif query_parameters.category_id.lower() in ["relocations", "movements"]:
         return flows_to_csv(result.data_by_date)
     else:
         raise HTTPException(
