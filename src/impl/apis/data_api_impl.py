@@ -406,20 +406,39 @@ async def run_csv_query(
     query_parameters: QueryParameters, pool: Pool, token_model: TokenModel
 ) -> QueryResult:
     result = await run_query(query_parameters, pool, token_model)
+    if query_parameters.category.lower() in ["residents", "presence"]:
+        return region_to_csv(result.data_by_date)
+    elif query_parameters.category.lower() in ["relocation", "movements"]:
+        return flows_to_csv(result.data_by_date)
+    else:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_IMPLEMENTED,
+            detail=f"CSV not yet implemented for {query_parameters.category.lower()}",
+        )
+
+
+def region_to_csv(region_data):
     csv_rows = []
-    for date, data in result.data_by_date.items():
+    for date, data in region_data.items():
         for source_region, value in data.items():
-            if type(value) is dict:
-                for dest_region, flow_value in value.items():
-                    row = {
-                        "date": date,
-                        "origin_code": source_region,
-                        "destination_code": dest_region,
-                        "value": flow_value,
-                    }
-                    csv_rows.append(",".join(str(v) for v in row.values()))
-            else:
-                row = {"date": date, "area_code": source_region, "value": value}
+            row = {"date": date, "area_code": source_region, "value": value}
+            csv_rows.append(",".join(str(v) for v in row.values()))
+    csv_header = ",".join(row.keys())
+    csv_out = "\n".join((csv_header, *csv_rows))
+    return csv_out
+
+
+def flows_to_csv(flow_data):
+    csv_rows = []
+    for date, data in flow_data.items():
+        for source_region, value in data.items():
+            for dest_region, flow_value in value.items():
+                row = {
+                    "date": date,
+                    "origin_code": source_region,
+                    "destination_code": dest_region,
+                    "value": flow_value,
+                }
                 csv_rows.append(",".join(str(v) for v in row.values()))
     csv_header = ",".join(row.keys())
     csv_out = "\n".join((csv_header, *csv_rows))
