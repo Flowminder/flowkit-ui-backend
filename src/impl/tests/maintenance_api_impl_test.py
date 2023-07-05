@@ -399,7 +399,12 @@ async def test_replace_setup(mocker, provisioned_db):
     )
     mocker.patch(
         "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.run",
-        side_effect=[(None, None), (None, None), (None, [("foo", "bar")]), (None, None)],
+        side_effect=[
+            (None, None),
+            (None, None),
+            (None, [("foo", "bar")]),
+            (None, None),
+        ],
     )
     mocker.patch(
         "flowkit_ui_backend.impl.apis.data_api_impl.get_indicator",
@@ -439,7 +444,12 @@ async def test_update_setup_no_indicator(mocker, provisioned_db):
     )
     mocker.patch(
         "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.run",
-        side_effect=[(None, None), (None, None), (None, [("foo", "bar")]), (None, None)],
+        side_effect=[
+            (None, None),
+            (None, None),
+            (None, [("foo", "bar")]),
+            (None, None),
+        ],
     )
     mocker.patch(
         "flowkit_ui_backend.impl.apis.data_api_impl.get_indicator",
@@ -478,7 +488,12 @@ async def test_update_setup_indicator_exists(mocker, provisioned_db):
     )
     mocker.patch(
         "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.run",
-        side_effect=[(None, None), (None, None), (None, [("foo", "bar")]), (None, None)],
+        side_effect=[
+            (None, None),
+            (None, None),
+            (None, [("foo", "bar")]),
+            (None, None),
+        ],
     )
     mocker.patch(
         "flowkit_ui_backend.impl.apis.data_api_impl.get_indicator",
@@ -581,7 +596,11 @@ async def test_create_dataset_no_data(provisioned_db):
                 data_type="single_location",
                 data_input=[],
                 metadata=Metadata(
-                    revision="rev", category_id="foo", indicator_id="foo.bar", srid=1, trid=1
+                    revision="rev",
+                    category_id="foo",
+                    indicator_id="foo.bar",
+                    srid=1,
+                    trid=1,
                 ),
             ),
             pool=provisioned_db,
@@ -596,7 +615,11 @@ async def test_create_dataset_wrong_type(provisioned_db):
                 data_type="foo",
                 data_input=[DataInput(spatial_unit_ids=["foo"], data=0.01)],
                 metadata=Metadata(
-                    revision="rev", category_id="foo", indicator_id="foo.bar", srid=1, trid=1
+                    revision="rev",
+                    category_id="foo",
+                    indicator_id="foo.bar",
+                    srid=1,
+                    trid=1,
                 ),
             ),
             pool=provisioned_db,

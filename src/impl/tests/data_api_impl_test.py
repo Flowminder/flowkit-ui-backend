@@ -18,6 +18,7 @@ from flowkit_ui_backend.models.indicator import Indicator
 from flowkit_ui_backend.models.metadata import Metadata
 from flowkit_ui_backend.models.spatial_resolution import SpatialResolution
 from flowkit_ui_backend.models.temporal_resolution import TemporalResolution
+from flowkit_ui_backend.models.extra_models import TokenModel
 
 
 # some simple test objects
@@ -375,7 +376,11 @@ async def test_run_query(mocker, fresh_pool):
 async def test_run_query_no_metadata(mocker, fresh_pool, token_model):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
-        side_effect=[[cat], [tr], [SingleLocationData(mdid=1, spatial_unit_id="foo", data=1.23)]],
+        side_effect=[
+            [cat],
+            [tr],
+            [SingleLocationData(mdid=1, spatial_unit_id="foo", data=1.23)],
+        ],
     )
     mocker.patch(
         "flowkit_ui_backend.impl.apis.data_api_impl.db.run",
@@ -420,3 +425,41 @@ async def test_run_query_no_data(mocker, fresh_pool):
     )
     # with pytest.raises(HTTPException):
     #    await data_api_impl.run_query(query_parameters=query_parameters, pool=fresh_pool)
+
+
+@pytest.mark.asyncio
+async def test_csv_generation(populated_db):
+    params = QueryParameters(
+        category_id="residents",
+        indicator_id="residents.residents",
+        srid=3,
+        trid=2,
+        start_date="2020-02-01",
+        duration=3,
+        mdids_only=False,
+    )
+    out = await data_api_impl.run_csv_query(
+        params,
+        pool=populated_db,
+        token_model=TokenModel(sub="TEST", permissions=["admin"]),
+    )
+    assert out.split("\n")[0].split(",") == ["date", "area_code", "value"]
+
+
+@pytest.mark.asyncio
+async def test_flow_csv_generation(populated_db):
+    params = QueryParameters(
+        category_id="relocations",
+        indicator_id="relocations.relocations",
+        srid=3,
+        trid=2,
+        start_date="2020-02-01",
+        duration=3,
+        mdids_only=False,
+    )
+    out = await data_api_impl.run_csv_query(
+        params,
+        pool=populated_db,
+        token_model=TokenModel(sub="TEST", permissions=["admin"]),
+    )
+    assert out.split("\n")[0].split(",") == ["date", "origin_code", "destination_code", "value"]

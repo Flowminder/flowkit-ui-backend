@@ -5,7 +5,11 @@ import asyncio
 import os
 import pathlib
 from flowkit_ui_backend.models.extra_models import TokenModel
-from flowkit_ui_backend.impl.util.db import provision_db, run_script, PERSISTENT_FIRST_RUN
+from flowkit_ui_backend.impl.util.db import (
+    provision_db,
+    run_script,
+    PERSISTENT_FIRST_RUN,
+)
 
 
 @pytest_asyncio.fixture

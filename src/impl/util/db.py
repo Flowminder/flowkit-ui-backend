@@ -422,7 +422,10 @@ async def update_data(
 
 
 async def delete_data(
-    base_model: BaseModel, pool: Pool, ids: Optional[List[str]] = None, id_key: Optional[str] = None
+    base_model: BaseModel,
+    pool: Pool,
+    ids: Optional[List[str]] = None,
+    id_key: Optional[str] = None,
 ):
     # Clear db
     delete_query = await load_prepared_sql(base_model, "DELETE")
@@ -453,7 +456,10 @@ async def add_resource_with_unique_id(
     )
     try:
         existing_resource = await select_data(
-            base_model=base_model, pool=pool, id_key=id_key if ids is not None else None, ids=ids
+            base_model=base_model,
+            pool=pool,
+            id_key=id_key if ids is not None else None,
+            ids=ids,
         )
         if existing_resource not in [None, []]:
             return existing_resource[0], HTTPStatus.SEE_OTHER
@@ -463,14 +469,21 @@ async def add_resource_with_unique_id(
 
     await insert_data(base_model=base_model, pool=pool, id_key=id_key, data=[resource])
     new_resource = await select_data(
-        base_model=base_model, pool=pool, id_key=id_key if ids is not None else None, ids=ids
+        base_model=base_model,
+        pool=pool,
+        id_key=id_key if ids is not None else None,
+        ids=ids,
     )
     return new_resource[0], HTTPStatus.CREATED
 
 
 # update an existing resource or throw an error
 async def update_resource_with_unique_id(
-    resource: BaseModel, base_model: BaseModel, id_key: str, id_value: object, pool: Pool
+    resource: BaseModel,
+    base_model: BaseModel,
+    id_key: str,
+    id_value: object,
+    pool: Pool,
 ):
     # cannot change ID!
     if getattr(resource, id_key) != id_value:
@@ -490,7 +503,11 @@ async def update_resource_with_unique_id(
 
     try:
         await update_data(
-            base_model=base_model, pool=pool, id_value=id_value, resource=resource, id_key=id_key
+            base_model=base_model,
+            pool=pool,
+            id_value=id_value,
+            resource=resource,
+            id_key=id_key,
         )
     except Exception as e:
         raise HTTPException(

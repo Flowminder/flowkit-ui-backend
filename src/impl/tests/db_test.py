@@ -80,7 +80,11 @@ async def test_provision_db_force_setup(mocker, fresh_pool):
 async def test_get_index(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.util.db.run",
-        side_effect=[(None, [(1, "metadata", "index_metadata_dt")]), (None, []), (None, None)],
+        side_effect=[
+            (None, [(1, "metadata", "index_metadata_dt")]),
+            (None, []),
+            (None, None),
+        ],
     )
 
     # field has index
@@ -119,7 +123,11 @@ async def test_add_index(mocker, fresh_pool):
 async def test_drop_index(mocker, fresh_pool):
     mocker.patch(
         "flowkit_ui_backend.impl.util.db.run",
-        side_effect=[None, Exception("Index doesn't exist"), Exception("Table doesn't exist")],
+        side_effect=[
+            None,
+            Exception("Index doesn't exist"),
+            Exception("Table doesn't exist"),
+        ],
     )
 
     # index exists
@@ -379,7 +387,11 @@ async def test_update_resource_with_unique_id_inexistent(mocker, fresh_pool):
 
     with pytest.raises(HTTPException):
         await db.update_resource_with_unique_id(
-            resource=dp, base_model=DataProvider, id_key="dpid", id_value=1, pool=fresh_pool
+            resource=dp,
+            base_model=DataProvider,
+            id_key="dpid",
+            id_value=1,
+            pool=fresh_pool,
         )
 
 
@@ -387,7 +399,11 @@ async def test_update_resource_with_unique_id_inexistent(mocker, fresh_pool):
 async def test_update_resource_with_unique_id_change_id(fresh_pool):
     with pytest.raises(HTTPException):
         await db.update_resource_with_unique_id(
-            resource=dp, base_model=DataProvider, id_key="dpid", id_value=2, pool=fresh_pool
+            resource=dp,
+            base_model=DataProvider,
+            id_key="dpid",
+            id_value=2,
+            pool=fresh_pool,
         )
 
 
@@ -404,7 +420,11 @@ async def test_update_resource_with_unique_id_error(mocker, fresh_pool):
 
     with pytest.raises(HTTPException):
         await db.update_resource_with_unique_id(
-            resource=dp, base_model=DataProvider, id_key="dpid", id_value=2, pool=fresh_pool
+            resource=dp,
+            base_model=DataProvider,
+            id_key="dpid",
+            id_value=2,
+            pool=fresh_pool,
         )
 
 

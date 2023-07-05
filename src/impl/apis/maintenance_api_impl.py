@@ -56,7 +56,10 @@ async def create_indicator(
     indicator: Indicator, pool: Pool, token_model: TokenModel = None
 ) -> Tuple[Indicator, int]:
     categories = await db.select_data(
-        base_model=Category, pool=pool, id_key="category_id", ids=[indicator.category_id]
+        base_model=Category,
+        pool=pool,
+        id_key="category_id",
+        ids=[indicator.category_id],
     )
     if categories is None or len(categories) <= 0:
         raise HTTPException(
@@ -69,7 +72,9 @@ async def create_indicator(
     )
     if status != HTTPStatus.CREATED:
         logger.debug(
-            f"Indicator already exists; no need to create.", new=indicator, existing=resource
+            f"Indicator already exists; no need to create.",
+            new=indicator,
+            existing=resource,
         )
         return resource, status
 
@@ -82,7 +87,10 @@ async def create_spatial_resolution(
     token_model: TokenModel = None,
 ) -> Tuple[SpatialResolution, int]:
     return await db.add_resource_with_unique_id(
-        resource=spatial_resolution, base_model=SpatialResolution, id_key="srid", pool=pool
+        resource=spatial_resolution,
+        base_model=SpatialResolution,
+        id_key="srid",
+        pool=pool,
     )
 
 
@@ -92,7 +100,10 @@ async def create_temporal_resolution(
     token_model: TokenModel = None,
 ) -> Tuple[TemporalResolution, int]:
     return await db.add_resource_with_unique_id(
-        resource=temporal_resolution, base_model=TemporalResolution, id_key="trid", pool=pool
+        resource=temporal_resolution,
+        base_model=TemporalResolution,
+        id_key="trid",
+        pool=pool,
     )
 
 
@@ -103,7 +114,11 @@ async def update_data_provider(
     token_model: TokenModel = None,
 ) -> None:
     return await db.update_resource_with_unique_id(
-        resource=data_provider, base_model=DataProvider, id_key="dpid", id_value=dpid, pool=pool
+        resource=data_provider,
+        base_model=DataProvider,
+        id_key="dpid",
+        id_value=dpid,
+        pool=pool,
     )
 
 
@@ -188,7 +203,10 @@ async def delete_indicator(indicator_id: str, pool: Pool, token_model: TokenMode
         )
 
     categories = await db.select_data(
-        base_model=Category, pool=pool, id_key="category_id", ids=[indicators[0].category_id]
+        base_model=Category,
+        pool=pool,
+        id_key="category_id",
+        ids=[indicators[0].category_id],
     )
     if categories in [None, []]:
         raise HTTPException(
@@ -283,7 +301,10 @@ async def update_setup(config: Config, pool: Pool, token_model: TokenModel = Non
         base_model=SpatialResolution, pool=pool, id_key="srid", data=spatial_resolutions
     )
     await db.insert_data(
-        base_model=TemporalResolution, pool=pool, id_key="trid", data=config.temporal_resolutions
+        base_model=TemporalResolution,
+        pool=pool,
+        id_key="trid",
+        data=config.temporal_resolutions,
     )
     return None
 
@@ -422,7 +443,10 @@ async def delete_dataset(dataset: Dataset, pool: Pool, token_model: TokenModel =
 
 
 async def add_dataset(
-    dataset: Dataset, pool: Pool, overwrite: bool = False, token_model: TokenModel = None
+    dataset: Dataset,
+    pool: Pool,
+    overwrite: bool = False,
+    token_model: TokenModel = None,
 ) -> Tuple[int, int]:
     if dataset.data_input is None or len(dataset.data_input) <= 0:
         raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="No data to ingest")
@@ -455,7 +479,9 @@ async def add_dataset(
     logger.debug(f"Converting data to appropriate data type...", data_type=dataset.data_type)
     data_func = (
         lambda input_data: SingleLocationData(
-            mdid=mdid, spatial_unit_id=input_data.spatial_unit_ids[0], data=input_data.data
+            mdid=mdid,
+            spatial_unit_id=input_data.spatial_unit_ids[0],
+            data=input_data.data,
         )
         if dataset.data_type == "single_location"
         else FlowData(
@@ -544,7 +570,10 @@ async def check_scope_mapping_exists(
 
 
 async def add_scope_mapping(
-    scope_mapping: ScopeMapping, pool: Pool, overwrite: bool = False, token_model: TokenModel = None
+    scope_mapping: ScopeMapping,
+    pool: Pool,
+    overwrite: bool = False,
+    token_model: TokenModel = None,
 ) -> Tuple[int, int]:
     logger.debug(
         "Adding scope mapping",
@@ -552,7 +581,8 @@ async def add_scope_mapping(
     )
     if scope_mapping is None or scope_mapping.scope is None or scope_mapping.mdid is None:
         raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST, detail=f"Scope mapping {scope_mapping} is invalid"
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail=f"Scope mapping {scope_mapping} is invalid",
         )
 
     return_status_code = HTTPStatus.NO_CONTENT

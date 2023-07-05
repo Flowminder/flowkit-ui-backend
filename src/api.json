@@ -985,30 +985,6 @@
                 }
             }
         },
-        "/csv/{category_id}/{srid}/{trid}": {
-            "parameters": [
-                { "$ref": "#/components/parameters/category_id" },
-                { "$ref": "#/components/parameters/srid" },
-                { "$ref": "#/components/parameters/trid" }
-            ],
-            "get": {
-                "operationId": "get_csv",
-                "tags": ["data"],
-                "description":"Retrieves a CSV serialisation of the requested data",
-                "security": [{
-                    "auth0": ["read:free_data"]
-                }],
-                "responses": {
-                    "200": { "$ref": "#/components/responses/csv" },
-                    "400": { "$ref": "#/components/responses/bad_request" },
-                    "401": { "$ref": "#/components/responses/unauthorized" },
-                    "404": { "$ref": "#/components/responses/not_found" },
-                    "429": { "$ref": "#/components/responses/too_many_requests" },
-                    "500": { "$ref": "#/components/responses/internal_server_error" },
-                    "503": { "$ref": "#/components/responses/service_unavailable" }
-                }
-            }
-        },
         "/timerange/{category_id}/{indicator_id}/{srid}/{trid}": {
             "parameters": [
                 { "$ref": "#/components/parameters/category_id" },
@@ -1057,6 +1033,38 @@
                 },
                 "responses": {
                     "200": { "$ref": "#/components/responses/query_result" },
+                    "400": { "$ref": "#/components/responses/bad_request" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "404": { "$ref": "#/components/responses/not_found" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            }
+        },
+        "/csv": {
+            "post": {
+                "operationId": "run_csv_query",
+                "x-skip-test": {"reason":"Post tests are broken"},
+                "tags": ["data"],
+                "description":"Run a query to get data from the database, returned as CSV",
+                "security": [{
+                    "auth0": ["read:free_data"]
+                }],
+                "requestBody": {
+                    "required": true,
+                    "description": "The query parameters",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/query_parameters",
+                                "x-body-name": "query_parameters"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": { "$ref": "#/components/responses/csv_result" },
                     "400": { "$ref": "#/components/responses/bad_request" },
                     "401": { "$ref": "#/components/responses/unauthorized" },
                     "404": { "$ref": "#/components/responses/not_found" },
@@ -1329,7 +1337,7 @@
                     }
                 }
             },
-            "csv": {
+            "csv_result": {
                 "description": "OK: The results for this request were retrieved successfully.",
                 "content": {
                     "text/csv": {
