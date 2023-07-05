@@ -427,7 +427,6 @@ async def test_run_query_no_data(mocker, fresh_pool):
     #    await data_api_impl.run_query(query_parameters=query_parameters, pool=fresh_pool)
 
 
-# This is in the Wrong Place, but hey
 @pytest.mark.asyncio
 async def test_csv_generation(populated_db):
     params = QueryParameters(
@@ -439,11 +438,12 @@ async def test_csv_generation(populated_db):
         duration=3,
         mdids_only=False,
     )
-    await data_api_impl.run_csv_query(
+    out = await data_api_impl.run_csv_query(
         params,
         pool=populated_db,
         token_model=TokenModel(sub="TEST", permissions=["admin"]),
     )
+    assert out.split("\n")[0].split(",") == ["date", "area_code", "value"]
 
 
 @pytest.mark.asyncio
@@ -457,8 +457,9 @@ async def test_flow_csv_generation(populated_db):
         duration=3,
         mdids_only=False,
     )
-    await data_api_impl.run_csv_query(
+    out = await data_api_impl.run_csv_query(
         params,
         pool=populated_db,
         token_model=TokenModel(sub="TEST", permissions=["admin"]),
     )
+    assert out.split("\n")[0].split(",") == ["date", "origin_code", "destination_code", "value"]

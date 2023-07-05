@@ -421,7 +421,6 @@ async def run_csv_query(
             else:
                 row = {"date": date, "area_code": source_region, "value": value}
                 csv_rows.append(",".join(str(v) for v in row.values()))
-    csv_body = "\n".join(csv_rows)
     csv_header = ",".join(row.keys())
-    csv_out = "\n".join([csv_header, csv_body])
+    csv_out = "\n".join((csv_header, *csv_rows))
     return csv_out
