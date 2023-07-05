@@ -417,7 +417,7 @@ async def run_csv_query(
         )
 
 
-def region_to_csv(region_data):
+def region_to_csv(region_data: Dict[str, Dict[str, float]]) -> str:
     csv_rows = []
     for date, data in region_data.items():
         for source_region, value in data.items():
