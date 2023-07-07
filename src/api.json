@@ -1339,8 +1339,11 @@
             },
             "csv_result": {
                 "description": "OK: The results for this request were retrieved successfully.",
+		"headers": {
+		    "content_disposition": "attachment"
+		},
                 "content": {
-                    "text/csv": {
+                    "application/vnd.ms-excel": {
                         "schema": {
                             "$ref": "#/components/schemas/csv"
                         }

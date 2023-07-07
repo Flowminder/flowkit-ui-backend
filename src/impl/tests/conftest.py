@@ -12,7 +12,7 @@ from flowkit_ui_backend.impl.util.db import (
 )
 
 
-@pytest_asyncio.fixture
+@pytest_asyncio.fixture(scope="module")
 async def fresh_pool():
     """
     Creates and yields up a fresh pool connected to a database, cleans it up at exit
@@ -39,7 +39,7 @@ async def fresh_pool():
         await pool.wait_closed()
 
 
-@pytest_asyncio.fixture
+@pytest_asyncio.fixture(scope="module")
 async def provisioned_db(fresh_pool, monkeypatch):
     monkeypatch.setenv("FORCE_DB_SETUP", "1")
     pathlib.Path(PERSISTENT_FIRST_RUN).unlink(missing_ok=True)
@@ -54,7 +54,7 @@ async def provisioned_db(fresh_pool, monkeypatch):
         pathlib.Path(PERSISTENT_FIRST_RUN).unlink(missing_ok=False)
 
 
-@pytest_asyncio.fixture
+@pytest_asyncio.fixture(scope="module")
 async def populated_db(provisioned_db):
     print("Populating db")
     await run_script(str(pathlib.Path(__file__).parent / "test_data.sql"), pool=provisioned_db)

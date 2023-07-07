@@ -1,5 +1,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 # If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
+import asyncio
 
 import structlog
 import math
@@ -280,13 +281,114 @@ async def run_query(
             detail="Could not find category",
         )
 
+    # REVIEWER QUESTION: Are these the same column names that are returned in the actual query?
+    result, metadata_col_names = await get_metadata(query_parameters, tr, pool, token_model)
+
+    mdids = [str(md[1]) for md in result]
+    # support getting mdids only
+    if query_parameters.mdids_only is True:
+        return QueryResult(mdids=mdids)
+
+    mdid_to_date = {str(md[1]): md[8] for md in result}
+    logger.debug(f"Found metadata objects, now getting data...", num=len(mdids))
+
+    # make sure to amend table name for data tables
+    base_table_name = f"{category.type}_data"
+    table_name = f"{base_table_name}_{query_parameters.indicator_id}"
+
+    column_names = await get_column_names(table_name, pool)
+
+    data_index = column_names.index("data")
+    mdid_index = column_names.index("mdid")
+    is_single_value = "spatial_unit_id" in column_names
+    if is_single_value:
+        spatial_unit_id_index = column_names.index("spatial_unit_id")
+    is_flow = "origin" in column_names and "destination" in column_names
+    if is_flow:
+        origin_index = column_names.index("origin")
+        destination_index = column_names.index("destination")
+    data_by_date = {}
+    min_value = math.inf
+    max_value = -math.inf
+    num_rows = 0
+    async for row in stream_query(base_table_name, mdid_to_date, mdids, pool, table_name, tr):
+        num_rows += 1
+        # adjust the global min/max if necessary
+        min_value = min([row[data_index], min_value])
+        max_value = max([row[data_index], max_value])
+        this_date = mdid_to_date[str(row[mdid_index])].strftime(tr.date_format)
+        data_by_date.setdefault(this_date, {})
+        value = util.num(str(row[data_index]))
+        if is_single_value:
+            data_by_date[this_date][row[spatial_unit_id_index]] = value
+        elif is_flow:
+            data_by_date[this_date].setdefault(row[origin_index], {})
+            if value is not None:
+                data_by_date[this_date][row[origin_index]][row[destination_index]] = value
+        else:
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+                detail="Cannot find spatial unit in data",
+            )
+
+    logger.debug(
+        "Finished running data query",
+        num_results=num_rows,
+        min_value=min_value,
+        max_value=max_value,
+    )
+    if len(data_by_date.keys()) == 0:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="No data found")
+
+    new_result = QueryResult(
+        min=min_value if min_value != math.inf else None,
+        max=max_value if max_value != -math.inf else None,
+        data_by_date=dict(sorted(data_by_date.items())),
+    )
+
+    return new_result
+
+
+async def get_column_names(table_name, pool):
+    select_query = f"SELECT * FROM {table_name} LIMIT 1;"
+    logger.debug("Getting column names", table_name=table_name)
+    async with pool.acquire() as conn, conn.cursor() as cursor:
+        await cursor.execute(select_query)
+        return [i[1] for i in cursor.description]
+
+
+async def stream_query(base_table_name, mdid_to_date, mdids, pool, table_name, tr):
+    # manually querying to make use of partitions
+    table_names = [f"`{os.getenv('DB_NAME')}`.`{table_name}_{mdid}`" for mdid in mdids]
+    union_string = f" UNION SELECT * FROM ".join(table_names)
+    select_query = f"SELECT * FROM {union_string};"
+    logger.debug(
+        "Running data query...",
+        base_table_name=base_table_name,
+        table_name=f"{table_name}_<mdid>",
+    )
+    async with pool.acquire() as conn, conn.cursor() as cursor:
+        await cursor.execute(select_query)
+
+        column_names = [i[0] for i in cursor.description]
+        logger.debug("Executed query", column_names=column_names)
+        if "data" not in column_names:
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+                detail="Cannot find data for metadata",
+            )
+        row = await cursor.fetchone()
+        if row is not None:
+            yield row
+
+
+async def get_metadata(query_parameters, temp_res, pool, token_model):
     # filter by date
     start_date = pendulum.parse(query_parameters.start_date.replace("w", "-W"))
     step = relativedelta()
-    setattr(step, tr.relativedelta_unit, tr.relativedelta_num)
+    setattr(step, temp_res.relativedelta_unit, temp_res.relativedelta_num)
     # subtracting 1 here because BETWEEN in the SQL includes the end date
     end_date = start_date + step * (query_parameters.duration - 1)
-
     sql = f"""
     SELECT * FROM `{DB_NAME}`.`metadata` AS md
     LEFT JOIN `{DB_NAME}`.`scope_mapping` AS sm
@@ -313,94 +415,7 @@ async def run_query(
     logger.debug("Finished running metadata query")
     if not result:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="No metadata found")
-
-    mdids = [str(md[1]) for md in result]
-    # support getting mdids only
-    if query_parameters.mdids_only is True:
-        return QueryResult(mdids=mdids)
-
-    mdid_to_date = {str(md[1]): md[8] for md in result}
-    logger.debug(f"Found metadata objects, now getting data...", num=len(mdids))
-
-    # make sure to amend table name for data tables
-    base_table_name = f"{category.type}_data"
-    table_name = f"{base_table_name}_{query_parameters.indicator_id}"
-
-    # manually querying to make use of partitions
-    table_names = [f"`{os.getenv('DB_NAME')}`.`{table_name}_{mdid}`" for mdid in mdids]
-    union_string = f" UNION SELECT * FROM ".join(table_names)
-    select_query = f"SELECT * FROM {union_string};"
-    logger.debug(
-        "Running data query...",
-        base_table_name=base_table_name,
-        table_name=f"{table_name}_<mdid>",
-    )
-    data_by_date = {}
-    min_value = math.inf
-    max_value = -math.inf
-    async with pool.acquire() as conn, conn.cursor() as cursor:
-        await cursor.execute(select_query)
-
-        column_names = [i[0] for i in cursor.description]
-        logger.debug("Executed query", column_names=column_names)
-        if "data" not in column_names:
-            raise HTTPException(
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-                detail="Cannot find data for metadata",
-            )
-        data_index = column_names.index("data")
-        mdid_index = column_names.index("mdid")
-        is_single_value = "spatial_unit_id" in column_names
-        if is_single_value:
-            spatial_unit_id_index = column_names.index("spatial_unit_id")
-        is_flow = "origin" in column_names and "destination" in column_names
-        if is_flow:
-            origin_index = column_names.index("origin")
-            destination_index = column_names.index("destination")
-        done = False
-        num_rows = 0
-        while not done:
-            row = await cursor.fetchone()
-            if row is not None:
-                num_rows += 1
-                # adjust the global min/max if necessary
-                min_value = min([row[data_index], min_value])
-                max_value = max([row[data_index], max_value])
-
-                this_date = mdid_to_date[str(row[mdid_index])].strftime(tr.date_format)
-                data_by_date.setdefault(this_date, {})
-                value = util.num(str(row[data_index]))
-
-                if is_single_value:
-                    data_by_date[this_date][row[spatial_unit_id_index]] = value
-                elif is_flow:
-                    data_by_date[this_date].setdefault(row[origin_index], {})
-                    if value is not None:
-                        data_by_date[this_date][row[origin_index]][row[destination_index]] = value
-                else:
-                    raise HTTPException(
-                        status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-                        detail="Cannot find spatial unit in data",
-                    )
-            else:
-                done = True
-    logger.debug(
-        "Finished running data query",
-        num_results=num_rows,
-        min_value=min_value,
-        max_value=max_value,
-    )
-
-    if len(data_by_date.keys()) == 0:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="No data found")
-
-    new_result = QueryResult(
-        min=min_value if min_value != math.inf else None,
-        max=max_value if max_value != -math.inf else None,
-        data_by_date=dict(sorted(data_by_date.items())),
-    )
-
-    return new_result
+    return result, column_names
 
 
 async def run_csv_query(
@@ -420,18 +435,16 @@ async def run_csv_query(
 
 
 def region_to_csv(region_data: Dict[str, Dict[str, float]]) -> str:
-    csv_rows = []
+    yield "date,area_code,value\r\n",
     for date, data in region_data.items():
         for source_region, value in data.items():
             row = {"date": date, "area_code": source_region, "value": value}
-            csv_rows.append(",".join(str(v) for v in row.values()))
-    csv_header = ",".join(row.keys())
-    csv_out = "\r\n".join((csv_header, *csv_rows))
-    return csv_out
+            yield ",".join(str(v) for v in row.values()) + "\r\n"
+    yield "\r\n"
 
 
 def flows_to_csv(flow_data: Dict[str, Dict[str, Dict[str, float]]]) -> str:
-    csv_rows = []
+    yield "date,origin_code,destination_code,value\r\n"
     for date, data in flow_data.items():
         for source_region, value in data.items():
             for dest_region, flow_value in value.items():
@@ -441,7 +454,5 @@ def flows_to_csv(flow_data: Dict[str, Dict[str, Dict[str, float]]]) -> str:
                     "destination_code": dest_region,
                     "value": flow_value,
                 }
-                csv_rows.append(",".join(str(v) for v in row.values()))
-    csv_header = ",".join(row.keys())
-    csv_out = "\r\n".join((csv_header, *csv_rows))
-    return csv_out
+                yield ",".join(str(v) for v in row.values()) + "\r\n"
+    yield "\r\n"
