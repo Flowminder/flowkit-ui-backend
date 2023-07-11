@@ -19,6 +19,7 @@ from flowkit_ui_backend.models.metadata import Metadata
 from flowkit_ui_backend.models.spatial_resolution import SpatialResolution
 from flowkit_ui_backend.models.temporal_resolution import TemporalResolution
 from flowkit_ui_backend.models.extra_models import TokenModel
+from flowkit_ui_backend.models.query_result import QueryResult
 
 
 # some simple test objects
@@ -332,7 +333,7 @@ async def test_run_query_unknown_query_type(mocker, fresh_pool, token_model):
 
 
 @pytest.mark.asyncio
-async def test_run_query(mocker, fresh_pool):
+async def test_run_query(populated_db, fresh_pool, token_model):
     # mocker.patch(
     #    "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
     #    side_effect=[[cat], [tr]],
@@ -360,16 +361,17 @@ async def test_run_query(mocker, fresh_pool):
     # )
 
     query_parameters = QueryParameters(
-        category_id="foo",
-        indicator_id="foo.bar",
+        category_id="residents",
+        indicator_id="residents.residents",
         srid=1,
         trid=1,
         start_date="2022-03-17",
         duration=1,
     )
+
     # TODO: not sure how to mock this
-    # result = await data_api_impl.run_query(query_parameters=query_parameters, pool=fresh_pool)
-    # assert result == QueryResult(min=1.23, max=1.23, data_by_date={"1970": {"foo": 1.23}})
+    result = await data_api_impl.run_query(query_parameters=query_parameters, pool=fresh_pool, token_model=token_model)
+    assert result == QueryResult(min=1.23, max=1.23, data_by_date={"1970": {"foo": 1.23}})
 
 
 @pytest.mark.asyncio
@@ -402,7 +404,7 @@ async def test_run_query_no_metadata(mocker, fresh_pool, token_model):
 
 
 @pytest.mark.asyncio
-async def test_run_query_no_data(mocker, fresh_pool):
+async def test_run_query_no_data(fresh_pool, provisioned_db, token_model):
     # mocker.patch(
     #    "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
     #    side_effect=[[cat], [tr], []],
@@ -416,15 +418,15 @@ async def test_run_query_no_data(mocker, fresh_pool):
     # )
     # TODO: not sure how to mock this
     query_parameters = QueryParameters(
-        category_id="foo",
-        indicator_id="foo.bar",
+        category_id="residents",
+        indicator_id="residents.residents",
         srid=1,
         trid=1,
         start_date="2022-03-17",
         duration=1,
     )
-    # with pytest.raises(HTTPException):
-    #    await data_api_impl.run_query(query_parameters=query_parameters, pool=fresh_pool)
+    with pytest.raises(HTTPException):
+       await data_api_impl.run_query(query_parameters=query_parameters, pool=fresh_pool, token_model=token_model)
 
 
 @pytest.mark.asyncio
