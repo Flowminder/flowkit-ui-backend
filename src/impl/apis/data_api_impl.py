@@ -45,6 +45,10 @@ async def list_categories(pool: Pool, token_model: TokenModel) -> Optional[Categ
     return Categories(categories=categories)
 
 
+async def list_all_categories(pool: Pool, token_model: TokenModel) -> Optional[Categories]:
+    return await list_categories(pool=pool, token_model=None)
+
+
 async def get_category(category_id: str, pool: Pool, token_model: TokenModel) -> Category:
     categories = await db.select_data(
         base_model=Category,
@@ -61,6 +65,10 @@ async def get_category(category_id: str, pool: Pool, token_model: TokenModel) ->
 async def list_indicators(pool: Pool, token_model: TokenModel) -> Optional[Indicators]:
     indicators = await db.select_data(base_model=Indicator, pool=pool, token_model=token_model)
     return Indicators(indicators=indicators)
+
+
+async def list_all_indicators(pool: Pool, token_model: TokenModel) -> Optional[Indicators]:
+    return await list_indicators(pool=pool, token_model=None)
 
 
 async def get_indicator(indicator_id: str, pool: Pool, token_model: TokenModel) -> Indicator:
@@ -99,6 +107,12 @@ async def list_spatial_resolutions(
         token_model=token_model,
     )
     return SpatialResolutions(spatial_resolutions=spatial_resolutions)
+
+
+async def list_all_spatial_resolutions(
+    pool: Pool, token_model: TokenModel
+) -> Optional[SpatialResolutions]:
+    return await list_spatial_resolutions(pool=pool, token_model=None)
 
 
 async def get_spatial_resolution(
@@ -152,6 +166,12 @@ async def list_temporal_resolutions(
         base_model=TemporalResolution, pool=pool, token_model=token_model
     )
     return TemporalResolutions(temporal_resolutions=temporal_resolutions)
+
+
+async def list_all_temporal_resolutions(
+    pool: Pool, token_model: TokenModel
+) -> Optional[TemporalResolutions]:
+    return await list_temporal_resolutions(pool=pool, token_model=None)
 
 
 async def get_temporal_resolution(

@@ -222,6 +222,23 @@
                 }
             }
         },
+        "/all_categories": {
+            "get": {
+                "operationId": "list_all_categories",
+                "tags": ["data"],
+                "description":"Gets all available categories currently ingested in this flowkit-ui-backend instance",
+                "security": [{
+                    "auth0": ["admin"]
+                }],
+                "responses": {
+                    "200": { "$ref": "#/components/responses/categories" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            }
+        },
         "/categories/{category_id}": {
             "parameters": [
                 {"$ref": "#/components/parameters/category_id"}
@@ -347,6 +364,22 @@
                 }
             }
         },
+        "/all_indicators": {
+            "get": {
+                "operationId": "list_all_indicators",
+                "tags": ["data"],
+                "description":"Gets all available indicators currently ingested in this flowkit-ui-backend instance",
+                "security": [{
+                    "auth0": ["admin"]
+                }],
+                "responses": {
+                    "200": { "$ref": "#/components/responses/indicators" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            }},
         "/indicators/{indicator_id}": {
             "parameters": [
                 {"$ref": "#/components/parameters/indicator_id"}
@@ -490,6 +523,22 @@
                 }
             }
         },
+        "/all_spatial_resolutions": {
+            "get": {
+                "operationId": "list_all_spatial_resolutions",
+                "tags": ["data"],
+                "description":"Gets all available spatial resolutions currently ingested in this flowkit-ui-backend instance. This excludes the boundaries, which are typically quite large and should be retrieved individually.",
+                "security": [{
+                    "auth0": ["admin"]
+                }],
+                "responses": {
+                    "200": { "$ref": "#/components/responses/spatial_resolutions" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            }},
         "/spatial_resolutions/{srid}": {
             "parameters": [
                 {"$ref": "#/components/parameters/srid"}
@@ -642,6 +691,22 @@
                 }
             }
         },
+        "/all_temporal_resolutions": {
+            "get": {
+                "operationId": "list_all_temporal_resolutions",
+                "tags": ["data"],
+                "description":"Gets all available temporal resolutions currently ingested in this flowkit-ui-backend instance",
+                "security": [{
+                    "auth0": ["admin"]
+                }],
+                "responses": {
+                    "200": { "$ref": "#/components/responses/temporal_resolutions" },
+                    "401": { "$ref": "#/components/responses/unauthorized" },
+                    "429": { "$ref": "#/components/responses/too_many_requests" },
+                    "500": { "$ref": "#/components/responses/internal_server_error" },
+                    "503": { "$ref": "#/components/responses/service_unavailable" }
+                }
+            }},
         "/temporal_resolutions/{trid}": {
             "parameters": [
                 {"$ref": "#/components/parameters/trid"}
