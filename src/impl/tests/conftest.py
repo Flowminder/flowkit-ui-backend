@@ -73,6 +73,13 @@ async def populated_db(provisioned_db):
     yield provisioned_db
 
 
+@pytest_asyncio.fixture(scope="session")
+async def local_db(fresh_pool):
+    print("Using existing db to save teardown time")
+
+
+
+
 @pytest.fixture
 def token_model():
     """
@@ -83,3 +90,13 @@ def token_model():
         A token model with no permissions
     """
     return TokenModel(sub="test_subject", permissions=[])
+
+@pytest.fixture
+def admin_token_model():
+    """
+    Returns
+    -------
+    TokenModel
+        A token model with admin permissions
+    """
+    return TokenModel(sub="test_subject", permissions=["admin"])

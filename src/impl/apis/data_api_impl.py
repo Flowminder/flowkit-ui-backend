@@ -272,7 +272,6 @@ async def run_query(
         base_table_name=base_table_name,
         table_name=table_name,
     )
-
     # get temporal resolution to know how to format the spatial entities
     tr = await get_temporal_resolution(query_parameters.trid, token_model=token_model, pool=pool)
     if category.type not in ["single_location", "flow"]:
@@ -296,7 +295,7 @@ async def run_query(
     base_table_name = f"{category.type}_data"
     table_name = f"{base_table_name}_{query_parameters.indicator_id}"
 
-    column_names = await get_column_names(table_name, pool)
+    column_names = await get_column_names(table_name, mdids, pool)
 
     data_index = column_names.index("data")
     mdid_index = column_names.index("mdid")
@@ -349,12 +348,12 @@ async def run_query(
     return new_result
 
 
-async def get_column_names(table_name, pool):
-    select_query = f"SELECT * FROM {table_name} LIMIT 1;"
+async def get_column_names(table_name, mdids, pool):
+    select_query = f"SELECT * FROM `{os.getenv('DB_NAME')}`.`{table_name}_{mdids[0]}` LIMIT 1;"
     logger.debug("Getting column names", table_name=table_name)
     async with pool.acquire() as conn, conn.cursor() as cursor:
         await cursor.execute(select_query)
-        return [i[1] for i in cursor.description]
+        return [i[0] for i in cursor.description]
 
 
 async def stream_query(base_table_name, mdid_to_date, mdids, pool, table_name, tr):
