@@ -1,5 +1,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 # If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
+import asyncio
 
 import pytest
 import datetime
@@ -359,7 +360,7 @@ async def test_run_flow_query(populated_db, fresh_pool, admin_token_model):
     )
     result = await data_api_impl.run_query(query_parameters=query_parameters, pool=fresh_pool,
                                            token_model=admin_token_model)
-    assert result == QueryResult(min=544650.0, max=544650.0, data_by_date={"2020-02": {"HT0111-01": {'HT0111-02':6040.0}}})
+    assert result == QueryResult(min=6040.0, max=6040.0, data_by_date={"2020-02": {"HT0111-01": {'HT0111-02':6040.0}}})
 
 @pytest.mark.asyncio
 async def test_run_query_no_metadata(mocker, fresh_pool, admin_token_model):
@@ -427,11 +428,19 @@ async def test_csv_generation(populated_db):
         duration=3,
         mdids_only=False,
     )
-    out = await data_api_impl.run_csv_query(
+    response = await data_api_impl.run_csv_query(
         params,
         pool=populated_db,
         token_model=TokenModel(sub="TEST", permissions=["admin"]),
     )
+    async def get_result():
+        out = ""
+        # REVIEWER NOTE: Not entirely sure why I need to iterate twice over this to get an output
+        async for row in response.body_iterator:
+            async for foo in row:
+                out += foo
+        return out
+    out = await get_result()
     assert out.split("\r\n")[0].split(",") == ["date", "area_code", "value"]
 
 

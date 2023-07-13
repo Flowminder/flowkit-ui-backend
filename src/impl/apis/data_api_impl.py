@@ -8,7 +8,7 @@ import pendulum
 import os
 from typing import Optional, Dict
 from fastapi import HTTPException
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import StreamingResponse
 from aiomysql import Pool
 from dateutil.relativedelta import relativedelta
 from http import HTTPStatus
@@ -259,14 +259,29 @@ async def get_time_range(
     return time_range
 
 
+async def get_query_attributes(query_parameters, token_model, pool):
+    """
+    Gets the metadata + query parameters
+    """
+    category = await get_category(query_parameters.category_id, token_model=token_model, pool=pool)
+    if category.type not in ["single_location", "flow"]:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail="Could not find category",
+        )
+    base_table_name = f"{category.type}_data"
+    table_name = f"{base_table_name}_{query_parameters.indicator_id}"
+    return base_table_name, table_name
+
+
 async def run_query(
     query_parameters: QueryParameters, pool: Pool, token_model: TokenModel
 ) -> QueryResult:
     # get category to find which data table to use
-    category = await get_category(query_parameters.category_id, token_model=token_model, pool=pool)
+    base_table_name, table_name = await get_query_attributes(
+        query_parameters, token_model=token_model, pool=pool
+    )
     # make sure to amend table name for data tables
-    base_table_name = f"{category.type}_data"
-    table_name = f"{base_table_name}_{query_parameters.indicator_id}"
     logger.debug(
         "Using indicator-specific data table",
         base_table_name=base_table_name,
@@ -274,11 +289,6 @@ async def run_query(
     )
     # get temporal resolution to know how to format the spatial entities
     tr = await get_temporal_resolution(query_parameters.trid, token_model=token_model, pool=pool)
-    if category.type not in ["single_location", "flow"]:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND,
-            detail="Could not find category",
-        )
 
     # REVIEWER QUESTION: Are these the same column names that are returned in the actual query?
     result, metadata_col_names = await get_metadata(query_parameters, tr, pool, token_model)
@@ -290,10 +300,6 @@ async def run_query(
 
     mdid_to_date = {str(md[1]): md[8] for md in result}
     logger.debug(f"Found metadata objects, now getting data...", num=len(mdids))
-
-    # make sure to amend table name for data tables
-    base_table_name = f"{category.type}_data"
-    table_name = f"{base_table_name}_{query_parameters.indicator_id}"
 
     column_names = await get_column_names(table_name, mdids, pool)
 
@@ -310,7 +316,7 @@ async def run_query(
     min_value = math.inf
     max_value = -math.inf
     num_rows = 0
-    async for row in stream_query(base_table_name, mdid_to_date, mdids, pool, table_name, tr):
+    async for row in stream_query(base_table_name, mdids, pool, table_name):
         num_rows += 1
         # adjust the global min/max if necessary
         min_value = min([row[data_index], min_value])
@@ -356,8 +362,7 @@ async def get_column_names(table_name, mdids, pool):
         return [i[0] for i in cursor.description]
 
 
-async def stream_query(base_table_name, mdid_to_date, mdids, pool, table_name, tr):
-    # manually querying to make use of partitions
+async def stream_query(base_table_name, mdids, pool, table_name):
     table_names = [f"`{os.getenv('DB_NAME')}`.`{table_name}_{mdid}`" for mdid in mdids]
     union_string = f" UNION SELECT * FROM ".join(table_names)
     select_query = f"SELECT * FROM {union_string};"
@@ -418,40 +423,45 @@ async def get_metadata(query_parameters, temp_res, pool, token_model):
 
 
 async def run_csv_query(
-    query_parameters: QueryParameters, pool: Pool, token_model: TokenModel
-) -> QueryResult:
-    result = await run_query(query_parameters, pool, token_model)
+        query_parameters: QueryParameters, pool: Pool, token_model: TokenModel
+)-> StreamingResponse:
+    return StreamingResponse(stream_csv(query_parameters, pool, token_model))
+
+
+async def stream_csv(query_parameters, pool, token_model):
+    base_table_name, table_name = await get_query_attributes(query_parameters, pool=pool, token_model=token_model)
+    tr = await get_temporal_resolution(query_parameters.trid, token_model=token_model, pool=pool)
+    result, metadata_col_names = await get_metadata(query_parameters, tr, pool, token_model)
+    mdids = [str(md[1]) for md in result]
+    query_stream_generator = stream_query(base_table_name,mdids,pool, table_name)
     if query_parameters.category_id.lower() in ["residents", "presence"]:
-        out = region_to_csv(result.data_by_date)
+        yield stream_region_to_csv(query_stream_generator)
     elif query_parameters.category_id.lower() in ["relocations", "movements"]:
-        out = flows_to_csv(result.data_by_date)
+        yield stream_flows_to_csv(query_stream_generator)
     else:
         raise HTTPException(
             status_code=HTTPStatus.NOT_IMPLEMENTED,
             detail=f"CSV not yet implemented for {query_parameters.category_id.lower()}",
         )
-    return out
 
 
-def region_to_csv(region_data: Dict[str, Dict[str, float]]) -> str:
-    yield "date,area_code,value\r\n",
-    for date, data in region_data.items():
-        for source_region, value in data.items():
-            row = {"date": date, "area_code": source_region, "value": value}
-            yield ",".join(str(v) for v in row.values()) + "\r\n"
+async def stream_region_to_csv(region_stream) -> str:
+    yield "date,area_code,value\r\n"
+    async for row in region_stream:
+        breakpoint()
+        row = {"date": row.date, "area_code": row.source_region, "value": row.value}
+        yield ",".join(str(v) for v in row.values()) + "\r\n"
     yield "\r\n"
 
 
-def flows_to_csv(flow_data: Dict[str, Dict[str, Dict[str, float]]]) -> str:
+async def stream_flows_to_csv(flow_stream) -> str:
     yield "date,origin_code,destination_code,value\r\n"
-    for date, data in flow_data.items():
-        for source_region, value in data.items():
-            for dest_region, flow_value in value.items():
-                row = {
-                    "date": date,
-                    "origin_code": source_region,
-                    "destination_code": dest_region,
-                    "value": flow_value,
-                }
-                yield ",".join(str(v) for v in row.values()) + "\r\n"
+    for row in flow_stream:
+        row = {
+            "date": row.date,
+            "origin_code": row.source_region,
+            "destination_code": row.dest_region,
+            "value": row.flow_value,
+        }
+        yield ",".join(str(v) for v in row.values()) + "\r\n"
     yield "\r\n"
