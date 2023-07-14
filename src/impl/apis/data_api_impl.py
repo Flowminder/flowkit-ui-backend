@@ -6,7 +6,7 @@ import structlog
 import math
 import pendulum
 import os
-from typing import Optional, Dict
+from typing import Optional, Dict, AsyncGenerator
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
 from aiomysql import Pool
@@ -364,19 +364,18 @@ async def get_column_names(table_name, mdids, pool):
 
 async def stream_query(base_table_name, mdids, pool, table_name):
     table_names = [f"`{os.getenv('DB_NAME')}`.`{table_name}_{mdid}`" for mdid in mdids]
+    short_names = [table_name.rpartition('.')[2].strip("`") for table_name in table_names]
 
     partition_queries = [
-        f"UNION SELECT `{table_name.}`.* FROM `{table_name} LEFT_JOIN metadata USING (mdid)"
-        for table_name
-        in table_names
+        f"SELECT `{short_name}`.*, `dt` FROM {table_name} AS `{short_name}` LEFT JOIN metadata USING (mdid)"
+        for table_name, short_name
+        in zip(table_names,short_names)
     ]
-    union_string = f" UNION SELECT * FROM ".join(table_names)
-    select_query = f"SELECT * FROM {union_string};"
+    select_query = " UNION ".join(partition_queries)
 
     """
     SELECT `left`.*, dt FROM `flowkit_ui_backend`.`single_location_data_residents.residents_1` AS `left` LEFT JOIN metadata USING (mdid);
     """
-    breakpoint()
     logger.debug(
         "Running data query...",
         base_table_name=base_table_name,
@@ -392,8 +391,9 @@ async def stream_query(base_table_name, mdids, pool, table_name):
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
                 detail="Cannot find data for metadata",
             )
-        row = await cursor.fetchone()
-        if row is not None:
+        row = "not none"
+        while row is not None:
+            row = await cursor.fetchone()
             yield row
 
 
@@ -446,9 +446,11 @@ async def stream_csv(query_parameters, pool, token_model):
     mdids = [str(md[1]) for md in result]
     query_stream_generator = stream_query(base_table_name,mdids,pool, table_name)
     if query_parameters.category_id.lower() in ["residents", "presence"]:
-        yield stream_region_to_csv(query_stream_generator)
+        async for f in stream_region_to_csv(query_stream_generator):
+            yield f
     elif query_parameters.category_id.lower() in ["relocations", "movements"]:
-        yield stream_flows_to_csv(query_stream_generator)
+        async for f in stream_flows_to_csv(query_stream_generator):
+            yield f
     else:
         raise HTTPException(
             status_code=HTTPStatus.NOT_IMPLEMENTED,
@@ -456,17 +458,21 @@ async def stream_csv(query_parameters, pool, token_model):
         )
 
 
-async def stream_region_to_csv(region_stream) -> str:
+async def stream_region_to_csv(region_stream: AsyncGenerator) -> str:
     yield "date,area_code,value\r\n"
+    breakpoint()
     async for row in region_stream:
-        row = {"date": row.date, "area_code": row.source_region, "value": row.value}
-        yield ",".join(str(v) for v in row.values()) + "\r\n"
+        date = row[-1].strftime("%Y-%m-%d")
+        area_code = row[2]
+        value = str(row[3])
+        yield ",".join(str(v) for v in [date, area_code, value]) + "\r\n"
     yield "\r\n"
 
 
-async def stream_flows_to_csv(flow_stream) -> str:
+async def stream_flows_to_csv(flow_stream: AsyncGenerator) -> str:
     yield "date,origin_code,destination_code,value\r\n"
     for row in flow_stream:
+        breakpoint()
         row = {
             "date": row.date,
             "origin_code": row.source_region,

@@ -22,6 +22,7 @@ from flowkit_ui_backend.models.temporal_resolution import TemporalResolution
 from flowkit_ui_backend.models.extra_models import TokenModel
 from flowkit_ui_backend.models.query_result import QueryResult
 
+from flowkit_ui_backend.impl.apis import data_api_impl as dai
 
 # some simple test objects
 cat = Category(category_id="foo", type="single_location")
@@ -428,19 +429,14 @@ async def test_csv_generation(populated_db):
         duration=3,
         mdids_only=False,
     )
-    response = await data_api_impl.run_csv_query(
-        params,
-        pool=populated_db,
-        token_model=TokenModel(sub="TEST", permissions=["admin"]),
-    )
-    async def get_result():
-        out = ""
-        # REVIEWER NOTE: Not entirely sure why I need to iterate twice over this to get an output
-        async for row in response.body_iterator:
-            async for foo in row:
-                out += foo
-        return out
-    out = await get_result()
+    #response = await data_api_impl.run_csv_query(
+        #params,
+        #pool=populated_db,
+        #token_model=TokenModel(sub="TEST", permissions=["admin"]),
+    #)
+    out = ""
+    async for f in dai.stream_csv(params, populated_db, TokenModel(sub="TEST", permissions=["admin"])):
+        out += f
     assert out.split("\r\n")[0].split(",") == ["date", "area_code", "value"]
 
 
@@ -455,9 +451,18 @@ async def test_flow_csv_generation(populated_db):
         duration=3,
         mdids_only=False,
     )
-    out = await data_api_impl.run_csv_query(
+    response = await data_api_impl.run_csv_query(
         params,
         pool=populated_db,
         token_model=TokenModel(sub="TEST", permissions=["admin"]),
     )
+
+    async def get_result():
+        out = ""
+        # REVIEWER NOTE: Not entirely sure why I need to iterate twice over this to get an output
+        async for row in response.body_iterator:
+            async for foo in row:
+                out += foo
+        return out
+    out = await get_result()
     assert out.split("\r\n")[0].split(",") == ["date", "origin_code", "destination_code", "value"]
