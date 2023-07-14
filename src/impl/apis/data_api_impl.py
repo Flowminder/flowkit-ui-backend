@@ -364,8 +364,19 @@ async def get_column_names(table_name, mdids, pool):
 
 async def stream_query(base_table_name, mdids, pool, table_name):
     table_names = [f"`{os.getenv('DB_NAME')}`.`{table_name}_{mdid}`" for mdid in mdids]
+
+    partition_queries = [
+        f"UNION SELECT `{table_name.}`.* FROM `{table_name} LEFT_JOIN metadata USING (mdid)"
+        for table_name
+        in table_names
+    ]
     union_string = f" UNION SELECT * FROM ".join(table_names)
     select_query = f"SELECT * FROM {union_string};"
+
+    """
+    SELECT `left`.*, dt FROM `flowkit_ui_backend`.`single_location_data_residents.residents_1` AS `left` LEFT JOIN metadata USING (mdid);
+    """
+    breakpoint()
     logger.debug(
         "Running data query...",
         base_table_name=base_table_name,
@@ -448,7 +459,6 @@ async def stream_csv(query_parameters, pool, token_model):
 async def stream_region_to_csv(region_stream) -> str:
     yield "date,area_code,value\r\n"
     async for row in region_stream:
-        breakpoint()
         row = {"date": row.date, "area_code": row.source_region, "value": row.value}
         yield ",".join(str(v) for v in row.values()) + "\r\n"
     yield "\r\n"
