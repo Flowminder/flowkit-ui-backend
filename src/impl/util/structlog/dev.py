@@ -326,7 +326,9 @@ class ConsoleRenderer:
 
         for key in self._level_to_color.keys():
             self._level_to_color[key] += styles.bright
-        self._longest_level = len(max(self._level_to_color.keys(), key=lambda e: len(e)))
+        self._longest_level = len(
+            max(self._level_to_color.keys(), key=lambda e: len(e))
+        )
 
         self._repr_native_str = repr_native_str
         self._exception_formatter = exception_formatter
@@ -373,7 +375,9 @@ class ConsoleRenderer:
         func_name = event_dict.pop("func_name", None)
         line_no = event_dict.pop("lineno", None)
         if file_name is not None and line_no is not None:
-            sio.write(f"{self._styles.bright}{file_name}:{line_no} {self._styles.reset}")
+            sio.write(
+                f"{self._styles.bright}{file_name}:{line_no} {self._styles.reset}"
+            )
         if func_name is not None and func_name != "<module>":
             sio.write(f"{self._styles.dim}({func_name}) {self._styles.reset}")
 
@@ -492,13 +496,18 @@ class ConsoleRenderer:
 _SENTINEL = object()
 
 
-def set_exc_info(logger: WrappedLogger, method_name: str, event_dict: EventDict) -> EventDict:
+def set_exc_info(
+    logger: WrappedLogger, method_name: str, event_dict: EventDict
+) -> EventDict:
     """
     Set ``event_dict["exc_info"] = True`` if *method_name* is ``"exception"``.
 
     Do nothing if the name is different or ``exc_info`` is already set.
     """
-    if method_name != "exception" or event_dict.get("exc_info", _SENTINEL) is not _SENTINEL:
+    if (
+        method_name != "exception"
+        or event_dict.get("exc_info", _SENTINEL) is not _SENTINEL
+    ):
         return event_dict
 
     event_dict["exc_info"] = True

@@ -65,7 +65,9 @@ async def test_create_data_provider(mocker, provisioned_db):
         side_effect=[(dp, HTTPStatus.CREATED)],
     )
 
-    content, status_code = await maintenance_api_impl.create_data_provider(dp, pool=provisioned_db)
+    content, status_code = await maintenance_api_impl.create_data_provider(
+        dp, pool=provisioned_db
+    )
     assert status_code == HTTPStatus.CREATED
     assert type(content) == DataProvider
     assert content == dp
@@ -78,7 +80,9 @@ async def test_create_category(mocker, provisioned_db):
         side_effect=[(cat, HTTPStatus.CREATED)],
     )
 
-    content, status_code = await maintenance_api_impl.create_category(cat, pool=provisioned_db)
+    content, status_code = await maintenance_api_impl.create_category(
+        cat, pool=provisioned_db
+    )
     assert status_code == HTTPStatus.CREATED
     assert type(content) == Category
     assert content == cat
@@ -99,7 +103,9 @@ async def test_create_indicator_success(mocker, provisioned_db):
         side_effect=[(None, [("table_name", "CREATE TABLE...")]), (None, None)],
     )
 
-    content, status_code = await maintenance_api_impl.create_indicator(ind, pool=provisioned_db)
+    content, status_code = await maintenance_api_impl.create_indicator(
+        ind, pool=provisioned_db
+    )
     assert status_code == HTTPStatus.CREATED
     assert content == ind
 
@@ -126,7 +132,9 @@ async def test_create_indicator_indicator_exists(mocker, provisioned_db):
         side_effect=[(ind, HTTPStatus.SEE_OTHER)],
     )
 
-    result, status = await maintenance_api_impl.create_indicator(ind, pool=provisioned_db)
+    result, status = await maintenance_api_impl.create_indicator(
+        ind, pool=provisioned_db
+    )
     assert status == HTTPStatus.SEE_OTHER
     assert result == ind
 
@@ -194,7 +202,9 @@ async def test_update_category_success(mocker, provisioned_db):
         side_effect=[None],
     )
 
-    result = await maintenance_api_impl.update_category(cat.category_id, cat, pool=provisioned_db)
+    result = await maintenance_api_impl.update_category(
+        cat.category_id, cat, pool=provisioned_db
+    )
     assert result is None
 
 
@@ -206,7 +216,9 @@ async def test_update_category_failure(mocker, provisioned_db):
     )
 
     with pytest.raises(HTTPException):
-        await maintenance_api_impl.update_category(cat.category_id, cat, pool=provisioned_db)
+        await maintenance_api_impl.update_category(
+            cat.category_id, cat, pool=provisioned_db
+        )
 
 
 @pytest.mark.asyncio
@@ -216,7 +228,9 @@ async def test_update_indicator_success(mocker, provisioned_db):
         side_effect=[None],
     )
 
-    result = await maintenance_api_impl.update_indicator(ind.indicator_id, ind, pool=provisioned_db)
+    result = await maintenance_api_impl.update_indicator(
+        ind.indicator_id, ind, pool=provisioned_db
+    )
     assert result is None
 
 
@@ -228,7 +242,9 @@ async def test_update_indicator_failure(mocker, provisioned_db):
     )
 
     with pytest.raises(HTTPException):
-        await maintenance_api_impl.update_indicator(ind.indicator_id, ind, pool=provisioned_db)
+        await maintenance_api_impl.update_indicator(
+            ind.indicator_id, ind, pool=provisioned_db
+        )
 
 
 @pytest.mark.asyncio
@@ -238,7 +254,9 @@ async def test_update_spatial_resolution_success(mocker, provisioned_db):
         side_effect=[None],
     )
 
-    result = await maintenance_api_impl.update_spatial_resolution(sr.srid, sr, pool=provisioned_db)
+    result = await maintenance_api_impl.update_spatial_resolution(
+        sr.srid, sr, pool=provisioned_db
+    )
     assert result is None
 
 
@@ -250,7 +268,9 @@ async def test_update_spatial_resolution_failure(mocker, provisioned_db):
     )
 
     with pytest.raises(HTTPException):
-        await maintenance_api_impl.update_spatial_resolution(sr.srid, sr, pool=provisioned_db)
+        await maintenance_api_impl.update_spatial_resolution(
+            sr.srid, sr, pool=provisioned_db
+        )
 
 
 @pytest.mark.asyncio
@@ -260,7 +280,9 @@ async def test_update_temporal_resolution_success(mocker, provisioned_db):
         side_effect=[None],
     )
 
-    result = await maintenance_api_impl.update_temporal_resolution(tr.trid, tr, pool=provisioned_db)
+    result = await maintenance_api_impl.update_temporal_resolution(
+        tr.trid, tr, pool=provisioned_db
+    )
     assert result is None
 
 
@@ -272,7 +294,9 @@ async def test_update_temporal_resolution_failure(mocker, provisioned_db):
     )
 
     with pytest.raises(HTTPException):
-        await maintenance_api_impl.update_temporal_resolution(tr.trid, tr, pool=provisioned_db)
+        await maintenance_api_impl.update_temporal_resolution(
+            tr.trid, tr, pool=provisioned_db
+        )
 
 
 @pytest.mark.asyncio
@@ -364,7 +388,9 @@ async def test_delete_spatial_resolution(mocker, provisioned_db):
         side_effect=[None],
     )
 
-    result = await maintenance_api_impl.delete_spatial_resolution("1", pool=provisioned_db)
+    result = await maintenance_api_impl.delete_spatial_resolution(
+        "1", pool=provisioned_db
+    )
     assert result is None
 
 
@@ -375,7 +401,9 @@ async def test_delete_temporal_resolution(mocker, provisioned_db):
         side_effect=[None],
     )
 
-    result = await maintenance_api_impl.delete_temporal_resolution("1", pool=provisioned_db)
+    result = await maintenance_api_impl.delete_temporal_resolution(
+        "1", pool=provisioned_db
+    )
     assert result is None
 
 
@@ -653,12 +681,16 @@ async def test_create_dataset(mocker, provisioned_db):
         side_effect=[1, 1],
     )
 
-    content, status = await maintenance_api_impl.create_dataset(dataset=ds, pool=provisioned_db)
+    content, status = await maintenance_api_impl.create_dataset(
+        dataset=ds, pool=provisioned_db
+    )
     assert content == 1
     assert status == HTTPStatus.CREATED
 
     # now it exists we run it again and it should return the existing one
-    content, status = await maintenance_api_impl.create_dataset(dataset=ds, pool=provisioned_db)
+    content, status = await maintenance_api_impl.create_dataset(
+        dataset=ds, pool=provisioned_db
+    )
     assert content == 1
     assert status == HTTPStatus.SEE_OTHER
 
