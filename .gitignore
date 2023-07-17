@@ -34,3 +34,4 @@ doc/examples/.bash_history
 **/.bash_history
 
 test_results/
+src/jupyter/tmp
