@@ -29,9 +29,7 @@ logger = structlog.get_logger("flowkit_ui_backend.log")
 # and use that to execute the request.
 
 
-async def get_user(
-    uid: str, pool: Pool = None, token_model: TokenModel = None
-) -> UserMetadata:
+async def get_user(uid: str, pool: Pool = None, token_model: TokenModel = None) -> UserMetadata:
     user = await Auth0(
         os.getenv("AUTH0_DOMAIN"), await get_management_api_m2m_token()
     ).users.get_async(uid)
@@ -46,22 +44,18 @@ async def update_user(
     pool: Pool = None,
     token_model: TokenModel = None,
 ) -> None:
-    await Auth0(
-        os.getenv("AUTH0_DOMAIN"), await get_management_api_m2m_token()
-    ).users.update_async(uid, {"user_metadata": body.dict()})
+    await Auth0(os.getenv("AUTH0_DOMAIN"), await get_management_api_m2m_token()).users.update_async(
+        uid, {"user_metadata": body.dict()}
+    )
 
 
-async def delete_user(
-    uid: str, pool: Pool = None, token_model: TokenModel = None
-) -> None:
-    await Auth0(
-        os.getenv("AUTH0_DOMAIN"), await get_management_api_m2m_token()
-    ).users.delete_async(uid)
+async def delete_user(uid: str, pool: Pool = None, token_model: TokenModel = None) -> None:
+    await Auth0(os.getenv("AUTH0_DOMAIN"), await get_management_api_m2m_token()).users.delete_async(
+        uid
+    )
 
 
-async def reset_password(
-    email: str, pool: Pool = None, token_model: TokenModel = None
-) -> None:
+async def reset_password(email: str, pool: Pool = None, token_model: TokenModel = None) -> None:
     response = httpx.post(
         url=f"https://{os.getenv('AUTH0_DOMAIN')}/dbconnections/change_password",
         headers={"Content-Type": "application/json"},

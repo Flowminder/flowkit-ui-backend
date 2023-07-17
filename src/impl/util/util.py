@@ -57,9 +57,7 @@ async def load_data_from_csv(csv_path: str) -> dict:
 
 
 # take individual properties and turn them into a serialised "translation" field
-async def add_translation(
-    resource: BaseModel, pool: Pool, props: list[str] = []
-) -> BaseModel:
+async def add_translation(resource: BaseModel, pool: Pool, props: list[str] = []) -> BaseModel:
     # if this data type supports i18n we'll add the possible extra fields
     if hasattr(resource, "translation"):
         languages = [

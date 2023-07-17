@@ -48,9 +48,7 @@ async def get_data_provider(dpid: int, pool: Pool) -> DataProvider:
         base_model=DataProvider, pool=pool, id_key="dpid", ids=[dpid]
     )
     if len(data_providers) == 0:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail="No data providers found"
-        )
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="No data providers found")
     return data_providers[0]
 
 
