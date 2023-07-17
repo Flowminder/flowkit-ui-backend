@@ -345,12 +345,14 @@ async def test_run_query(populated_db, fresh_pool, admin_token_model):
         start_date="2020-02-01",
         duration=2,
     )
-    result = await data_api_impl.run_query(query_parameters=query_parameters, pool=fresh_pool, token_model=admin_token_model)
-    assert result == QueryResult(min=540640.0, max=544650.0, data_by_date={
-        "2020-02": {"HT0111-01": 544650.0},
-        "2020-03": {"HT0111-01": 540640.0}
-    })
-
+    result = await data_api_impl.run_query(
+        query_parameters=query_parameters, pool=fresh_pool, token_model=admin_token_model
+    )
+    assert result == QueryResult(
+        min=540640.0,
+        max=544650.0,
+        data_by_date={"2020-02": {"HT0111-01": 544650.0}, "2020-03": {"HT0111-01": 540640.0}},
+    )
 
 
 @pytest.mark.asyncio
@@ -363,9 +365,12 @@ async def test_run_flow_query(populated_db, fresh_pool, admin_token_model):
         start_date="2020-02-01",
         duration=1,
     )
-    result = await data_api_impl.run_query(query_parameters=query_parameters, pool=fresh_pool,
-                                           token_model=admin_token_model)
-    assert result == QueryResult(min=6040.0, max=6040.0, data_by_date={"2020-02": {"HT0111-01": {'HT0111-02':6040.0}}})
+    result = await data_api_impl.run_query(
+        query_parameters=query_parameters, pool=fresh_pool, token_model=admin_token_model
+    )
+    assert result == QueryResult(
+        min=6040.0, max=6040.0, data_by_date={"2020-02": {"HT0111-01": {"HT0111-02": 6040.0}}}
+    )
 
 
 @pytest.mark.asyncio
@@ -420,7 +425,9 @@ async def test_run_query_no_data(fresh_pool, provisioned_db, admin_token_model):
         duration=1,
     )
     with pytest.raises(HTTPException):
-       await data_api_impl.run_query(query_parameters=query_parameters, pool=fresh_pool, token_model=admin_token_model)
+        await data_api_impl.run_query(
+            query_parameters=query_parameters, pool=fresh_pool, token_model=admin_token_model
+        )
 
 
 @pytest.mark.asyncio
@@ -442,7 +449,10 @@ async def test_csv_generation(populated_db):
     out = ""
     async for f in response.body_iterator:
         out += f
-    assert out == 'date,area_code,value\r\n2020-02-01,HT0111-01,544650.000000000\r\n2020-03-01,HT0111-01,540640.000000000\r\n2020-04-01,HT0111-01,547210.000000000\r\n\r\n'
+    assert (
+        out
+        == "date,area_code,value\r\n2020-02-01,HT0111-01,544650.000000000\r\n2020-03-01,HT0111-01,540640.000000000\r\n2020-04-01,HT0111-01,547210.000000000\r\n\r\n"
+    )
 
 
 @pytest.mark.asyncio

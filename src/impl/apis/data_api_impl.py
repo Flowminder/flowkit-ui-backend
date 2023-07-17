@@ -366,12 +366,11 @@ async def get_column_names(table_name, mdids, pool):
 
 async def stream_query(base_table_name, mdids, pool, table_name) -> AsyncGenerator[list, None]:
     table_names = [f"`{os.getenv('DB_NAME')}`.`{table_name}_{mdid}`" for mdid in mdids]
-    short_names = [table_name.rpartition('.')[2].strip("`") for table_name in table_names]
+    short_names = [table_name.rpartition(".")[2].strip("`") for table_name in table_names]
 
     partition_queries = [
         f"SELECT `{short_name}`.*, `dt` FROM {table_name} AS `{short_name}` LEFT JOIN metadata USING (mdid)"
-        for table_name, short_name
-        in zip(table_names,short_names)
+        for table_name, short_name in zip(table_names, short_names)
     ]
     select_query = " UNION ".join(partition_queries)
 
@@ -436,17 +435,19 @@ async def get_metadata(query_parameters, temp_res, pool, token_model):
 
 
 async def run_csv_query(
-        query_parameters: QueryParameters, pool: Pool, token_model: TokenModel
-)-> StreamingResponse:
+    query_parameters: QueryParameters, pool: Pool, token_model: TokenModel
+) -> StreamingResponse:
     return StreamingResponse(stream_csv(query_parameters, pool, token_model))
 
 
 async def stream_csv(query_parameters, pool, token_model) -> AsyncGenerator[str, None]:
-    base_table_name, table_name = await get_query_attributes(query_parameters, pool=pool, token_model=token_model)
+    base_table_name, table_name = await get_query_attributes(
+        query_parameters, pool=pool, token_model=token_model
+    )
     tr = await get_temporal_resolution(query_parameters.trid, token_model=token_model, pool=pool)
     result, metadata_col_names = await get_metadata(query_parameters, tr, pool, token_model)
     mdids = [str(md[1]) for md in result]
-    query_stream_generator = stream_query(base_table_name,mdids,pool, table_name)
+    query_stream_generator = stream_query(base_table_name, mdids, pool, table_name)
     if query_parameters.category_id.lower() in ["residents", "presence"]:
         async for f in stream_region_to_csv(query_stream_generator):
             yield f

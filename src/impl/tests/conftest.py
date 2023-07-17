@@ -11,12 +11,14 @@ from flowkit_ui_backend.impl.util.db import (
     PERSISTENT_FIRST_RUN,
 )
 
+
 @pytest.fixture()
 def event_loop():
     policy = asyncio.get_event_loop_policy()
     loop = policy.new_event_loop()
     yield loop
     loop.close()
+
 
 @pytest_asyncio.fixture()
 async def fresh_pool(event_loop):
@@ -83,6 +85,7 @@ def token_model():
         A token model with no permissions
     """
     return TokenModel(sub="test_subject", permissions=[])
+
 
 @pytest.fixture
 def admin_token_model():
