@@ -317,6 +317,9 @@ async def run_query(
     max_value = -math.inf
     num_rows = 0
     async for row in stream_query(base_table_name, mdids, pool, table_name):
+        if row is None:
+            # I don't think I should need to do this?
+            break
         num_rows += 1
         # adjust the global min/max if necessary
         min_value = min([row[data_index], min_value])
