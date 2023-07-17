@@ -6,7 +6,7 @@ import structlog
 import math
 import pendulum
 import os
-from typing import Optional, Dict, AsyncGenerator
+from typing import Optional, Dict, AsyncGenerator, AsyncIterable
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
 from aiomysql import Pool
@@ -362,7 +362,7 @@ async def get_column_names(table_name, mdids, pool):
         return [i[0] for i in cursor.description]
 
 
-async def stream_query(base_table_name, mdids, pool, table_name):
+async def stream_query(base_table_name, mdids, pool, table_name) -> AsyncGenerator[list, None]:
     table_names = [f"`{os.getenv('DB_NAME')}`.`{table_name}_{mdid}`" for mdid in mdids]
     short_names = [table_name.rpartition('.')[2].strip("`") for table_name in table_names]
 
@@ -439,7 +439,7 @@ async def run_csv_query(
     return StreamingResponse(stream_csv(query_parameters, pool, token_model))
 
 
-async def stream_csv(query_parameters, pool, token_model):
+async def stream_csv(query_parameters, pool, token_model) -> AsyncGenerator[str, None]:
     base_table_name, table_name = await get_query_attributes(query_parameters, pool=pool, token_model=token_model)
     tr = await get_temporal_resolution(query_parameters.trid, token_model=token_model, pool=pool)
     result, metadata_col_names = await get_metadata(query_parameters, tr, pool, token_model)
@@ -458,26 +458,24 @@ async def stream_csv(query_parameters, pool, token_model):
         )
 
 
-async def stream_region_to_csv(region_stream: AsyncGenerator) -> str:
+async def stream_region_to_csv(region_stream: AsyncGenerator) -> AsyncGenerator[str, None]:
     yield "date,area_code,value\r\n"
-    breakpoint()
     async for row in region_stream:
-        date = row[-1].strftime("%Y-%m-%d")
-        area_code = row[2]
-        value = str(row[3])
-        yield ",".join(str(v) for v in [date, area_code, value]) + "\r\n"
+        if row:
+            date = row[-1].strftime("%Y-%m-%d")
+            area_code = row[2]
+            value = str(row[3])
+            yield ",".join(str(v) for v in [date, area_code, value]) + "\r\n"
     yield "\r\n"
 
 
-async def stream_flows_to_csv(flow_stream: AsyncGenerator) -> str:
+async def stream_flows_to_csv(flow_stream: AsyncGenerator) -> AsyncGenerator[str, None]:
     yield "date,origin_code,destination_code,value\r\n"
-    for row in flow_stream:
-        breakpoint()
-        row = {
-            "date": row.date,
-            "origin_code": row.source_region,
-            "destination_code": row.dest_region,
-            "value": row.flow_value,
-        }
-        yield ",".join(str(v) for v in row.values()) + "\r\n"
+    async for row in flow_stream:
+        if row:
+            date = row[-1].strftime("%Y-%m-%d")
+            orig_code = row[2]
+            dest_code = row[3]
+            value = str(row[4])
+            yield ",".join(str(v) for v in [date, orig_code, dest_code, value]) + "\r\n"
     yield "\r\n"

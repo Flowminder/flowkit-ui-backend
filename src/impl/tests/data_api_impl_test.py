@@ -429,15 +429,15 @@ async def test_csv_generation(populated_db):
         duration=3,
         mdids_only=False,
     )
-    #response = await data_api_impl.run_csv_query(
-        #params,
-        #pool=populated_db,
-        #token_model=TokenModel(sub="TEST", permissions=["admin"]),
-    #)
+    response = await data_api_impl.run_csv_query(
+        params,
+        pool=populated_db,
+        token_model=TokenModel(sub="TEST", permissions=["admin"]),
+    )
     out = ""
-    async for f in dai.stream_csv(params, populated_db, TokenModel(sub="TEST", permissions=["admin"])):
+    async for f in response.body_iterator:
         out += f
-    assert out.split("\r\n")[0].split(",") == ["date", "area_code", "value"]
+    assert out == 'date,area_code,value\r\n2020-02-01,HT0111-01,544650.000000000\r\n2020-03-01,HT0111-01,540640.000000000\r\n2020-04-01,HT0111-01,547210.000000000\r\n\r\n'
 
 
 @pytest.mark.asyncio
@@ -456,13 +456,7 @@ async def test_flow_csv_generation(populated_db):
         pool=populated_db,
         token_model=TokenModel(sub="TEST", permissions=["admin"]),
     )
-
-    async def get_result():
-        out = ""
-        # REVIEWER NOTE: Not entirely sure why I need to iterate twice over this to get an output
-        async for row in response.body_iterator:
-            async for foo in row:
-                out += foo
-        return out
-    out = await get_result()
+    out = ""
+    async for f in response.body_iterator:
+        out += f
     assert out.split("\r\n")[0].split(",") == ["date", "origin_code", "destination_code", "value"]
