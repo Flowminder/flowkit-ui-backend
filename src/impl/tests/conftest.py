@@ -11,14 +11,14 @@ from flowkit_ui_backend.impl.util.db import (
     PERSISTENT_FIRST_RUN,
 )
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def event_loop():
     policy = asyncio.get_event_loop_policy()
     loop = policy.new_event_loop()
     yield loop
     loop.close()
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture()
 async def fresh_pool(event_loop):
     """
     Creates and yields up a fresh pool connected to a database, cleans it up at exit
@@ -45,13 +45,13 @@ async def fresh_pool(event_loop):
         await pool.wait_closed()
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture()
 def monkey_session():
     with pytest.MonkeyPatch.context() as mp:
         yield mp
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture()
 async def provisioned_db(fresh_pool, monkey_session):
     monkey_session.setenv("FORCE_DB_SETUP", "1")
     pathlib.Path(PERSISTENT_FIRST_RUN).unlink(missing_ok=True)
@@ -66,18 +66,11 @@ async def provisioned_db(fresh_pool, monkey_session):
         pathlib.Path(PERSISTENT_FIRST_RUN).unlink(missing_ok=False)
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture()
 async def populated_db(provisioned_db):
     print("Populating db")
     await run_script(str(pathlib.Path(__file__).parent / "test_data.sql"), pool=provisioned_db)
     yield provisioned_db
-
-
-@pytest_asyncio.fixture(scope="session")
-async def local_db(fresh_pool):
-    print("Using existing db to save teardown time")
-
-
 
 
 @pytest.fixture

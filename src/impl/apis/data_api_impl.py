@@ -290,7 +290,6 @@ async def run_query(
     # get temporal resolution to know how to format the spatial entities
     tr = await get_temporal_resolution(query_parameters.trid, token_model=token_model, pool=pool)
 
-    # REVIEWER QUESTION: Are these the same column names that are returned in the actual query?
     result, metadata_col_names = await get_metadata(query_parameters, tr, pool, token_model)
 
     mdids = [str(md[1]) for md in result]
