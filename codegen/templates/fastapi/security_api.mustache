@@ -117,7 +117,7 @@ def validate_scope_{{name}}(
     :rtype: bool
     """
 
-    token_scopes = claims['permissions']
+    token_scopes = claims['scope'].split(' ') # We want to check scope here, rather than permission
     valid = all(item in token_scopes for item in required_scopes)
     logger.debug(f"Validating scopes", valid=valid, required=required_scopes, received=token_scopes)
 
