@@ -454,7 +454,9 @@ async def run_csv_query(
     return StreamingResponse(stream_csv(query_parameters, pool, token_model))
 
 
-async def stream_csv(query_parameters:QueryParameters, pool:Pool, token_model: TokenModel) -> AsyncGenerator[str, None]:
+async def stream_csv(
+    query_parameters: QueryParameters, pool: Pool, token_model: TokenModel
+) -> AsyncGenerator[str, None]:
     base_table_name, table_name = await get_table_name(
         query_parameters, pool=pool, token_model=token_model
     )
