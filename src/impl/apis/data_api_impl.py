@@ -6,7 +6,7 @@ import structlog
 import math
 import pendulum
 import os
-from typing import Optional, Dict, AsyncGenerator, AsyncIterable
+from typing import Optional, Dict, AsyncGenerator, AsyncIterable, Tuple, List
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
 from aiomysql import Pool
@@ -259,14 +259,16 @@ async def get_time_range(
     return time_range
 
 
-async def get_query_attributes(query_parameters, token_model, pool):
+async def get_table_name(
+    query_parameters: QueryParameters, token_model: TokenModel, pool: Pool
+) -> Tuple[str, str]:
     """
-    Gets the metadata + query parameters
+    Gets the base- and specific- table names
     """
     category = await get_category(query_parameters.category_id, token_model=token_model, pool=pool)
     if category.type not in ["single_location", "flow"]:
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND,
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
             detail="Could not find category",
         )
     base_table_name = f"{category.type}_data"
@@ -274,11 +276,16 @@ async def get_query_attributes(query_parameters, token_model, pool):
     return base_table_name, table_name
 
 
+def mdid_to_date(mdid: int, metadata: List[Metadata]):
+    this_metadata = filter(lambda m: m.mdid == mdid, metadata)
+    return next(this_metadata).dt
+
+
 async def run_query(
     query_parameters: QueryParameters, pool: Pool, token_model: TokenModel
 ) -> QueryResult:
     # get category to find which data table to use
-    base_table_name, table_name = await get_query_attributes(
+    base_table_name, table_name = await get_table_name(
         query_parameters, token_model=token_model, pool=pool
     )
     # make sure to amend table name for data tables
@@ -290,17 +297,15 @@ async def run_query(
     # get temporal resolution to know how to format the spatial entities
     tr = await get_temporal_resolution(query_parameters.trid, token_model=token_model, pool=pool)
 
-    result, metadata_col_names = await get_metadata(query_parameters, tr, pool, token_model)
+    metadata = await get_metadata(query_parameters, tr, pool, token_model)
 
-    mdids = [str(md[1]) for md in result]
     # support getting mdids only
     if query_parameters.mdids_only is True:
-        return QueryResult(mdids=mdids)
+        return QueryResult(mdids=[m.mdid for m in metadata])
 
-    mdid_to_date = {str(md[1]): md[8] for md in result}
-    logger.debug(f"Found metadata objects, now getting data...", num=len(mdids))
+    logger.debug(f"Found metadata objects, now getting data...", num=len(metadata))
 
-    column_names = await get_column_names(table_name, mdids, pool)
+    column_names = await get_column_names(table_name, metadata, pool)
 
     data_index = column_names.index("data")
     mdid_index = column_names.index("mdid")
@@ -315,7 +320,7 @@ async def run_query(
     min_value = math.inf
     max_value = -math.inf
     num_rows = 0
-    async for row in stream_query(base_table_name, mdids, pool, table_name):
+    async for row in stream_query(base_table_name, metadata, pool, table_name):
         if row is None:
             # I don't think I should need to do this?
             break
@@ -323,7 +328,7 @@ async def run_query(
         # adjust the global min/max if necessary
         min_value = min([row[data_index], min_value])
         max_value = max([row[data_index], max_value])
-        this_date = mdid_to_date[str(row[mdid_index])].strftime(tr.date_format)
+        this_date = mdid_to_date(row[mdid_index], metadata).strftime(tr.date_format)
         data_by_date.setdefault(this_date, {})
         value = util.num(str(row[data_index]))
         if is_single_value:
@@ -356,16 +361,20 @@ async def run_query(
     return new_result
 
 
-async def get_column_names(table_name, mdids, pool):
-    select_query = f"SELECT * FROM `{os.getenv('DB_NAME')}`.`{table_name}_{mdids[0]}` LIMIT 1;"
+async def get_column_names(table_name: str, metadata: List[Metadata], pool: Pool) -> List:
+    select_query = (
+        f"SELECT * FROM `{os.getenv('DB_NAME')}`.`{table_name}_{metadata[0].mdid}` LIMIT 1;"
+    )
     logger.debug("Getting column names", table_name=table_name)
     async with pool.acquire() as conn, conn.cursor() as cursor:
         await cursor.execute(select_query)
         return [i[0] for i in cursor.description]
 
 
-async def stream_query(base_table_name, mdids, pool, table_name) -> AsyncGenerator[list, None]:
-    table_names = [f"`{os.getenv('DB_NAME')}`.`{table_name}_{mdid}`" for mdid in mdids]
+async def stream_query(
+    base_table_name: str, metadata: List[Metadata], pool: Pool, table_name: str
+) -> AsyncGenerator[list, None]:
+    table_names = [f"`{os.getenv('DB_NAME')}`.`{table_name}_{m.mdid}`" for m in metadata]
     short_names = [table_name.rpartition(".")[2].strip("`") for table_name in table_names]
 
     partition_queries = [
@@ -392,13 +401,15 @@ async def stream_query(base_table_name, mdids, pool, table_name) -> AsyncGenerat
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
                 detail="Cannot find data for metadata",
             )
-        row = "not none"
-        while row is not None:
+        while True:
             row = await cursor.fetchone()
-            yield row
+            if row:
+                yield row
+            else:
+                break
 
 
-async def get_metadata(query_parameters, temp_res, pool, token_model):
+async def get_metadata(query_parameters, temp_res, pool, token_model) -> List[Metadata]:
     # filter by date
     start_date = pendulum.parse(query_parameters.start_date.replace("w", "-W"))
     step = relativedelta()
@@ -431,7 +442,10 @@ async def get_metadata(query_parameters, temp_res, pool, token_model):
     logger.debug("Finished running metadata query")
     if not result:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="No metadata found")
-    return result, column_names
+    metadata_args = [
+        {col_name: value for col_name, value in zip(column_names, row)} for row in result
+    ]
+    return [Metadata(**metadata_item) for metadata_item in metadata_args]
 
 
 async def run_csv_query(
@@ -440,14 +454,13 @@ async def run_csv_query(
     return StreamingResponse(stream_csv(query_parameters, pool, token_model))
 
 
-async def stream_csv(query_parameters, pool, token_model) -> AsyncGenerator[str, None]:
-    base_table_name, table_name = await get_query_attributes(
+async def stream_csv(query_parameters:QueryParameters, pool:Pool, token_model: TokenModel) -> AsyncGenerator[str, None]:
+    base_table_name, table_name = await get_table_name(
         query_parameters, pool=pool, token_model=token_model
     )
     tr = await get_temporal_resolution(query_parameters.trid, token_model=token_model, pool=pool)
-    result, metadata_col_names = await get_metadata(query_parameters, tr, pool, token_model)
-    mdids = [str(md[1]) for md in result]
-    query_stream_generator = stream_query(base_table_name, mdids, pool, table_name)
+    metadata = await get_metadata(query_parameters, tr, pool, token_model)
+    query_stream_generator = stream_query(base_table_name, metadata, pool, table_name)
     if query_parameters.category_id.lower() in ["residents", "presence"]:
         async for f in stream_region_to_csv(query_stream_generator):
             yield f
