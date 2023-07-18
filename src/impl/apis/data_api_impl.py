@@ -9,7 +9,7 @@ import os
 from typing import Optional, Dict, AsyncGenerator, AsyncIterable, Tuple, List
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
-from aiomysql import Pool
+from aiomysql import Pool, SSCursor
 from dateutil.relativedelta import relativedelta
 from http import HTTPStatus
 from dotenv import load_dotenv
@@ -388,7 +388,7 @@ async def stream_query(
         base_table_name=base_table_name,
         table_name=f"{table_name}_<mdid>",
     )
-    async with pool.acquire() as conn, conn.cursor() as cursor:
+    async with pool.acquire() as conn, conn.cursor(SSCursor) as cursor:
         await cursor.execute(select_query)
 
         column_names = [i[0] for i in cursor.description]
