@@ -383,9 +383,6 @@ async def stream_query(
     ]
     select_query = " UNION ".join(partition_queries)
 
-    """
-    SELECT `left`.*, dt FROM `flowkit_ui_backend`.`single_location_data_residents.residents_1` AS `left` LEFT JOIN metadata USING (mdid);
-    """
     logger.debug(
         "Running data query...",
         base_table_name=base_table_name,
@@ -465,9 +462,11 @@ async def stream_csv(
     query_stream_generator = stream_query(base_table_name, metadata, pool, table_name)
     if query_parameters.category_id.lower() in ["residents", "presence"]:
         async for f in stream_region_to_csv(query_stream_generator):
+            logger.debug(f"Yielding {f}")
             yield f
     elif query_parameters.category_id.lower() in ["relocations", "movements"]:
         async for f in stream_flows_to_csv(query_stream_generator):
+            logger.debug(f"Yielding {f}")
             yield f
     else:
         raise HTTPException(
