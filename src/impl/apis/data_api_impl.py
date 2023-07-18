@@ -1,6 +1,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 # If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import asyncio
+from asyncio import sleep
 
 import structlog
 import math
@@ -398,8 +399,14 @@ async def stream_query(
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
                 detail="Cannot find data for metadata",
             )
+        sleep_counter = 50
         while True:
             row = await cursor.fetchone()
+            sleep_counter -= 1
+            if sleep_counter == 0:
+                sleep_counter = 50
+                logger.debug("Sleeping query coroutine")
+                await sleep(10)
             if row:
                 yield row
             else:
@@ -462,11 +469,9 @@ async def stream_csv(
     query_stream_generator = stream_query(base_table_name, metadata, pool, table_name)
     if query_parameters.category_id.lower() in ["residents", "presence"]:
         async for f in stream_region_to_csv(query_stream_generator):
-            logger.debug(f"Yielding {f}")
             yield f
     elif query_parameters.category_id.lower() in ["relocations", "movements"]:
         async for f in stream_flows_to_csv(query_stream_generator):
-            logger.debug(f"Yielding {f}")
             yield f
     else:
         raise HTTPException(
