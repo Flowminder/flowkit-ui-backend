@@ -10,7 +10,7 @@ import os
 from typing import Optional, Dict, AsyncGenerator, AsyncIterable, Tuple, List
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
-from aiomysql import Pool, SSCursor
+from aiomysql import Pool, SSDictCursor
 from dateutil.relativedelta import relativedelta
 from http import HTTPStatus
 from dotenv import load_dotenv
@@ -36,7 +36,7 @@ logger = structlog.get_logger("flowkit_ui_backend.log")
 
 DEFAULT_NUM_BINS = 7
 DB_NAME = os.getenv("DB_NAME")
-CSV_CHUNK_SIZE = 150
+FETCH_CHUNK_SIZE = 150
 
 
 async def list_categories(pool: Pool, token_model: TokenModel) -> Optional[Categories]:
@@ -309,15 +309,8 @@ async def run_query(
 
     column_names = await get_column_names(table_name, metadata, pool)
 
-    data_index = column_names.index("data")
-    mdid_index = column_names.index("mdid")
     is_single_value = "spatial_unit_id" in column_names
-    if is_single_value:
-        spatial_unit_id_index = column_names.index("spatial_unit_id")
     is_flow = "origin" in column_names and "destination" in column_names
-    if is_flow:
-        origin_index = column_names.index("origin")
-        destination_index = column_names.index("destination")
     data_by_date = {}
     min_value = math.inf
     max_value = -math.inf
@@ -329,17 +322,17 @@ async def run_query(
         for row in chunk:
             num_rows += 1
             # adjust the global min/max if necessary
-            min_value = min([row[data_index], min_value])
-            max_value = max([row[data_index], max_value])
-            this_date = mdid_to_date(row[mdid_index], metadata).strftime(tr.date_format)
+            min_value = min(row["data"], min_value)
+            max_value = max(row["data"], max_value)
+            this_date = row["dt"].strftime(tr.date_format)
             data_by_date.setdefault(this_date, {})
-            value = util.num(str(row[data_index]))
+            value = util.num(str(row["data"]))
             if is_single_value:
-                data_by_date[this_date][row[spatial_unit_id_index]] = value
+                data_by_date[this_date][row["spatial_unit_id"]] = value
             elif is_flow:
-                data_by_date[this_date].setdefault(row[origin_index], {})
+                data_by_date[this_date].setdefault(row["origin"], {})
                 if value is not None:
-                    data_by_date[this_date][row[origin_index]][row[destination_index]] = value
+                    data_by_date[this_date][row["origin"]][row["destination"]] = value
             else:
                 raise HTTPException(
                     status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
@@ -376,7 +369,7 @@ async def get_column_names(table_name: str, metadata: List[Metadata], pool: Pool
 
 async def stream_query(
     base_table_name: str, metadata: List[Metadata], pool: Pool, table_name: str
-) -> AsyncGenerator[list, None]:
+) -> AsyncGenerator[list[dict], None]:
     table_names = [f"`{os.getenv('DB_NAME')}`.`{table_name}_{m.mdid}`" for m in metadata]
     short_names = [table_name.rpartition(".")[2].strip("`") for table_name in table_names]
 
@@ -391,7 +384,7 @@ async def stream_query(
         base_table_name=base_table_name,
         table_name=f"{table_name}_<mdid>",
     )
-    async with pool.acquire() as conn, conn.cursor(SSCursor) as cursor:
+    async with pool.acquire() as conn, conn.cursor(SSDictCursor) as cursor:
         await cursor.execute(select_query)
 
         column_names = [i[0] for i in cursor.description]
@@ -402,7 +395,7 @@ async def stream_query(
                 detail="Cannot find data for metadata",
             )
         while True:
-            chunk = await cursor.fetchmany(CSV_CHUNK_SIZE)
+            chunk = await cursor.fetchmany(FETCH_CHUNK_SIZE)
             if chunk:
                 yield chunk
             else:
@@ -482,13 +475,8 @@ async def stream_region_to_csv(
     yield "date,area_code,value\r\n"
     async for chunk in region_stream:
         if chunk:
-            row_str = ""
-            for row in chunk:
-                date = row[-1].strftime("%Y-%m-%d")
-                area_code = row[2]
-                value = str(row[3])
-                row_str += ",".join(str(v) for v in [date, area_code, value]) + "\r\n"
-            yield row_str
+            yield "\r\n".join(
+                f"{row['dt'].strftime('%Y-%m-%d')},{row['spatial_unit_id']},{row['data']}" for row in chunk) + "\r\n"
     yield "\r\n"
 
 
@@ -496,12 +484,6 @@ async def stream_flows_to_csv(flow_stream: AsyncGenerator) -> AsyncGenerator[str
     yield "date,origin_code,destination_code,value\r\n"
     async for chunk in flow_stream:
         if chunk:
-            row_str = ""
-            for row in chunk:
-                date = row[-1].strftime("%Y-%m-%d")
-                orig_code = row[2]
-                dest_code = row[3]
-                value = str(row[4])
-                row_str += ",".join(str(v) for v in [date, orig_code, dest_code, value]) + "\r\n"
-            yield row_str
+            yield "\r\n".join(
+                f"{row['dt'].strftime('%Y-%m-%d')},{row['origin']},{row['destination']},{row['data']}" for row in chunk) + "\r\n"
     yield "\r\n"
