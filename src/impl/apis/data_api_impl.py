@@ -370,7 +370,8 @@ async def get_column_names(table_name: str, metadata: List[Metadata], pool: Pool
 async def stream_query(
     base_table_name: str, metadata: List[Metadata], pool: Pool, table_name: str
 ) -> AsyncGenerator[list[dict], None]:
-    table_names = (f"`{os.getenv('DB_NAME')}`.`{table_name}_{m.mdid}`" for m in metadata)
+    # table_names is consumed twice, so it needs to be a list
+    table_names = [f"`{os.getenv('DB_NAME')}`.`{table_name}_{m.mdid}`" for m in metadata]
     short_names = (table_name.rpartition(".")[2].strip("`") for table_name in table_names)
 
     partition_queries = (
