@@ -476,7 +476,9 @@ async def stream_region_to_csv(
     async for chunk in region_stream:
         if chunk:
             yield "\r\n".join(
-                f"{row['dt'].strftime('%Y-%m-%d')},{row['spatial_unit_id']},{row['data']}" for row in chunk) + "\r\n"
+                f"{row['dt'].strftime('%Y-%m-%d')},{row['spatial_unit_id']},{row['data']}"
+                for row in chunk
+            ) + "\r\n"
     yield "\r\n"
 
 
@@ -485,5 +487,7 @@ async def stream_flows_to_csv(flow_stream: AsyncGenerator) -> AsyncGenerator[str
     async for chunk in flow_stream:
         if chunk:
             yield "\r\n".join(
-                f"{row['dt'].strftime('%Y-%m-%d')},{row['origin']},{row['destination']},{row['data']}" for row in chunk) + "\r\n"
+                f"{row['dt'].strftime('%Y-%m-%d')},{row['origin']},{row['destination']},{row['data']}"
+                for row in chunk
+            ) + "\r\n"
     yield "\r\n"
