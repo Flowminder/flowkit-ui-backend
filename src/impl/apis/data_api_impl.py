@@ -317,7 +317,6 @@ async def run_query(
     num_rows = 0
     async for chunk in stream_query(base_table_name, metadata, pool, table_name):
         if chunk is None:
-            # I don't think I should need to do this?
             break
         for row in chunk:
             num_rows += 1
@@ -397,10 +396,9 @@ async def stream_query(
             )
         while True:
             chunk = await cursor.fetchmany(FETCH_CHUNK_SIZE)
-            if chunk:
-                yield chunk
-            else:
+            if chunk == []:
                 break
+            yield chunk
 
 
 async def get_metadata(query_parameters, temp_res, pool, token_model) -> List[Metadata]:
@@ -480,7 +478,6 @@ async def stream_region_to_csv(
                 f"{row['dt'].strftime('%Y-%m-%d')},{row['spatial_unit_id']},{row['data']}"
                 for row in chunk
             ) + "\r\n"
-    yield "\r\n"
 
 
 async def stream_flows_to_csv(flow_stream: AsyncGenerator) -> AsyncGenerator[str, None]:
@@ -491,4 +488,3 @@ async def stream_flows_to_csv(flow_stream: AsyncGenerator) -> AsyncGenerator[str
                 f"{row['dt'].strftime('%Y-%m-%d')},{row['origin']},{row['destination']},{row['data']}"
                 for row in chunk
             ) + "\r\n"
-    yield "\r\n"
