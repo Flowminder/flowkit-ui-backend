@@ -1343,7 +1343,7 @@
 		    "content_disposition": "attachment"
 		},
                 "content": {
-                    "application/vnd.ms-excel": {
+                    "text/csv": {
                         "schema": {
                             "$ref": "#/components/schemas/csv"
                         }
