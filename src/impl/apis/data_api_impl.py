@@ -38,6 +38,7 @@ DEFAULT_NUM_BINS = 7
 DB_NAME = os.getenv("DB_NAME")
 CSV_CHUNK_SIZE = 150
 
+
 async def list_categories(pool: Pool, token_model: TokenModel) -> Optional[Categories]:
     logger.warn("TODO: check permissions", token_model=token_model.permissions)
     categories = await db.select_data(base_model=Category, pool=pool, token_model=token_model)
