@@ -401,14 +401,8 @@ async def stream_query(
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
                 detail="Cannot find data for metadata",
             )
-        sleep_counter = 50
         while True:
             chunk = await cursor.fetchmany(CSV_CHUNK_SIZE)
-            sleep_counter -= 1
-            if sleep_counter == 0:
-                sleep_counter = 50
-                logger.debug("Sleeping query coroutine")
-                await sleep(10)
             if chunk:
                 yield chunk
             else:
