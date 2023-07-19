@@ -36,7 +36,7 @@ logger = structlog.get_logger("flowkit_ui_backend.log")
 
 DEFAULT_NUM_BINS = 7
 DB_NAME = os.getenv("DB_NAME")
-
+CSV_CHUNK_SIZE = 150
 
 async def list_categories(pool: Pool, token_model: TokenModel) -> Optional[Categories]:
     logger.warn("TODO: check permissions", token_model=token_model.permissions)
@@ -321,28 +321,29 @@ async def run_query(
     min_value = math.inf
     max_value = -math.inf
     num_rows = 0
-    async for row in stream_query(base_table_name, metadata, pool, table_name):
-        if row is None:
+    async for chunk in stream_query(base_table_name, metadata, pool, table_name):
+        if chunk is None:
             # I don't think I should need to do this?
             break
-        num_rows += 1
-        # adjust the global min/max if necessary
-        min_value = min([row[data_index], min_value])
-        max_value = max([row[data_index], max_value])
-        this_date = mdid_to_date(row[mdid_index], metadata).strftime(tr.date_format)
-        data_by_date.setdefault(this_date, {})
-        value = util.num(str(row[data_index]))
-        if is_single_value:
-            data_by_date[this_date][row[spatial_unit_id_index]] = value
-        elif is_flow:
-            data_by_date[this_date].setdefault(row[origin_index], {})
-            if value is not None:
-                data_by_date[this_date][row[origin_index]][row[destination_index]] = value
-        else:
-            raise HTTPException(
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-                detail="Cannot find spatial unit in data",
-            )
+        for row in chunk:
+            num_rows += 1
+            # adjust the global min/max if necessary
+            min_value = min([row[data_index], min_value])
+            max_value = max([row[data_index], max_value])
+            this_date = mdid_to_date(row[mdid_index], metadata).strftime(tr.date_format)
+            data_by_date.setdefault(this_date, {})
+            value = util.num(str(row[data_index]))
+            if is_single_value:
+                data_by_date[this_date][row[spatial_unit_id_index]] = value
+            elif is_flow:
+                data_by_date[this_date].setdefault(row[origin_index], {})
+                if value is not None:
+                    data_by_date[this_date][row[origin_index]][row[destination_index]] = value
+            else:
+                raise HTTPException(
+                    status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+                    detail="Cannot find spatial unit in data",
+                )
 
     logger.debug(
         "Finished running data query",
@@ -401,14 +402,14 @@ async def stream_query(
             )
         sleep_counter = 50
         while True:
-            row = await cursor.fetchone()
+            chunk = await cursor.fetchmany(CSV_CHUNK_SIZE)
             sleep_counter -= 1
             if sleep_counter == 0:
                 sleep_counter = 50
                 logger.debug("Sleeping query coroutine")
                 await sleep(10)
-            if row:
-                yield row
+            if chunk:
+                yield chunk
             else:
                 break
 
@@ -468,11 +469,11 @@ async def stream_csv(
     metadata = await get_metadata(query_parameters, tr, pool, token_model)
     query_stream_generator = stream_query(base_table_name, metadata, pool, table_name)
     if query_parameters.category_id.lower() in ["residents", "presence"]:
-        async for f in stream_region_to_csv(query_stream_generator):
-            yield f
+        async for csv_chunk in stream_region_to_csv(query_stream_generator):
+            yield csv_chunk
     elif query_parameters.category_id.lower() in ["relocations", "movements"]:
-        async for f in stream_flows_to_csv(query_stream_generator):
-            yield f
+        async for csv_chunk in stream_flows_to_csv(query_stream_generator):
+            yield csv_chunk
     else:
         raise HTTPException(
             status_code=HTTPStatus.NOT_IMPLEMENTED,
@@ -484,22 +485,28 @@ async def stream_region_to_csv(
     region_stream: AsyncGenerator,
 ) -> AsyncGenerator[str, None]:
     yield "date,area_code,value\r\n"
-    async for row in region_stream:
-        if row:
-            date = row[-1].strftime("%Y-%m-%d")
-            area_code = row[2]
-            value = str(row[3])
-            yield ",".join(str(v) for v in [date, area_code, value]) + "\r\n"
+    async for chunk in region_stream:
+        if chunk:
+            row_str = ""
+            for row in chunk:
+                date = row[-1].strftime("%Y-%m-%d")
+                area_code = row[2]
+                value = str(row[3])
+                row_str += ",".join(str(v) for v in [date, area_code, value]) + "\r\n"
+            yield row_str
     yield "\r\n"
 
 
 async def stream_flows_to_csv(flow_stream: AsyncGenerator) -> AsyncGenerator[str, None]:
     yield "date,origin_code,destination_code,value\r\n"
-    async for row in flow_stream:
-        if row:
-            date = row[-1].strftime("%Y-%m-%d")
-            orig_code = row[2]
-            dest_code = row[3]
-            value = str(row[4])
-            yield ",".join(str(v) for v in [date, orig_code, dest_code, value]) + "\r\n"
+    async for chunk in flow_stream:
+        if chunk:
+            row_str = ""
+            for row in chunk:
+                date = row[-1].strftime("%Y-%m-%d")
+                orig_code = row[2]
+                dest_code = row[3]
+                value = str(row[4])
+                row_str += ",".join(str(v) for v in [date, orig_code, dest_code, value]) + "\r\n"
+            yield row_str
     yield "\r\n"
