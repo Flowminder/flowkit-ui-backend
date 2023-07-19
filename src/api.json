@@ -1339,6 +1339,9 @@
             },
             "csv_result": {
                 "description": "OK: The results for this request were retrieved successfully.",
+		"headers": {
+		    "content_disposition": "attachment"
+		},
                 "content": {
                     "text/csv": {
                         "schema": {

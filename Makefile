@@ -105,6 +105,7 @@ all:
 	echo -e "- \033[1mtest\033[0m \t\tRun all tests in a dedicated container"; \
 	echo -e "- \033[1mrun\033[0m \t\tRun the application"; \
 	echo -e "- \033[1mingest\033[0m \tIngest data into the database, see src/jupyter/PopulateDatabase.ipynb for details"; \
+	echo -e "- \033[1mpop_db\033[0m \t\tPopulates the local db with test data"; \
 	echo -e ""; \
 	echo -e "API version: $(API_VERSION) (/$(API_VERSION_URL_APPENDIX)); Python version: $(PYTHON_VERSION)"; \
 	echo -e "Git info: $(GIT_COMMIT) ($(GIT_BRANCH)); tag: $(GIT_TAG)"; \
@@ -260,6 +261,11 @@ lint:
 	export IMAGE_NAME_ACTUAL=$(IMAGE_NAME_ACTUAL); \
 	docker compose -p $(APP_NAME)_lint --env-file ./.env run --name $(APP_NAME)_lint --service-ports --entrypoint="" web bash -c \
 	"pip install black; black /home/$(APP_DIR)/src/impl"
+
+pop_db:
+	$(info Populating local db for testing)
+	docker cp ./src/impl/tests/test_data.sql $(CONTAINER_NAME_DB):/test_data.sql
+	docker exec -it $(CONTAINER_NAME_DB) mysql -u$(DB_USER) -p$(DB_PW) -e "source /test_data.sql" $(DB_NAME)
 
 stop: clear
 	$(info Shutting down...)
