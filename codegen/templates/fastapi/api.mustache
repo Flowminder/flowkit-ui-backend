@@ -77,6 +77,8 @@ async def {{operationId}}(
         impl_result = await {{classFilename}}_impl.{{operationId}}({{#allParams}}{{paramName}}, {{/allParams}}pool=request.app.state.pool{{#hasAuthMethods}}{{#authMethods}}, token_model=token_auth0{{/authMethods}}{{/hasAuthMethods}})
         logger.debug("Request ready")
         content = impl_result[0] if isinstance(impl_result, tuple) else impl_result
+        if isinstance(impl_result, Response):
+            return impl_result
         # default to status 200/204 but give the impl the option to define a different status code when returning content
         status_code = impl_result[1] if isinstance(impl_result, tuple) else None
         if content is not None:

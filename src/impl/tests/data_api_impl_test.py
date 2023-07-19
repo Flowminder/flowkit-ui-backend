@@ -1,5 +1,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 # If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
+import asyncio
 
 import pytest
 import datetime
@@ -19,7 +20,9 @@ from flowkit_ui_backend.models.metadata import Metadata
 from flowkit_ui_backend.models.spatial_resolution import SpatialResolution
 from flowkit_ui_backend.models.temporal_resolution import TemporalResolution
 from flowkit_ui_backend.models.extra_models import TokenModel
+from flowkit_ui_backend.models.query_result import QueryResult
 
+from flowkit_ui_backend.impl.apis import data_api_impl as dai
 
 # some simple test objects
 cat = Category(category_id="foo", type="single_location")
@@ -332,48 +335,54 @@ async def test_run_query_unknown_query_type(mocker, fresh_pool, token_model):
 
 
 @pytest.mark.asyncio
-async def test_run_query(mocker, fresh_pool):
-    # mocker.patch(
-    #    "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
-    #    side_effect=[[cat], [tr]],
-    # )
-    # mocker.patch(
-    #    "flowkit_ui_backend.impl.apis.data_api_impl.db.run",
-    #    side_effect=[
-    #        (
-    #            None,
-    #            [
-    #                (
-    #                    None,
-    #                    1,
-    #                    None,
-    #                    None,
-    #                    None,
-    #                    None,
-    #                    None,
-    #                    None,
-    #                    datetime.datetime.fromisoformat("1970-01-01"),
-    #                )
-    #            ],
-    #        ),
-    #    ],
-    # )
-
+async def test_run_query(populated_db, fresh_pool, admin_token_model):
     query_parameters = QueryParameters(
-        category_id="foo",
-        indicator_id="foo.bar",
-        srid=1,
-        trid=1,
-        start_date="2022-03-17",
-        duration=1,
+        category_id="residents",
+        indicator_id="residents.residents",
+        srid=3,
+        trid=2,
+        start_date="2020-02-01",
+        duration=2,
     )
-    # TODO: not sure how to mock this
-    # result = await data_api_impl.run_query(query_parameters=query_parameters, pool=fresh_pool)
-    # assert result == QueryResult(min=1.23, max=1.23, data_by_date={"1970": {"foo": 1.23}})
+    result = await data_api_impl.run_query(
+        query_parameters=query_parameters,
+        pool=fresh_pool,
+        token_model=admin_token_model,
+    )
+    assert result == QueryResult(
+        min=540640.0,
+        max=544650.0,
+        data_by_date={
+            "2020-02": {"HT0111-01": 544650.0},
+            "2020-03": {"HT0111-01": 540640.0},
+        },
+    )
 
 
 @pytest.mark.asyncio
-async def test_run_query_no_metadata(mocker, fresh_pool, token_model):
+async def test_run_flow_query(populated_db, fresh_pool, admin_token_model):
+    query_parameters = QueryParameters(
+        category_id="relocations",
+        indicator_id="relocations.relocations",
+        srid=3,
+        trid=2,
+        start_date="2020-02-01",
+        duration=1,
+    )
+    result = await data_api_impl.run_query(
+        query_parameters=query_parameters,
+        pool=fresh_pool,
+        token_model=admin_token_model,
+    )
+    assert result == QueryResult(
+        min=6040.0,
+        max=6040.0,
+        data_by_date={"2020-02": {"HT0111-01": {"HT0111-02": 6040.0}}},
+    )
+
+
+@pytest.mark.asyncio
+async def test_run_query_no_metadata(mocker, fresh_pool, admin_token_model):
     mocker.patch(
         "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
         side_effect=[
@@ -397,12 +406,14 @@ async def test_run_query_no_metadata(mocker, fresh_pool, token_model):
     )
     with pytest.raises(HTTPException):
         await data_api_impl.run_query(
-            query_parameters=query_parameters, pool=fresh_pool, token_model=token_model
+            query_parameters=query_parameters,
+            pool=fresh_pool,
+            token_model=admin_token_model,
         )
 
 
 @pytest.mark.asyncio
-async def test_run_query_no_data(mocker, fresh_pool):
+async def test_run_query_no_data(fresh_pool, provisioned_db, admin_token_model):
     # mocker.patch(
     #    "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
     #    side_effect=[[cat], [tr], []],
@@ -416,15 +427,19 @@ async def test_run_query_no_data(mocker, fresh_pool):
     # )
     # TODO: not sure how to mock this
     query_parameters = QueryParameters(
-        category_id="foo",
-        indicator_id="foo.bar",
+        category_id="residents",
+        indicator_id="residents.residents",
         srid=1,
         trid=1,
         start_date="2022-03-17",
         duration=1,
     )
-    # with pytest.raises(HTTPException):
-    #    await data_api_impl.run_query(query_parameters=query_parameters, pool=fresh_pool)
+    with pytest.raises(HTTPException):
+        await data_api_impl.run_query(
+            query_parameters=query_parameters,
+            pool=fresh_pool,
+            token_model=admin_token_model,
+        )
 
 
 @pytest.mark.asyncio
@@ -438,12 +453,18 @@ async def test_csv_generation(populated_db):
         duration=3,
         mdids_only=False,
     )
-    out = await data_api_impl.run_csv_query(
+    response = await data_api_impl.run_csv_query(
         params,
         pool=populated_db,
         token_model=TokenModel(sub="TEST", permissions=["admin"]),
     )
-    assert out.split("\r\n")[0].split(",") == ["date", "area_code", "value"]
+    out = ""
+    async for f in response.body_iterator:
+        out += f
+    assert (
+        out
+        == "date,area_code,value\r\n2020-02-01,HT0111-01,544650.000000000\r\n2020-03-01,HT0111-01,540640.000000000\r\n2020-04-01,HT0111-01,547210.000000000\r\n"
+    )
 
 
 @pytest.mark.asyncio
@@ -457,9 +478,17 @@ async def test_flow_csv_generation(populated_db):
         duration=3,
         mdids_only=False,
     )
-    out = await data_api_impl.run_csv_query(
+    response = await data_api_impl.run_csv_query(
         params,
         pool=populated_db,
         token_model=TokenModel(sub="TEST", permissions=["admin"]),
     )
-    assert out.split("\r\n")[0].split(",") == ["date", "origin_code", "destination_code", "value"]
+    out = ""
+    async for f in response.body_iterator:
+        out += f
+    assert out.split("\r\n")[0].split(",") == [
+        "date",
+        "origin_code",
+        "destination_code",
+        "value",
+    ]

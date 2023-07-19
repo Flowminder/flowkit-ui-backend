@@ -1,14 +1,16 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 # If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
+import asyncio
+from asyncio import sleep
 
 import structlog
 import math
 import pendulum
 import os
-from typing import Optional, Dict
+from typing import Optional, Dict, AsyncGenerator, AsyncIterable, Tuple, List
 from fastapi import HTTPException
-from fastapi.responses import PlainTextResponse
-from aiomysql import Pool
+from fastapi.responses import StreamingResponse
+from aiomysql import Pool, SSDictCursor
 from dateutil.relativedelta import relativedelta
 from http import HTTPStatus
 from dotenv import load_dotenv
@@ -34,6 +36,7 @@ logger = structlog.get_logger("flowkit_ui_backend.log")
 
 DEFAULT_NUM_BINS = 7
 DB_NAME = os.getenv("DB_NAME")
+FETCH_CHUNK_SIZE = 150
 
 
 async def list_categories(pool: Pool, token_model: TokenModel) -> Optional[Categories]:
@@ -258,35 +261,153 @@ async def get_time_range(
     return time_range
 
 
+async def get_table_name(
+    query_parameters: QueryParameters, token_model: TokenModel, pool: Pool
+) -> Tuple[str, str]:
+    """
+    Gets the base- and specific- table names
+    """
+    category = await get_category(query_parameters.category_id, token_model=token_model, pool=pool)
+    if category.type not in ["single_location", "flow"]:
+        raise HTTPException(
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            detail="Could not find category",
+        )
+    base_table_name = f"{category.type}_data"
+    table_name = f"{base_table_name}_{query_parameters.indicator_id}"
+    return base_table_name, table_name
+
+
+def mdid_to_date(mdid: int, metadata: List[Metadata]):
+    this_metadata = filter(lambda m: m.mdid == mdid, metadata)
+    return next(this_metadata).dt
+
+
 async def run_query(
     query_parameters: QueryParameters, pool: Pool, token_model: TokenModel
 ) -> QueryResult:
     # get category to find which data table to use
-    category = await get_category(query_parameters.category_id, token_model=token_model, pool=pool)
+    base_table_name, table_name = await get_table_name(
+        query_parameters, token_model=token_model, pool=pool
+    )
     # make sure to amend table name for data tables
-    base_table_name = f"{category.type}_data"
-    table_name = f"{base_table_name}_{query_parameters.indicator_id}"
     logger.debug(
         "Using indicator-specific data table",
         base_table_name=base_table_name,
         table_name=table_name,
     )
-
     # get temporal resolution to know how to format the spatial entities
     tr = await get_temporal_resolution(query_parameters.trid, token_model=token_model, pool=pool)
-    if category.type not in ["single_location", "flow"]:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND,
-            detail="Could not find category",
-        )
 
+    metadata = await get_metadata(query_parameters, tr, pool, token_model)
+
+    # support getting mdids only
+    if query_parameters.mdids_only is True:
+        return QueryResult(mdids=[m.mdid for m in metadata])
+
+    logger.debug(f"Found metadata objects, now getting data...", num=len(metadata))
+
+    column_names = await get_column_names(table_name, metadata, pool)
+
+    is_single_value = "spatial_unit_id" in column_names
+    is_flow = "origin" in column_names and "destination" in column_names
+    data_by_date = {}
+    min_value = math.inf
+    max_value = -math.inf
+    num_rows = 0
+    async for chunk in stream_query(base_table_name, metadata, pool, table_name):
+        if chunk is None:
+            break
+        for row in chunk:
+            num_rows += 1
+            # adjust the global min/max if necessary
+            min_value = min(row["data"], min_value)
+            max_value = max(row["data"], max_value)
+            this_date = row["dt"].strftime(tr.date_format)
+            data_by_date.setdefault(this_date, {})
+            value = util.num(str(row["data"]))
+            if is_single_value:
+                data_by_date[this_date][row["spatial_unit_id"]] = value
+            elif is_flow:
+                data_by_date[this_date].setdefault(row["origin"], {})
+                if value is not None:
+                    data_by_date[this_date][row["origin"]][row["destination"]] = value
+            else:
+                raise HTTPException(
+                    status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+                    detail="Cannot find spatial unit in data",
+                )
+
+    logger.debug(
+        "Finished running data query",
+        num_results=num_rows,
+        min_value=min_value,
+        max_value=max_value,
+    )
+    if len(data_by_date.keys()) == 0:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="No data found")
+
+    new_result = QueryResult(
+        min=min_value if min_value != math.inf else None,
+        max=max_value if max_value != -math.inf else None,
+        data_by_date=dict(sorted(data_by_date.items())),
+    )
+
+    return new_result
+
+
+async def get_column_names(table_name: str, metadata: List[Metadata], pool: Pool) -> List:
+    select_query = (
+        f"SELECT * FROM `{os.getenv('DB_NAME')}`.`{table_name}_{metadata[0].mdid}` LIMIT 1;"
+    )
+    logger.debug("Getting column names", table_name=table_name)
+    async with pool.acquire() as conn, conn.cursor() as cursor:
+        await cursor.execute(select_query)
+        return [i[0] for i in cursor.description]
+
+
+async def stream_query(
+    base_table_name: str, metadata: List[Metadata], pool: Pool, table_name: str
+) -> AsyncGenerator[list[dict], None]:
+    # table_names is consumed twice, so it needs to be a list
+    table_names = [f"`{os.getenv('DB_NAME')}`.`{table_name}_{m.mdid}`" for m in metadata]
+    short_names = (table_name.rpartition(".")[2].strip("`") for table_name in table_names)
+
+    partition_queries = (
+        f"SELECT `{short_name}`.*, `dt` FROM {table_name} AS `{short_name}` LEFT JOIN metadata USING (mdid)"
+        for table_name, short_name in zip(table_names, short_names)
+    )
+    select_query = " UNION ".join(partition_queries)
+
+    logger.debug(
+        "Running data query...",
+        base_table_name=base_table_name,
+        table_name=f"{table_name}_<mdid>",
+    )
+    async with pool.acquire() as conn, conn.cursor(SSDictCursor) as cursor:
+        await cursor.execute(select_query)
+
+        column_names = [i[0] for i in cursor.description]
+        logger.debug("Executed query", column_names=column_names)
+        if "data" not in column_names:
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+                detail="Cannot find data for metadata",
+            )
+        while True:
+            chunk = await cursor.fetchmany(FETCH_CHUNK_SIZE)
+            if chunk == []:
+                break
+            yield chunk
+
+
+async def get_metadata(query_parameters, temp_res, pool, token_model) -> List[Metadata]:
     # filter by date
     start_date = pendulum.parse(query_parameters.start_date.replace("w", "-W"))
     step = relativedelta()
-    setattr(step, tr.relativedelta_unit, tr.relativedelta_num)
+    setattr(step, temp_res.relativedelta_unit, temp_res.relativedelta_num)
     # subtracting 1 here because BETWEEN in the SQL includes the end date
     end_date = start_date + step * (query_parameters.duration - 1)
-
     sql = f"""
     SELECT * FROM `{DB_NAME}`.`metadata` AS md
     LEFT JOIN `{DB_NAME}`.`scope_mapping` AS sm
@@ -313,135 +434,57 @@ async def run_query(
     logger.debug("Finished running metadata query")
     if not result:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="No metadata found")
-
-    mdids = [str(md[1]) for md in result]
-    # support getting mdids only
-    if query_parameters.mdids_only is True:
-        return QueryResult(mdids=mdids)
-
-    mdid_to_date = {str(md[1]): md[8] for md in result}
-    logger.debug(f"Found metadata objects, now getting data...", num=len(mdids))
-
-    # make sure to amend table name for data tables
-    base_table_name = f"{category.type}_data"
-    table_name = f"{base_table_name}_{query_parameters.indicator_id}"
-
-    # manually querying to make use of partitions
-    table_names = [f"`{os.getenv('DB_NAME')}`.`{table_name}_{mdid}`" for mdid in mdids]
-    union_string = f" UNION SELECT * FROM ".join(table_names)
-    select_query = f"SELECT * FROM {union_string};"
-    logger.debug(
-        "Running data query...",
-        base_table_name=base_table_name,
-        table_name=f"{table_name}_<mdid>",
-    )
-    data_by_date = {}
-    min_value = math.inf
-    max_value = -math.inf
-    async with pool.acquire() as conn, conn.cursor() as cursor:
-        await cursor.execute(select_query)
-
-        column_names = [i[0] for i in cursor.description]
-        logger.debug("Executed query", column_names=column_names)
-        if "data" not in column_names:
-            raise HTTPException(
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-                detail="Cannot find data for metadata",
-            )
-        data_index = column_names.index("data")
-        mdid_index = column_names.index("mdid")
-        is_single_value = "spatial_unit_id" in column_names
-        if is_single_value:
-            spatial_unit_id_index = column_names.index("spatial_unit_id")
-        is_flow = "origin" in column_names and "destination" in column_names
-        if is_flow:
-            origin_index = column_names.index("origin")
-            destination_index = column_names.index("destination")
-        done = False
-        num_rows = 0
-        while not done:
-            row = await cursor.fetchone()
-            if row is not None:
-                num_rows += 1
-                # adjust the global min/max if necessary
-                min_value = min([row[data_index], min_value])
-                max_value = max([row[data_index], max_value])
-
-                this_date = mdid_to_date[str(row[mdid_index])].strftime(tr.date_format)
-                data_by_date.setdefault(this_date, {})
-                value = util.num(str(row[data_index]))
-
-                if is_single_value:
-                    data_by_date[this_date][row[spatial_unit_id_index]] = value
-                elif is_flow:
-                    data_by_date[this_date].setdefault(row[origin_index], {})
-                    if value is not None:
-                        data_by_date[this_date][row[origin_index]][row[destination_index]] = value
-                else:
-                    raise HTTPException(
-                        status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-                        detail="Cannot find spatial unit in data",
-                    )
-            else:
-                done = True
-    logger.debug(
-        "Finished running data query",
-        num_results=num_rows,
-        min_value=min_value,
-        max_value=max_value,
-    )
-
-    if len(data_by_date.keys()) == 0:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="No data found")
-
-    new_result = QueryResult(
-        min=min_value if min_value != math.inf else None,
-        max=max_value if max_value != -math.inf else None,
-        data_by_date=dict(sorted(data_by_date.items())),
-    )
-
-    return new_result
+    metadata_args = [
+        {col_name: value for col_name, value in zip(column_names, row)} for row in result
+    ]
+    return [Metadata(**metadata_item) for metadata_item in metadata_args]
 
 
 async def run_csv_query(
     query_parameters: QueryParameters, pool: Pool, token_model: TokenModel
-) -> QueryResult:
-    result = await run_query(query_parameters, pool, token_model)
+) -> StreamingResponse:
+    return StreamingResponse(stream_csv(query_parameters, pool, token_model))
+
+
+async def stream_csv(
+    query_parameters: QueryParameters, pool: Pool, token_model: TokenModel
+) -> AsyncGenerator[str, None]:
+    base_table_name, table_name = await get_table_name(
+        query_parameters, pool=pool, token_model=token_model
+    )
+    tr = await get_temporal_resolution(query_parameters.trid, token_model=token_model, pool=pool)
+    metadata = await get_metadata(query_parameters, tr, pool, token_model)
+    query_stream_generator = stream_query(base_table_name, metadata, pool, table_name)
     if query_parameters.category_id.lower() in ["residents", "presence"]:
-        out = region_to_csv(result.data_by_date)
+        async for csv_chunk in stream_region_to_csv(query_stream_generator):
+            yield csv_chunk
     elif query_parameters.category_id.lower() in ["relocations", "movements"]:
-        out = flows_to_csv(result.data_by_date)
+        async for csv_chunk in stream_flows_to_csv(query_stream_generator):
+            yield csv_chunk
     else:
         raise HTTPException(
             status_code=HTTPStatus.NOT_IMPLEMENTED,
             detail=f"CSV not yet implemented for {query_parameters.category_id.lower()}",
         )
-    return out
 
 
-def region_to_csv(region_data: Dict[str, Dict[str, float]]) -> str:
-    csv_rows = []
-    for date, data in region_data.items():
-        for source_region, value in data.items():
-            row = {"date": date, "area_code": source_region, "value": value}
-            csv_rows.append(",".join(str(v) for v in row.values()))
-    csv_header = ",".join(row.keys())
-    csv_out = "\r\n".join((csv_header, *csv_rows))
-    return csv_out
+async def stream_region_to_csv(
+    region_stream: AsyncGenerator,
+) -> AsyncGenerator[str, None]:
+    yield "date,area_code,value\r\n"
+    async for chunk in region_stream:
+        if chunk:
+            yield "\r\n".join(
+                f"{row['dt'].strftime('%Y-%m-%d')},{row['spatial_unit_id']},{row['data']}"
+                for row in chunk
+            ) + "\r\n"
 
 
-def flows_to_csv(flow_data: Dict[str, Dict[str, Dict[str, float]]]) -> str:
-    csv_rows = []
-    for date, data in flow_data.items():
-        for source_region, value in data.items():
-            for dest_region, flow_value in value.items():
-                row = {
-                    "date": date,
-                    "origin_code": source_region,
-                    "destination_code": dest_region,
-                    "value": flow_value,
-                }
-                csv_rows.append(",".join(str(v) for v in row.values()))
-    csv_header = ",".join(row.keys())
-    csv_out = "\r\n".join((csv_header, *csv_rows))
-    return csv_out
+async def stream_flows_to_csv(flow_stream: AsyncGenerator) -> AsyncGenerator[str, None]:
+    yield "date,origin_code,destination_code,value\r\n"
+    async for chunk in flow_stream:
+        if chunk:
+            yield "\r\n".join(
+                f"{row['dt'].strftime('%Y-%m-%d')},{row['origin']},{row['destination']},{row['data']}"
+                for row in chunk
+            ) + "\r\n"
