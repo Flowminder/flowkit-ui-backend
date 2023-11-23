@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Added new endpoint 'csv' to return a query as a CSV text object.
+- Added new `all_X` endpoints for indicators, categories, spatial, and temporal resolutions which return all of them even if no datasets exist that are accessible only with `admin` scope.
 
 
 ### Changed
