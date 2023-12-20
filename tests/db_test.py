@@ -44,13 +44,12 @@ def get_mock_pool():
 
 @pytest.mark.asyncio
 async def test_provision_db_subsequent_run(mocker, fresh_pool):
-    mocker.patch(
-        "flowkit_ui_backend.db.db.os.path.isfile",
-        side_effect=[True],
-    )
-
     result = await db.provision_db(pool=fresh_pool)
-    assert result is False
+    assert result
+    with pytest.raises(HTTPException):
+        result = await db.provision_db(pool=fresh_pool)
+        assert not result
+
 
 
 @pytest.mark.asyncio
@@ -62,8 +61,7 @@ async def test_provision_db(mocker, fresh_pool):
 @pytest.mark.asyncio
 async def test_provision_db_force_setup(mocker, fresh_pool):
 
-    os.environ["FORCE_DB_SETUP"] = "1"
-    await db.provision_db(pool=fresh_pool)
+    await db.provision_db(force=True, pool=fresh_pool)
     # TODO: add meaningful tests
 
 

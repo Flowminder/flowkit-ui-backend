@@ -18,7 +18,7 @@ services:
     volumes:
       - $VOLUME_IMPL
       - $VOLUME_DATA
-      - $PWD/.env:/home/$APP_DIR/src/.env:ro
+      - $PWD/development_env:/home/$APP_DIR/src/development_env:ro
       - $PWD/test_results/:/home/$APP_DIR/test_results:rw
       - $PWD/doc/:/home/$APP_DIR/doc:rw
     environment:

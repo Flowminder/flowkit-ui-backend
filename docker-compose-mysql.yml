@@ -12,6 +12,8 @@ services:
     container_name: $CONTAINER_NAME_DB
     image: $IMAGE_NAME_DB_ACTUAL
     restart: unless-stopped
+    volumes:
+      - ./resources/mysql.cnf:/etc/mysql/conf.d/config-file.cnf
     ports:
       - "${DB_PORT_HOST}:${DB_PORT_CONTAINER}"
     environment:

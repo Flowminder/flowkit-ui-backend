@@ -58,6 +58,10 @@ async def fresh_pool(event_loop):
     try:
         yield pool
     finally:
+        async with pool.acquire() as conn:
+            cur = await conn.cursor()
+            await cur.execute("DROP DATABASE `flowkit_ui_backend`")
+            await cur.execute("CREATE DATABASE `flowkit_ui_backend`")
         pool.close()
         await pool.wait_closed()
 
@@ -72,13 +76,7 @@ def monkey_session():
 async def provisioned_db(fresh_pool, monkey_session):
     monkey_session.setenv("FORCE_DB_SETUP", "1")
     await provision_db(fresh_pool)
-    try:
-        yield fresh_pool
-    finally:
-        async with fresh_pool.acquire() as conn:
-            cur = await conn.cursor()
-            await cur.execute("DROP DATABASE `flowkit_ui_backend`")
-            await cur.execute("CREATE DATABASE `flowkit_ui_backend`")
+    yield fresh_pool
 
 
 @pytest_asyncio.fixture()

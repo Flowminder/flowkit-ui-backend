@@ -41,7 +41,7 @@ async def test_load_data_from_csv():
     # inexistent file
     result = await util.load_data_from_csv("")
     assert result == {}
-    data_path = Path() / "resources"
+    data_path = Path(__file__).parent.parent / "resources"
     # invalid file
     filename = data_path / "invalid.csv"
     os.chmod(filename, 0o220)
