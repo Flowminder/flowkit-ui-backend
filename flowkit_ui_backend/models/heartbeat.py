@@ -35,7 +35,7 @@ class Heartbeat(BaseModel):
         python_version: The python_version of this Heartbeat [Optional].
     """
 
-    datetime: Optional[datetime] = None
+    datetime: Optional[datetime] = None  # this breaks pydantic at least as far as 2.5.2
     docker_image: Optional[str] = None
     git_branch: Optional[str] = None
     git_commit: Optional[str] = None

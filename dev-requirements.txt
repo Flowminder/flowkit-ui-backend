@@ -31,10 +31,6 @@ aniso8601==9.0.1
     #   -c /tmp/requirements/requirements.txt
     #   -r /tmp/requirements/requirements.in
     #   graphene
-annotated-types==0.6.0
-    # via
-    #   -c /tmp/requirements/requirements.txt
-    #   pydantic
 anyio==3.7.1
     # via
     #   -c /tmp/requirements/requirements.txt
@@ -262,15 +258,12 @@ pycparser==2.21
     # via
     #   -c /tmp/requirements/requirements.txt
     #   cffi
-pydantic==2.5.2
+pydantic==1.10.13
     # via
+    #   -c /tmp/requirements/constraints.in
     #   -c /tmp/requirements/requirements.txt
     #   -r /tmp/requirements/requirements.in
     #   fastapi
-pydantic-core==2.14.5
-    # via
-    #   -c /tmp/requirements/requirements.txt
-    #   pydantic
 pygments==2.17.2
     # via ipython
 pyjwt==2.8.0
@@ -376,7 +369,6 @@ typing-extensions==4.9.0
     #   -r /tmp/requirements/requirements.in
     #   fastapi
     #   pydantic
-    #   pydantic-core
 tzdata==2023.3
     # via
     #   -c /tmp/requirements/requirements.txt
