@@ -31,24 +31,30 @@ INDICES = {
 }
 
 
-async def provision_db(pool: Pool) -> boolean:
+async def provision_db(pool: Pool, force: bool = False) -> boolean:
     try:
         # Force delete existing tables
-        logger.debug(f"Force DB setup? {os.getenv('FORCE_DB_SETUP')}")
-        if os.getenv("FORCE_DB_SETUP") == "1":
-            (column_names, result) = await run(
-                f"SHOW TABLES FROM {os.getenv('DB_NAME')};", pool=pool
+        logger.debug(f"Force DB setup? {force}")
+        # Check for existing db
+        (column_names, result) = await run(
+            f"SHOW TABLES FROM {os.getenv('DB_NAME')};", pool=pool
+        )
+        logger.debug(f"Force DB setup? {force}", existing_tables=result)
+        if len(result) > 0 and force:
+            logger.debug(f"Deleting {len(result)} existing tables")
+            # delete existing tables
+            await run(
+                f"DROP TABLE IF EXISTS `{'`, `'.join([os.getenv('DB_NAME') + '`.`' + i[0] for i in result])}`",
+                pool=pool,
             )
-            if len(result) > 0:
-                logger.debug(f"Deleting {len(result)} existing tables")
-                # delete existing tables
-                await run(
-                    f"DROP TABLE IF EXISTS `{'`, `'.join([os.getenv('DB_NAME') + '`.`' + i[0] for i in result])}`",
-                    pool=pool,
-                )
-                logger.debug("Done.")
-            else:
-                logger.debug(f"No existing tables found")
+            logger.debug("Done.")
+        elif len(result) > 0:
+            raise HTTPException(
+                status_code=HTTPStatus.BAD_REQUEST,
+                detail="Existing database found.",
+            )
+        else:
+            logger.debug(f"No existing tables found")
 
         # recreate tables from schema
         logger.debug("Creating db schema")
@@ -120,8 +126,8 @@ async def drop_indices(pool: Pool):
 
 
 async def load_prepared_sql(base_model: BaseModel, query_type: str) -> str:
-    queries_dir = f"{SCHEMA_PATH}/Model"
-    async with aiofiles.open(f"{queries_dir}/{base_model.__name__}.sql") as f:
+    queries_dir = SCHEMA_PATH.parent / "Model"
+    async with aiofiles.open(queries_dir / f"{base_model.__name__}.sql") as f:
         contents = await f.read()
         return re.compile(r"^" + re.escape(query_type) + r".*", re.MULTILINE).findall(contents)[0]
 
