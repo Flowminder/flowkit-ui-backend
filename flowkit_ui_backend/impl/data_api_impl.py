@@ -1,13 +1,11 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 # If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
-import asyncio
-from asyncio import sleep
 
 import structlog
 import math
 import pendulum
 import os
-from typing import Optional, Dict, AsyncGenerator, AsyncIterable, Tuple, List
+from typing import Optional, AsyncGenerator, Tuple, List
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
 from aiomysql import Pool, SSDictCursor
@@ -27,8 +25,8 @@ from flowkit_ui_backend.models.categories import Categories
 from flowkit_ui_backend.models.indicator import Indicator
 from flowkit_ui_backend.models.indicators import Indicators
 from flowkit_ui_backend.models.query_result import QueryResult
-from flowkit_ui_backend.impl.util import db, util
-
+from flowkit_ui_backend.util import util
+from flowkit_ui_backend.db import db
 
 load_dotenv()
 

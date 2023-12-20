@@ -11,7 +11,7 @@ from aiocsv import AsyncReader
 from typing import Union
 from pydantic import BaseModel
 from aiomysql import Pool
-from flowkit_ui_backend.impl.util import db
+from flowkit_ui_backend.db import db
 from flowkit_ui_backend.models.config import Config
 from flowkit_ui_backend.models.language import Language
 

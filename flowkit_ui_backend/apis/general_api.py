@@ -24,13 +24,13 @@ from fastapi import (  # noqa: F401
     status,
 )
 
-from flowkit_ui_backend.impl.util import gzip
+from flowkit_ui_backend.util import gzip
 from flowkit_ui_backend.models.extra_models import TokenModel  # noqa: F401
 from flowkit_ui_backend.models.config import Config
 from flowkit_ui_backend.models.data_providers import DataProviders
 from flowkit_ui_backend.models.heartbeat import Heartbeat
 
-from flowkit_ui_backend.impl.apis import general_api_impl
+from flowkit_ui_backend.impl import general_api_impl
 
 router = APIRouter(route_class=gzip.GzipRoute)
 logger = structlog.get_logger("flowkit_ui_backend.log")

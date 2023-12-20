@@ -1,12 +1,11 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 # If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
-import asyncio
 
 import pytest
 import datetime
 from http import HTTPStatus
 from fastapi import HTTPException
-from flowkit_ui_backend.impl.apis import data_api_impl
+from flowkit_ui_backend.impl import data_api_impl
 from flowkit_ui_backend.models.query_parameters import QueryParameters
 from flowkit_ui_backend.models.time_range import TimeRange
 from flowkit_ui_backend.models.single_location_data import SingleLocationData
@@ -21,8 +20,6 @@ from flowkit_ui_backend.models.spatial_resolution import SpatialResolution
 from flowkit_ui_backend.models.temporal_resolution import TemporalResolution
 from flowkit_ui_backend.models.extra_models import TokenModel
 from flowkit_ui_backend.models.query_result import QueryResult
-
-from flowkit_ui_backend.impl.apis import data_api_impl as dai
 
 # some simple test objects
 cat = Category(category_id="foo", type="single_location")
@@ -50,7 +47,7 @@ md = Metadata(
 @pytest.mark.asyncio
 async def test_list_categories_empty(mocker, fresh_pool, token_model):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
+        "flowkit_ui_backend.impl.data_api_impl.db.select_data",
         side_effect=[[]],
     )
 
@@ -61,7 +58,7 @@ async def test_list_categories_empty(mocker, fresh_pool, token_model):
 @pytest.mark.asyncio
 async def test_get_category(mocker, fresh_pool, token_model):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
+        "flowkit_ui_backend.impl.data_api_impl.db.select_data",
         side_effect=[[cat]],
     )
 
@@ -72,7 +69,7 @@ async def test_get_category(mocker, fresh_pool, token_model):
 @pytest.mark.asyncio
 async def test_get_category_invalid(mocker, fresh_pool, token_model):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
+        "flowkit_ui_backend.impl.data_api_impl.db.select_data",
         side_effect=[[]],
     )
 
@@ -83,7 +80,7 @@ async def test_get_category_invalid(mocker, fresh_pool, token_model):
 @pytest.mark.asyncio
 async def test_list_indicators_empty(mocker, fresh_pool, token_model):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
+        "flowkit_ui_backend.impl.data_api_impl.db.select_data",
         side_effect=[[]],
     )
 
@@ -94,7 +91,7 @@ async def test_list_indicators_empty(mocker, fresh_pool, token_model):
 @pytest.mark.asyncio
 async def test_get_indicator(mocker, fresh_pool, token_model):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
+        "flowkit_ui_backend.impl.data_api_impl.db.select_data",
         side_effect=[[ind]],
     )
 
@@ -105,7 +102,7 @@ async def test_get_indicator(mocker, fresh_pool, token_model):
 @pytest.mark.asyncio
 async def test_get_indicator_invalid(mocker, fresh_pool, token_model):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
+        "flowkit_ui_backend.impl.data_api_impl.db.select_data",
         side_effect=[[]],
     )
 
@@ -116,7 +113,7 @@ async def test_get_indicator_invalid(mocker, fresh_pool, token_model):
 @pytest.mark.asyncio
 async def test_get_indicators_for_category(mocker, fresh_pool, token_model):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
+        "flowkit_ui_backend.impl.data_api_impl.db.select_data",
         side_effect=[[ind, ind]],
     )
 
@@ -129,7 +126,7 @@ async def test_get_indicators_for_category(mocker, fresh_pool, token_model):
 @pytest.mark.asyncio
 async def test_list_spatial_resolutions_empty(mocker, fresh_pool, token_model):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
+        "flowkit_ui_backend.impl.data_api_impl.db.select_data",
         side_effect=[[]],
     )
 
@@ -140,7 +137,7 @@ async def test_list_spatial_resolutions_empty(mocker, fresh_pool, token_model):
 @pytest.mark.asyncio
 async def test_get_spatial_resolution(mocker, fresh_pool, token_model):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
+        "flowkit_ui_backend.impl.data_api_impl.db.select_data",
         side_effect=[[sr]],
     )
 
@@ -153,7 +150,7 @@ async def test_get_spatial_resolution(mocker, fresh_pool, token_model):
 @pytest.mark.asyncio
 async def test_get_spatial_resolution_invalid(mocker, fresh_pool, token_model):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
+        "flowkit_ui_backend.impl.data_api_impl.db.select_data",
         side_effect=[[]],
     )
 
@@ -164,7 +161,7 @@ async def test_get_spatial_resolution_invalid(mocker, fresh_pool, token_model):
 @pytest.mark.asyncio
 async def test_get_spatial_resolutions_for_category(mocker, fresh_pool, token_model):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
+        "flowkit_ui_backend.impl.data_api_impl.db.select_data",
         side_effect=[[md], [sr, sr]],
     )
 
@@ -177,7 +174,7 @@ async def test_get_spatial_resolutions_for_category(mocker, fresh_pool, token_mo
 @pytest.mark.asyncio
 async def test_get_spatial_resolutions_for_category_error(mocker, fresh_pool, token_model):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
+        "flowkit_ui_backend.impl.data_api_impl.db.select_data",
         side_effect=[[], HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR)],
     )
 
@@ -190,7 +187,7 @@ async def test_get_spatial_resolutions_for_category_error(mocker, fresh_pool, to
 @pytest.mark.asyncio
 async def test_list_temporal_resolutions_empty(mocker, fresh_pool, token_model):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
+        "flowkit_ui_backend.impl.data_api_impl.db.select_data",
         side_effect=[[]],
     )
 
@@ -201,7 +198,7 @@ async def test_list_temporal_resolutions_empty(mocker, fresh_pool, token_model):
 @pytest.mark.asyncio
 async def test_get_temporal_resolution(mocker, fresh_pool, token_model):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
+        "flowkit_ui_backend.impl.data_api_impl.db.select_data",
         side_effect=[[tr]],
     )
 
@@ -214,7 +211,7 @@ async def test_get_temporal_resolution(mocker, fresh_pool, token_model):
 @pytest.mark.asyncio
 async def test_get_temporal_resolution_invalid(mocker, fresh_pool, token_model):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
+        "flowkit_ui_backend.impl.data_api_impl.db.select_data",
         side_effect=[[]],
     )
 
@@ -225,7 +222,7 @@ async def test_get_temporal_resolution_invalid(mocker, fresh_pool, token_model):
 @pytest.mark.asyncio
 async def test_get_temporal_resolutions_for_category(mocker, fresh_pool, token_model):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
+        "flowkit_ui_backend.impl.data_api_impl.db.select_data",
         side_effect=[[md], [tr, tr]],
     )
 
@@ -238,7 +235,7 @@ async def test_get_temporal_resolutions_for_category(mocker, fresh_pool, token_m
 @pytest.mark.asyncio
 async def test_get_temporal_resolutions_for_category_error(mocker, fresh_pool, token_model):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
+        "flowkit_ui_backend.impl.data_api_impl.db.select_data",
         side_effect=[[], HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR)],
     )
 
@@ -251,11 +248,11 @@ async def test_get_temporal_resolutions_for_category_error(mocker, fresh_pool, t
 @pytest.mark.asyncio
 async def test_get_time_range_empty(mocker, fresh_pool, token_model):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
+        "flowkit_ui_backend.impl.data_api_impl.db.select_data",
         side_effect=[[tr]],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.data_api_impl.db.run",
+        "flowkit_ui_backend.impl.data_api_impl.db.run",
         side_effect=[(None, [])],
     )
 
@@ -275,11 +272,11 @@ async def test_get_time_range_empty(mocker, fresh_pool, token_model):
 @pytest.mark.asyncio
 async def test_get_time_range(mocker, fresh_pool, token_model):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
+        "flowkit_ui_backend.impl.data_api_impl.db.select_data",
         side_effect=[[tr]],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.data_api_impl.db.run",
+        "flowkit_ui_backend.impl.data_api_impl.db.run",
         side_effect=[
             (
                 None,
@@ -311,12 +308,12 @@ async def test_get_time_range(mocker, fresh_pool, token_model):
 @pytest.mark.asyncio
 async def test_run_query_unknown_query_type(mocker, fresh_pool, token_model):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
+        "flowkit_ui_backend.impl.data_api_impl.db.select_data",
         side_effect=[[cat], [tr]],
     )
 
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.data_api_impl.db.run",
+        "flowkit_ui_backend.impl.data_api_impl.db.run",
         side_effect=[(None, None)],
     )
 
@@ -384,7 +381,7 @@ async def test_run_flow_query(populated_db, fresh_pool, admin_token_model):
 @pytest.mark.asyncio
 async def test_run_query_no_metadata(mocker, fresh_pool, admin_token_model):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
+        "flowkit_ui_backend.impl.data_api_impl.db.select_data",
         side_effect=[
             [cat],
             [tr],
@@ -392,7 +389,7 @@ async def test_run_query_no_metadata(mocker, fresh_pool, admin_token_model):
         ],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.data_api_impl.db.run",
+        "flowkit_ui_backend.impl.data_api_impl.db.run",
         side_effect=[(None, None)],
     )
 
@@ -415,11 +412,11 @@ async def test_run_query_no_metadata(mocker, fresh_pool, admin_token_model):
 @pytest.mark.asyncio
 async def test_run_query_no_data(fresh_pool, provisioned_db, admin_token_model):
     # mocker.patch(
-    #    "flowkit_ui_backend.impl.apis.data_api_impl.db.select_data",
+    #    "flowkit_ui_backend.impl.data_api_impl.db.select_data",
     #    side_effect=[[cat], [tr], []],
     # )
     # mocker.patch(
-    #    "flowkit_ui_backend.impl.apis.data_api_impl.db.run",
+    #    "flowkit_ui_backend.impl.data_api_impl.db.run",
     #    side_effect=[
     #        (None, [(None, 1, None, None, None, None, None, None, "1970-01-01")]),
     #        (None, None),

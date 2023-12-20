@@ -4,7 +4,7 @@
 import structlog
 import logging.config
 from asgi_correlation_id import correlation_id
-from flowkit_ui_backend.impl.util.structlog.dev import ConsoleRenderer
+from flowkit_ui_backend.util.structlog.dev import ConsoleRenderer
 from typing import Tuple, Any
 
 
@@ -29,7 +29,7 @@ def setup_logging(log_level: str = "INFO", dev_mode: bool = False) -> None:
     """
 
     if dev_mode:
-        processors: Tuple[structlog.types.Processor, ...] = (
+        processors: Tuple[flowkit_ui_backend.util.structlog.types.Processor, ...] = (
             add_correlation,
             structlog.processors.TimeStamper(fmt="%H:%M:%S.%f"),
             structlog.stdlib.add_log_level,
@@ -43,7 +43,7 @@ def setup_logging(log_level: str = "INFO", dev_mode: bool = False) -> None:
         )
 
     else:
-        processors: Tuple[structlog.types.Processor, ...] = (
+        processors: Tuple[flowkit_ui_backend.util.structlog.types.Processor, ...] = (
             add_correlation,
             structlog.contextvars.merge_contextvars,
             structlog.processors.TimeStamper(fmt="iso"),

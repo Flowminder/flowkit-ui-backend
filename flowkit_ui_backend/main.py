@@ -30,9 +30,8 @@ from fastapi.middleware.gzip import GZipMiddleware
 from asgi_correlation_id import CorrelationIdMiddleware
 from timing_asgi import TimingMiddleware, TimingClient
 from timing_asgi.integrations import StarletteScopeToName
-from flowkit_ui_backend.impl.util import db, logging, gzip
-
-
+from flowkit_ui_backend.util import logging, gzip
+from flowkit_ui_backend.db import db
 
 default_log_level = 'DEBUG' if (int(os.getenv('DEV_MODE', 0)) == 1) else 'WARNING'
 log_level = os.getenv('LOG_LEVEL')
@@ -130,9 +129,7 @@ async def _startup():
     )
     logger.debug("Done.")
 
-    logger.debug("Provisioning database...")
-    success = await db.provision_db(pool=app.state.pool)
-    logger.debug(f"Provisioned database? {success}")
+
 
     logger.info(f"Check the server is running on http://localhost:{os.getenv('SERVER_PORT_HOST')}/{os.getenv('API_VERSION_URL_APPENDIX')}/heartbeat")
 

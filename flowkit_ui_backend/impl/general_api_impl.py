@@ -14,8 +14,7 @@ from flowkit_ui_backend.models.language import Language
 from flowkit_ui_backend.models.data_provider import DataProvider
 from flowkit_ui_backend.models.data_providers import DataProviders
 from flowkit_ui_backend.models.heartbeat import Heartbeat
-from flowkit_ui_backend.impl.util import db
-
+from flowkit_ui_backend.db import db
 
 load_dotenv()
 

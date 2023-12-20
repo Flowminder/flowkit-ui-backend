@@ -24,7 +24,8 @@ from fastapi import (  # noqa: F401
     status,
 )
 
-from flowkit_ui_backend.impl.util import gzip
+from flowkit_ui_backend.db import db
+from flowkit_ui_backend.util import gzip
 from flowkit_ui_backend.models.extra_models import TokenModel  # noqa: F401
 from flowkit_ui_backend.models.category import Category
 from flowkit_ui_backend.models.config import Config
@@ -35,11 +36,58 @@ from flowkit_ui_backend.models.scope_mapping import ScopeMapping
 from flowkit_ui_backend.models.spatial_resolution import SpatialResolution
 from flowkit_ui_backend.models.temporal_resolution import TemporalResolution
 from flowkit_ui_backend.security_api import get_token_auth0
-from flowkit_ui_backend.impl.apis import maintenance_api_impl
+from flowkit_ui_backend.impl import maintenance_api_impl
 
 router = APIRouter(route_class=gzip.GzipRoute)
 logger = structlog.get_logger("flowkit_ui_backend.log")
 
+
+
+
+
+@router.post(
+    "/provision_db",
+    responses={
+        201: {"description": "Created: The resource was created successfully."},
+        204: {"description": "OK: The request was successful."},
+        400: {"description": "Bad Request: The request is malformed, incomplete or otherwise invalid."},
+        401: {"description": "Unauthorized: The user does not have the permissions to access this resource."},
+        404: {"description": "Not Found: The requested data could not be found."},
+        429: {"description": "Too Many Requests: The user has exceeded the limit of allowed simultaneous requests."},
+        500: {"description": "Internal Server Error: Something went wrong on the server while retrieving the data."},
+        503: {"description": "Service Unavailable: The server is currently down, e.g. for maintenance. Please try again later."},
+    },
+    tags=["maintenance"],
+    response_class=ORJSONResponse
+)
+async def provision_db(
+    token_auth0: TokenModel = Security(
+        get_token_auth0, scopes=["admin"]
+    ),
+    request: Request = None
+) -> None:
+    """Provision the db."""
+
+    try:
+        logger.debug("Starting request")
+        logger.debug("Provisioning database...")
+        success = await db.provision_db(pool=request.app.state.pool)
+        logger.debug(f"Provisioned database? {success}")
+        logger.debug("Request ready")
+        if success:
+            status_code = 200
+        else:
+            status_code = 500
+        return Response(status_code=status_code if status_code is not None else HTTPStatus.NO_CONTENT)
+
+    # This is where we handle status codes via exceptions as raised by the impl methods
+    except HTTPException as e:
+        logger.debug("Request failed", code=e.status_code, content=e.detail, traceback=traceback.print_exception(type(e), e, e.__traceback__))
+        return JSONResponse(status_code=e.status_code, content=e.detail)
+    except Exception as e:
+        logger.error(e)
+        traceback.print_exception(type(e), e, e.__traceback__)
+        return JSONResponse(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, content=f"Something went wrong: {e}")
 
 @router.post(
     "/scope_mapping",

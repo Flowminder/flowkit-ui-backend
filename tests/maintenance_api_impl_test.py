@@ -5,7 +5,7 @@ import pytest
 import datetime
 from http import HTTPStatus
 from fastapi import HTTPException
-from flowkit_ui_backend.impl.apis import maintenance_api_impl
+from flowkit_ui_backend.impl import maintenance_api_impl
 from flowkit_ui_backend.models.extra_models import TokenModel
 from flowkit_ui_backend.models.config import Config
 from flowkit_ui_backend.models.data_provider import DataProvider
@@ -61,7 +61,7 @@ ds = Dataset(
 @pytest.mark.asyncio
 async def test_create_data_provider(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.add_resource_with_unique_id",
+        "flowkit_ui_backend.db.db.add_resource_with_unique_id",
         side_effect=[(dp, HTTPStatus.CREATED)],
     )
 
@@ -74,7 +74,7 @@ async def test_create_data_provider(mocker, provisioned_db):
 @pytest.mark.asyncio
 async def test_create_category(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.add_resource_with_unique_id",
+        "flowkit_ui_backend.db.db.add_resource_with_unique_id",
         side_effect=[(cat, HTTPStatus.CREATED)],
     )
 
@@ -87,15 +87,15 @@ async def test_create_category(mocker, provisioned_db):
 @pytest.mark.asyncio
 async def test_create_indicator_success(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.select_data",
+        "flowkit_ui_backend.db.db.select_data",
         side_effect=[[cat]],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.add_resource_with_unique_id",
+        "flowkit_ui_backend.db.db.add_resource_with_unique_id",
         side_effect=[(ind, HTTPStatus.CREATED)],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.run",
+        "flowkit_ui_backend.db.db.run",
         side_effect=[(None, [("table_name", "CREATE TABLE...")]), (None, None)],
     )
 
@@ -107,7 +107,7 @@ async def test_create_indicator_success(mocker, provisioned_db):
 @pytest.mark.asyncio
 async def test_create_indicator_category_exists(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.select_data",
+        "flowkit_ui_backend.db.db.select_data",
         side_effect=[None],
     )
 
@@ -118,11 +118,11 @@ async def test_create_indicator_category_exists(mocker, provisioned_db):
 @pytest.mark.asyncio
 async def test_create_indicator_indicator_exists(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.select_data",
+        "flowkit_ui_backend.db.db.select_data",
         side_effect=[[cat]],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.add_resource_with_unique_id",
+        "flowkit_ui_backend.db.db.add_resource_with_unique_id",
         side_effect=[(ind, HTTPStatus.SEE_OTHER)],
     )
 
@@ -134,7 +134,7 @@ async def test_create_indicator_indicator_exists(mocker, provisioned_db):
 @pytest.mark.asyncio
 async def test_create_spatial_resolution(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.add_resource_with_unique_id",
+        "flowkit_ui_backend.db.db.add_resource_with_unique_id",
         side_effect=[(sr, HTTPStatus.CREATED)],
     )
 
@@ -149,7 +149,7 @@ async def test_create_spatial_resolution(mocker, provisioned_db):
 @pytest.mark.asyncio
 async def test_create_temporal_resolution(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.add_resource_with_unique_id",
+        "flowkit_ui_backend.db.db.add_resource_with_unique_id",
         side_effect=[(tr, HTTPStatus.CREATED)],
     )
 
@@ -164,7 +164,7 @@ async def test_create_temporal_resolution(mocker, provisioned_db):
 @pytest.mark.asyncio
 async def test_update_data_provider_success(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.update_resource_with_unique_id",
+        "flowkit_ui_backend.impl.maintenance_api_impl.db.update_resource_with_unique_id",
         side_effect=[None],
     )
 
@@ -177,7 +177,7 @@ async def test_update_data_provider_success(mocker, provisioned_db):
 @pytest.mark.asyncio
 async def test_update_data_provider_failure(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.update_resource_with_unique_id",
+        "flowkit_ui_backend.impl.maintenance_api_impl.db.update_resource_with_unique_id",
         side_effect=[HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="Error")],
     )
 
@@ -190,7 +190,7 @@ async def test_update_data_provider_failure(mocker, provisioned_db):
 @pytest.mark.asyncio
 async def test_update_category_success(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.update_resource_with_unique_id",
+        "flowkit_ui_backend.impl.maintenance_api_impl.db.update_resource_with_unique_id",
         side_effect=[None],
     )
 
@@ -201,7 +201,7 @@ async def test_update_category_success(mocker, provisioned_db):
 @pytest.mark.asyncio
 async def test_update_category_failure(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.update_resource_with_unique_id",
+        "flowkit_ui_backend.impl.maintenance_api_impl.db.update_resource_with_unique_id",
         side_effect=[HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="Error")],
     )
 
@@ -212,7 +212,7 @@ async def test_update_category_failure(mocker, provisioned_db):
 @pytest.mark.asyncio
 async def test_update_indicator_success(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.update_resource_with_unique_id",
+        "flowkit_ui_backend.impl.maintenance_api_impl.db.update_resource_with_unique_id",
         side_effect=[None],
     )
 
@@ -223,7 +223,7 @@ async def test_update_indicator_success(mocker, provisioned_db):
 @pytest.mark.asyncio
 async def test_update_indicator_failure(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.update_resource_with_unique_id",
+        "flowkit_ui_backend.impl.maintenance_api_impl.db.update_resource_with_unique_id",
         side_effect=[HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="Error")],
     )
 
@@ -234,7 +234,7 @@ async def test_update_indicator_failure(mocker, provisioned_db):
 @pytest.mark.asyncio
 async def test_update_spatial_resolution_success(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.update_resource_with_unique_id",
+        "flowkit_ui_backend.impl.maintenance_api_impl.db.update_resource_with_unique_id",
         side_effect=[None],
     )
 
@@ -245,7 +245,7 @@ async def test_update_spatial_resolution_success(mocker, provisioned_db):
 @pytest.mark.asyncio
 async def test_update_spatial_resolution_failure(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.update_resource_with_unique_id",
+        "flowkit_ui_backend.impl.maintenance_api_impl.db.update_resource_with_unique_id",
         side_effect=[HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="Error")],
     )
 
@@ -256,7 +256,7 @@ async def test_update_spatial_resolution_failure(mocker, provisioned_db):
 @pytest.mark.asyncio
 async def test_update_temporal_resolution_success(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.update_resource_with_unique_id",
+        "flowkit_ui_backend.impl.maintenance_api_impl.db.update_resource_with_unique_id",
         side_effect=[None],
     )
 
@@ -267,7 +267,7 @@ async def test_update_temporal_resolution_success(mocker, provisioned_db):
 @pytest.mark.asyncio
 async def test_update_temporal_resolution_failure(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.update_resource_with_unique_id",
+        "flowkit_ui_backend.impl.maintenance_api_impl.db.update_resource_with_unique_id",
         side_effect=[HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="Error")],
     )
 
@@ -278,7 +278,7 @@ async def test_update_temporal_resolution_failure(mocker, provisioned_db):
 @pytest.mark.asyncio
 async def test_delete_data_provider(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.delete_data",
+        "flowkit_ui_backend.impl.maintenance_api_impl.db.delete_data",
         side_effect=[None],
     )
 
@@ -289,7 +289,7 @@ async def test_delete_data_provider(mocker, provisioned_db):
 @pytest.mark.asyncio
 async def test_delete_category(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.delete_data",
+        "flowkit_ui_backend.impl.maintenance_api_impl.db.delete_data",
         side_effect=[None],
     )
 
@@ -300,15 +300,15 @@ async def test_delete_category(mocker, provisioned_db):
 @pytest.mark.asyncio
 async def test_delete_indicator_success(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.select_data",
+        "flowkit_ui_backend.db.db.select_data",
         side_effect=[[ind], [cat]],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.delete_data",
+        "flowkit_ui_backend.db.db.delete_data",
         side_effect=[None],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.run",
+        "flowkit_ui_backend.db.db.run",
         side_effect=[(None, None), (None, None)],
     )
 
@@ -319,7 +319,7 @@ async def test_delete_indicator_success(mocker, provisioned_db):
 @pytest.mark.asyncio
 async def test_delete_indicator_indicator_doesnt_exist(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.select_data",
+        "flowkit_ui_backend.db.db.select_data",
         side_effect=[[ind], []],
     )
 
@@ -330,7 +330,7 @@ async def test_delete_indicator_indicator_doesnt_exist(mocker, provisioned_db):
 @pytest.mark.asyncio
 async def test_delete_indicator_category_doesnt_exist(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.select_data",
+        "flowkit_ui_backend.db.db.select_data",
         side_effect=[[]],
     )
 
@@ -341,15 +341,15 @@ async def test_delete_indicator_category_doesnt_exist(mocker, provisioned_db):
 @pytest.mark.asyncio
 async def test_delete_indicator_failed_to_drop_table(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.select_data",
+        "flowkit_ui_backend.db.db.select_data",
         side_effect=[[ind], [cat]],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.delete_data",
+        "flowkit_ui_backend.db.db.delete_data",
         side_effect=[None],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.run",
+        "flowkit_ui_backend.db.db.run",
         side_effect=[(None, None), Exception("Could not drop table")],
     )
 
@@ -360,7 +360,7 @@ async def test_delete_indicator_failed_to_drop_table(mocker, provisioned_db):
 @pytest.mark.asyncio
 async def test_delete_spatial_resolution(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.delete_data",
+        "flowkit_ui_backend.impl.maintenance_api_impl.db.delete_data",
         side_effect=[None],
     )
 
@@ -371,7 +371,7 @@ async def test_delete_spatial_resolution(mocker, provisioned_db):
 @pytest.mark.asyncio
 async def test_delete_temporal_resolution(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.delete_data",
+        "flowkit_ui_backend.impl.maintenance_api_impl.db.delete_data",
         side_effect=[None],
     )
 
@@ -382,23 +382,23 @@ async def test_delete_temporal_resolution(mocker, provisioned_db):
 @pytest.mark.asyncio
 async def test_replace_setup(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.delete_data",
+        "flowkit_ui_backend.impl.maintenance_api_impl.db.delete_data",
         side_effect=[None, None, None, None, None, None, None, None, None, None, None],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.select_data",
+        "flowkit_ui_backend.impl.maintenance_api_impl.db.select_data",
         side_effect=[[], [ind], [cat], [cat]],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.insert_data",
+        "flowkit_ui_backend.impl.maintenance_api_impl.db.insert_data",
         side_effect=[None, None, None, None, None],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.add_resource_with_unique_id",
+        "flowkit_ui_backend.db.db.add_resource_with_unique_id",
         side_effect=[(ind, HTTPStatus.CREATED)],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.run",
+        "flowkit_ui_backend.impl.maintenance_api_impl.db.run",
         side_effect=[
             (None, None),
             (None, None),
@@ -407,7 +407,7 @@ async def test_replace_setup(mocker, provisioned_db):
         ],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.data_api_impl.get_indicator",
+        "flowkit_ui_backend.impl.data_api_impl.get_indicator",
         side_effect=[ind],
     )
 
@@ -427,23 +427,23 @@ async def test_replace_setup(mocker, provisioned_db):
 @pytest.mark.asyncio
 async def test_update_setup_no_indicator(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.delete_data",
+        "flowkit_ui_backend.impl.maintenance_api_impl.db.delete_data",
         side_effect=[None, None, None, None, None],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.select_data",
+        "flowkit_ui_backend.impl.maintenance_api_impl.db.select_data",
         side_effect=[[cat], [cat]],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.insert_data",
+        "flowkit_ui_backend.impl.maintenance_api_impl.db.insert_data",
         side_effect=[None, None, None, None, None],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.add_resource_with_unique_id",
+        "flowkit_ui_backend.db.db.add_resource_with_unique_id",
         side_effect=[(ind, HTTPStatus.CREATED)],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.run",
+        "flowkit_ui_backend.impl.maintenance_api_impl.db.run",
         side_effect=[
             (None, None),
             (None, None),
@@ -452,7 +452,7 @@ async def test_update_setup_no_indicator(mocker, provisioned_db):
         ],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.data_api_impl.get_indicator",
+        "flowkit_ui_backend.impl.data_api_impl.get_indicator",
         side_effect=[ind],
     )
 
@@ -471,23 +471,23 @@ async def test_update_setup_no_indicator(mocker, provisioned_db):
 @pytest.mark.asyncio
 async def test_update_setup_indicator_exists(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.delete_data",
+        "flowkit_ui_backend.impl.maintenance_api_impl.db.delete_data",
         side_effect=[None, None, None, None, None, None],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.select_data",
+        "flowkit_ui_backend.impl.maintenance_api_impl.db.select_data",
         side_effect=[[ind], [cat], [cat]],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.insert_data",
+        "flowkit_ui_backend.impl.maintenance_api_impl.db.insert_data",
         side_effect=[None, None, None, None, None],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.add_resource_with_unique_id",
+        "flowkit_ui_backend.db.db.add_resource_with_unique_id",
         side_effect=[(ind, HTTPStatus.CREATED)],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.run",
+        "flowkit_ui_backend.impl.maintenance_api_impl.db.run",
         side_effect=[
             (None, None),
             (None, None),
@@ -496,7 +496,7 @@ async def test_update_setup_indicator_exists(mocker, provisioned_db):
         ],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.data_api_impl.get_indicator",
+        "flowkit_ui_backend.impl.data_api_impl.get_indicator",
         side_effect=[ind],
     )
 
@@ -515,11 +515,11 @@ async def test_update_setup_indicator_exists(mocker, provisioned_db):
 @pytest.mark.asyncio
 async def test_update_setup_indicator_error(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.delete_data",
+        "flowkit_ui_backend.impl.maintenance_api_impl.db.delete_data",
         side_effect=[None, None],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.select_data",
+        "flowkit_ui_backend.impl.maintenance_api_impl.db.select_data",
         side_effect=[Exception],
     )
 
@@ -538,15 +538,15 @@ async def test_update_setup_indicator_error(mocker, provisioned_db):
 @pytest.mark.asyncio
 async def test_delete_setup_error(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.delete_data",
+        "flowkit_ui_backend.impl.maintenance_api_impl.db.delete_data",
         side_effect=[None, None, None, None, None, None],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.select_data",
+        "flowkit_ui_backend.impl.maintenance_api_impl.db.select_data",
         side_effect=[[ind], []],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.delete_indicator",
+        "flowkit_ui_backend.impl.maintenance_api_impl.delete_indicator",
         side_effect=[HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR)],
     )
 
@@ -557,15 +557,15 @@ async def test_delete_setup_error(mocker, provisioned_db):
 @pytest.mark.asyncio
 async def test_delete_setup_with_indicators(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.delete_data",
+        "flowkit_ui_backend.impl.maintenance_api_impl.db.delete_data",
         side_effect=[None, None, None, None, None, None],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.select_data",
+        "flowkit_ui_backend.impl.maintenance_api_impl.db.select_data",
         side_effect=[[ind], [ind], [cat]],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.run",
+        "flowkit_ui_backend.impl.maintenance_api_impl.db.run",
         side_effect=[(None, None), (None, None)],
     )
 
@@ -576,11 +576,11 @@ async def test_delete_setup_with_indicators(mocker, provisioned_db):
 @pytest.mark.asyncio
 async def test_delete_setup_no_indicators(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.delete_data",
+        "flowkit_ui_backend.impl.maintenance_api_impl.db.delete_data",
         side_effect=[None, None, None, None, None],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.db.select_data",
+        "flowkit_ui_backend.impl.maintenance_api_impl.db.select_data",
         side_effect=[[]],
     )
 
@@ -629,7 +629,7 @@ async def test_create_dataset_wrong_type(provisioned_db):
 @pytest.mark.asyncio
 async def test_create_dataset(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.run",
+        "flowkit_ui_backend.db.db.run",
         side_effect=[
             # 1
             # check dataset exists
@@ -644,12 +644,12 @@ async def test_create_dataset(mocker, provisioned_db):
         ],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.insert_data",
+        "flowkit_ui_backend.db.db.insert_data",
         side_effect=[1, None],
     )
 
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.add_scope_mapping",
+        "flowkit_ui_backend.impl.maintenance_api_impl.add_scope_mapping",
         side_effect=[1, 1],
     )
 
@@ -666,7 +666,7 @@ async def test_create_dataset(mocker, provisioned_db):
 @pytest.mark.asyncio
 async def test_update_dataset(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.run",
+        "flowkit_ui_backend.db.db.run",
         side_effect=[
             # 1
             # check dataset exists
@@ -695,12 +695,12 @@ async def test_update_dataset(mocker, provisioned_db):
         ],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.insert_data",
+        "flowkit_ui_backend.db.db.insert_data",
         side_effect=[1, None, 1, None],
     )
 
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.maintenance_api_impl.add_scope_mapping",
+        "flowkit_ui_backend.impl.maintenance_api_impl.add_scope_mapping",
         side_effect=[1, 1],
     )
 

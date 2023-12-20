@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 
 import pytest
-import flowkit_ui_backend.impl.util.util as util
+import flowkit_ui_backend.util.util as util
 from flowkit_ui_backend.models.config import Config
 from flowkit_ui_backend.models.category import Category
 from flowkit_ui_backend.models.indicator import Indicator
@@ -25,12 +25,12 @@ def test_load_config_from_json():
 
     # invalid file
     config = util.load_config_from_json(
-        f"{os.getenv('PWD')}/src/flowkit_ui_backend/impl/resources/test.csv"
+        f"{os.getenv('PWD')}/../resources/test.csv"
     )
     assert config is None
 
     config = util.load_config_from_json(
-        f"{os.getenv('PWD')}/src/flowkit_ui_backend/impl/resources/config.json"
+        f"{os.getenv('PWD')}/../resources/config.json"
     )
     print(config)
     assert type(config) == Config
@@ -41,9 +41,7 @@ async def test_load_data_from_csv():
     # inexistent file
     result = await util.load_data_from_csv("")
     assert result == {}
-    data_path = Path(
-        f"/home/{os.getenv('APP_DIR')}/src-generated/src/{os.getenv('PACKAGE_NAME')}/impl/resources"
-    )
+    data_path = Path() / "resources"
     # invalid file
     filename = data_path / "invalid.csv"
     os.chmod(filename, 0o220)
@@ -67,7 +65,7 @@ async def test_add_translation(mocker):
         Language(lid=2, code="bz", name="Baz", flag="baz.svg", default=False),
     ]
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.general_api_impl.db.select_data",
+        "flowkit_ui_backend.impl.general_api_impl.db.select_data",
         side_effect=[languages, languages, languages],
     )
 

@@ -4,24 +4,19 @@ import fastapi
 import pytest
 from flowkit_ui_backend.models.extra_models import TokenModel
 from flowkit_ui_backend.models.indicators import Indicators
-from flowkit_ui_backend.models.indicator import Indicator
 from flowkit_ui_backend.models.categories import Categories
-from flowkit_ui_backend.models.category import Category
 from flowkit_ui_backend.models.spatial_resolutions import SpatialResolutions
-from flowkit_ui_backend.models.spatial_resolution import SpatialResolution
 from flowkit_ui_backend.models.temporal_resolutions import TemporalResolutions
-from flowkit_ui_backend.models.temporal_resolution import TemporalResolution
 from flowkit_ui_backend.models.scope_mapping import ScopeMapping
 from flowkit_ui_backend.models.query_parameters import QueryParameters
-from flowkit_ui_backend.impl.apis.data_api_impl import (
+from flowkit_ui_backend.impl.data_api_impl import (
     run_query,
-    run_csv_query,
     list_categories,
     list_indicators,
     list_spatial_resolutions,
     list_temporal_resolutions,
 )
-from flowkit_ui_backend.impl.apis.maintenance_api_impl import (
+from flowkit_ui_backend.impl.maintenance_api_impl import (
     create_dataset,
     add_scope_mapping,
 )

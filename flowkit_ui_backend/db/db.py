@@ -2,7 +2,6 @@
 # If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import structlog
-import os
 import re
 import json
 import os
@@ -18,14 +17,12 @@ from http import HTTPStatus
 from aiomysql import Pool
 from pydantic import BaseModel
 from flowkit_ui_backend.models.extra_models import TokenModel
-from flowkit_ui_backend.impl.util import util
-
+from flowkit_ui_backend.util import util
 
 logger = structlog.get_logger("flowkit_ui_backend.log")
 
 
-SCHEMA_PATH = f"/home/{os.getenv('APP_DIR')}/src-generated/schema"
-PERSISTENT_FIRST_RUN = f"/home/{os.getenv('APP_DIR')}/FIRST_RUN"
+SCHEMA_PATH = Path(__file__).parent / "mysql_schema.sql"
 INDICES = {
     "metadata": ["dt", "mdid", "trid", "srid", "category_id", "indicator_id"],
     "scope_mapping": ["mdid", "scope"],
@@ -35,10 +32,6 @@ INDICES = {
 
 
 async def provision_db(pool: Pool) -> boolean:
-    # can't use env vars as they are reset whenever the dev server reloads
-    if os.path.isfile(PERSISTENT_FIRST_RUN):
-        logger.debug("This is a subsequent run. Skipping provisioning... ")
-        return False
     try:
         # Force delete existing tables
         logger.debug(f"Force DB setup? {os.getenv('FORCE_DB_SETUP')}")
@@ -59,7 +52,7 @@ async def provision_db(pool: Pool) -> boolean:
 
         # recreate tables from schema
         logger.debug("Creating db schema")
-        success = await run_script(f"{SCHEMA_PATH}/mysql_schema.sql", pool=pool)
+        success = await run_script(SCHEMA_PATH, pool=pool)
         if not success:
             logger.error("Could not set up database.")
             return False
@@ -71,12 +64,11 @@ async def provision_db(pool: Pool) -> boolean:
         # add index to speed up queries
         await add_indices(pool=pool)
 
-        # make sure this won't run again but only here where it was successful
-        Path(PERSISTENT_FIRST_RUN).touch()
         return success
     except Exception as e:
         logger.error(e)
         logger.error(traceback.format_exc())
+        raise e
     return False
 
 

@@ -8,7 +8,7 @@ from fastapi import HTTPException
 from datetime import datetime
 from http import HTTPStatus
 from aiomysql import Pool
-from typing import Tuple, List
+from typing import Tuple
 from dotenv import load_dotenv
 from flowkit_ui_backend.models.extra_models import TokenModel
 from flowkit_ui_backend.models.config import Config
@@ -23,9 +23,8 @@ from flowkit_ui_backend.models.indicator import Indicator
 from flowkit_ui_backend.models.spatial_resolution import SpatialResolution
 from flowkit_ui_backend.models.temporal_resolution import TemporalResolution
 from flowkit_ui_backend.models.scope_mapping import ScopeMapping
-from flowkit_ui_backend.impl.util import db
-from flowkit_ui_backend.impl.apis import data_api_impl
-
+from flowkit_ui_backend.db import db
+from flowkit_ui_backend.impl import data_api_impl
 
 load_dotenv()
 

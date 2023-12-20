@@ -4,7 +4,7 @@
 import os
 import pytest
 from fastapi import HTTPException
-from flowkit_ui_backend.impl.apis import general_api_impl
+from flowkit_ui_backend.impl import general_api_impl
 from flowkit_ui_backend.models.data_providers import DataProviders
 from flowkit_ui_backend.models.data_provider import DataProvider
 from flowkit_ui_backend.models.language import Language
@@ -28,7 +28,7 @@ async def test_get_setup(mocker, provisioned_db):
     ]
 
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.general_api_impl.db.select_data",
+        "flowkit_ui_backend.impl.general_api_impl.db.select_data",
         side_effect=[languages, DPS.data_providers],
     )
 
@@ -42,7 +42,7 @@ async def test_get_setup(mocker, provisioned_db):
 @pytest.mark.asyncio
 async def test_list_data_providers(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.general_api_impl.db.select_data",
+        "flowkit_ui_backend.impl.general_api_impl.db.select_data",
         return_value=DPS.data_providers,
     )
 
@@ -53,7 +53,7 @@ async def test_list_data_providers(mocker, provisioned_db):
 @pytest.mark.asyncio
 async def test_get_data_provider_invalid(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.general_api_impl.db.select_data",
+        "flowkit_ui_backend.impl.general_api_impl.db.select_data",
         side_effect=[[]],
     )
 
@@ -64,7 +64,7 @@ async def test_get_data_provider_invalid(mocker, provisioned_db):
 @pytest.mark.asyncio
 async def test_get_data_provider(mocker, provisioned_db):
     mocker.patch(
-        "flowkit_ui_backend.impl.apis.general_api_impl.db.select_data",
+        "flowkit_ui_backend.impl.general_api_impl.db.select_data",
         return_value=[DPS.data_providers[0]],
     )
 

@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from auth0.v3.exceptions import Auth0Error
 from flowkit_ui_backend.models.user_metadata import UserMetadata
 from flowkit_ui_backend.models.signup_cache import SignupCache
-from flowkit_ui_backend.impl.apis import accounts_api_impl
+from flowkit_ui_backend.impl import accounts_api_impl
 
 
 @patch("auth0.v3.management.auth0", side_effect=Auth0Error)

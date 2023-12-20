@@ -8,7 +8,7 @@ from http import HTTPStatus
 from fastapi import HTTPException
 from unittest.mock import MagicMock
 from decimal import Decimal
-from flowkit_ui_backend.impl.util import db
+from flowkit_ui_backend.db import db
 from flowkit_ui_backend.models.data_provider import DataProvider
 from flowkit_ui_backend.models.language import Language
 
@@ -45,7 +45,7 @@ def get_mock_pool():
 @pytest.mark.asyncio
 async def test_provision_db_subsequent_run(mocker, fresh_pool):
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.os.path.isfile",
+        "flowkit_ui_backend.db.db.os.path.isfile",
         side_effect=[True],
     )
 
@@ -55,21 +55,12 @@ async def test_provision_db_subsequent_run(mocker, fresh_pool):
 
 @pytest.mark.asyncio
 async def test_provision_db(mocker, fresh_pool):
-    mocker.patch(
-        "flowkit_ui_backend.impl.util.db.os.path.isfile",
-        side_effect=[False],
-    )
-
     await db.provision_db(pool=fresh_pool)
     # TODO: add meaningful tests
 
 
 @pytest.mark.asyncio
 async def test_provision_db_force_setup(mocker, fresh_pool):
-    mocker.patch(
-        "flowkit_ui_backend.impl.util.db.os.path.isfile",
-        side_effect=[False],
-    )
 
     os.environ["FORCE_DB_SETUP"] = "1"
     await db.provision_db(pool=fresh_pool)
@@ -79,7 +70,7 @@ async def test_provision_db_force_setup(mocker, fresh_pool):
 @pytest.mark.asyncio
 async def test_get_index(mocker, fresh_pool):
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.run",
+        "flowkit_ui_backend.db.db.run",
         side_effect=[
             (None, [(1, "metadata", "index_metadata_dt")]),
             (None, []),
@@ -104,7 +95,7 @@ async def test_get_index(mocker, fresh_pool):
 @pytest.mark.asyncio
 async def test_add_index(mocker, fresh_pool):
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.run",
+        "flowkit_ui_backend.db.db.run",
         side_effect=[Exception("Index exists"), None, Exception("Table doesn't exist")],
     )
 
@@ -122,7 +113,7 @@ async def test_add_index(mocker, fresh_pool):
 @pytest.mark.asyncio
 async def test_drop_index(mocker, fresh_pool):
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.run",
+        "flowkit_ui_backend.db.db.run",
         side_effect=[
             None,
             Exception("Index doesn't exist"),
@@ -143,10 +134,10 @@ async def test_drop_index(mocker, fresh_pool):
 @pytest.mark.asyncio
 async def test_add_indices(mocker, fresh_pool):
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.run",
+        "flowkit_ui_backend.db.db.run",
         side_effect=[None] * 10,
     )
-    mocker.patch("flowkit_ui_backend.impl.util.db.get_index", side_effect=[None] * 10)
+    mocker.patch("flowkit_ui_backend.db.db.get_index", side_effect=[None] * 10)
 
     await db.add_indices(pool=fresh_pool)
     # TODO: add meaningful tests
@@ -155,11 +146,11 @@ async def test_add_indices(mocker, fresh_pool):
 @pytest.mark.asyncio
 async def test_drop_indices(mocker, fresh_pool):
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.get_index",
+        "flowkit_ui_backend.db.db.get_index",
         side_effect=[None] * 10,
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.run",
+        "flowkit_ui_backend.db.db.run",
         side_effect=[(None, None)] * 10,
     )
 
@@ -318,7 +309,7 @@ async def test_delete_data():
 @pytest.mark.asyncio
 async def test_add_resource_with_unique_id_error(mocker, fresh_pool):
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.select_data",
+        "flowkit_ui_backend.db.db.select_data",
         side_effect=[HTTPException(HTTPStatus.INTERNAL_SERVER_ERROR)],
     )
 
@@ -331,7 +322,7 @@ async def test_add_resource_with_unique_id_error(mocker, fresh_pool):
 @pytest.mark.asyncio
 async def test_add_resource_with_unique_id_existing(mocker, fresh_pool):
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.select_data",
+        "flowkit_ui_backend.db.db.select_data",
         side_effect=[[dp]],
     )
 
@@ -345,11 +336,11 @@ async def test_add_resource_with_unique_id_existing(mocker, fresh_pool):
 @pytest.mark.asyncio
 async def test_add_resource_with_unique_id_inexistent_created(mocker, fresh_pool):
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.select_data",
+        "flowkit_ui_backend.db.db.select_data",
         side_effect=[[], [dp]],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.insert_data",
+        "flowkit_ui_backend.db.db.insert_data",
         side_effect=[None],
     )
 
@@ -363,11 +354,11 @@ async def test_add_resource_with_unique_id_inexistent_created(mocker, fresh_pool
 @pytest.mark.asyncio
 async def test_add_resource_with_unique_id_not_found_created(mocker, fresh_pool):
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.select_data",
+        "flowkit_ui_backend.db.db.select_data",
         side_effect=[HTTPException(HTTPStatus.NOT_FOUND, "foo"), [dp]],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.insert_data",
+        "flowkit_ui_backend.db.db.insert_data",
         side_effect=[None],
     )
 
@@ -381,7 +372,7 @@ async def test_add_resource_with_unique_id_not_found_created(mocker, fresh_pool)
 @pytest.mark.asyncio
 async def test_update_resource_with_unique_id_inexistent(mocker, fresh_pool):
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.select_data",
+        "flowkit_ui_backend.db.db.select_data",
         side_effect=[[]],
     )
 
@@ -410,11 +401,11 @@ async def test_update_resource_with_unique_id_change_id(fresh_pool):
 @pytest.mark.asyncio
 async def test_update_resource_with_unique_id_error(mocker, fresh_pool):
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.select_data",
+        "flowkit_ui_backend.db.db.select_data",
         side_effect=[[dp]],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.update_data",
+        "flowkit_ui_backend.db.db.update_data",
         side_effect=[Exception],
     )
 
@@ -431,11 +422,11 @@ async def test_update_resource_with_unique_id_error(mocker, fresh_pool):
 @pytest.mark.asyncio
 async def test_update_resource_with_unique_id_success(mocker, fresh_pool):
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.select_data",
+        "flowkit_ui_backend.db.db.select_data",
         side_effect=[[dp]],
     )
     mocker.patch(
-        "flowkit_ui_backend.impl.util.db.update_data",
+        "flowkit_ui_backend.db.db.update_data",
         side_effect=[None],
     )
 

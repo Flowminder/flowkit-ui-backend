@@ -8,10 +8,9 @@ import os
 import pathlib
 from flowkit_ui_backend.main import app as application
 from flowkit_ui_backend.models.extra_models import TokenModel
-from flowkit_ui_backend.impl.util.db import (
+from flowkit_ui_backend.db.db import (
     provision_db,
     run_script,
-    PERSISTENT_FIRST_RUN,
 )
 
 
@@ -47,8 +46,8 @@ async def fresh_pool(event_loop):
         An aiomysql pool connected to the db
     """
     pool = await aiomysql.create_pool(
-        host=os.getenv("CONTAINER_NAME_DB"),
-        port=int(os.getenv("DB_PORT_CONTAINER")),
+        host="localhost",
+        port=int(os.getenv("DB_PORT_HOST")),
         user=os.getenv("DB_USER"),
         password=os.getenv("DB_PW"),
         db=os.getenv("DB_NAME"),
@@ -72,7 +71,6 @@ def monkey_session():
 @pytest_asyncio.fixture()
 async def provisioned_db(fresh_pool, monkey_session):
     monkey_session.setenv("FORCE_DB_SETUP", "1")
-    pathlib.Path(PERSISTENT_FIRST_RUN).unlink(missing_ok=True)
     await provision_db(fresh_pool)
     try:
         yield fresh_pool
@@ -81,7 +79,6 @@ async def provisioned_db(fresh_pool, monkey_session):
             cur = await conn.cursor()
             await cur.execute("DROP DATABASE `flowkit_ui_backend`")
             await cur.execute("CREATE DATABASE `flowkit_ui_backend`")
-        pathlib.Path(PERSISTENT_FIRST_RUN).unlink(missing_ok=False)
 
 
 @pytest_asyncio.fixture()
