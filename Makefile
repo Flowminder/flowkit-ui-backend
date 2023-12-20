@@ -100,7 +100,6 @@ all:
 	echo -e "No target given. Please use one of these:\n"; \
 	echo -e "- \033[1mupgrade\033[0m \tUpgrade the dependencies"; \
 	echo -e "- \033[1mdeps\033[0m \t\tRe-generate the dependencies from the *.in files"; \
-	echo -e "- \033[1mcode\033[0m \t\tGenerate the code"; \
 	echo -e "- \033[1mbuild\033[0m \tBuild the docker image"; \
 	echo -e "- \033[1mtest\033[0m \t\tRun all tests in a dedicated container"; \
 	echo -e "- \033[1mrun\033[0m \t\tRun the application"; \
@@ -115,68 +114,25 @@ all:
 	echo -e "Local user: $(UID):$(GID) using shell $(SHELL)"; \
 	echo -e ""
 
---clean: --codeclean
-	$(info Cleaning tmp files...)
-
---codeclean:
-	$(info Cleaning generated code...)
-	rm -rf ./src-generated
-	echo "Done."
-
---validate-api:
-	$(info Validating API spec...)
-	docker run --rm --volume "$(PWD)":/data jamescooke/openapi-validator:0.97.3 -v -s -r .spectral.yaml ./src/api.json
-
---codegen: --codeclean --validate-api
-	$(info Generating code from API spec...)
-	echo "Current working directory: $(PWD)"
-	docker run --rm -v "$(PWD):/tmp/code" \
-	-u "$(UID):$(GID)" \
-	-e JAVA_OPTS="-Xmx15G -DloggerPath=conf/log4j.properties" \
-	openapitools/openapi-generator-cli:v6.2.0 generate \
-	-g python-fastapi \
-	-i /tmp/code/src/api.json \
-	-o /tmp/code/src-generated \
-	-t /tmp/code/codegen/templates/fastapi \
-	-p pythonVersion=$(PYTHON_VERSION) \
-	-p packageName=$(PACKAGE_NAME) \
-	-p packageVersion=$(APP_VERSION) \
-	-p serverPort=$(SERVER_PORT_CONTAINER) \
-	-p user=$(CONTAINER_USER) \
-	-p uid=$${UID:-9001} -p gid=$${GID:-9001} \
-	-p dataDir=$(DATA_DIR_CONTAINER) \
-	--skip-validate-spec --global-property debugOperations=true>codegen-server.log;
-	docker run --rm -v "$(PWD):/tmp/code" \
-	-u "$(UID):$(GID)" \
-	openapitools/openapi-generator-cli generate \
-	-g mysql-schema \
-	-i /tmp/code/src/api.json \
-	-o /tmp/code/src-generated/schema \
-	-t /tmp/code/codegen/templates/mysql \
-	-p defaultDatabaseName=$(DB_NAME) \
-	--skip-validate-spec --global-property debugModels=true>codegen-schema.log;
-	echo "Done. Please find your code at $(PWD)/src-generated"
-
-code: --codegen
 
 upgrade:
 	docker run --rm \
-    --mount "source=${PWD}/src/impl,target=/tmp/requirements,type=bind" \
+    --mount "source=${PWD},target=/tmp/requirements,type=bind" \
     shakiyam/pip-tools@sha256:5864eb067c68ee679240e6bea9aa7cdde8b42bbe4410e028b9eaefbc0d65a62c pip-compile \
     --upgrade --output-file=/tmp/requirements/requirements.txt /tmp/requirements/requirements.in
 	docker run --rm \
-    --mount "source=${PWD}/src/impl,target=/tmp/requirements,type=bind" \
+    --mount "source=${PWD},target=/tmp/requirements,type=bind" \
     shakiyam/pip-tools@sha256:5864eb067c68ee679240e6bea9aa7cdde8b42bbe4410e028b9eaefbc0d65a62c pip-compile \
     --upgrade --output-file=/tmp/requirements/dev-requirements.txt /tmp/requirements/dev-requirements.in
 	
 
 deps:
 	docker run --rm \
-    --mount "source=${PWD}/src/impl,target=/tmp/requirements,type=bind" \
+    --mount "source=${PWD},target=/tmp/requirements,type=bind" \
     shakiyam/pip-tools@sha256:5864eb067c68ee679240e6bea9aa7cdde8b42bbe4410e028b9eaefbc0d65a62c pip-compile \
     --output-file=/tmp/requirements/requirements.txt /tmp/requirements/requirements.in
 	docker run --rm \
-    --mount "source=${PWD}/src/impl,target=/tmp/requirements,type=bind" \
+    --mount "source=${PWD},target=/tmp/requirements,type=bind" \
     shakiyam/pip-tools@sha256:5864eb067c68ee679240e6bea9aa7cdde8b42bbe4410e028b9eaefbc0d65a62c pip-compile \
     --output-file=/tmp/requirements/dev-requirements.txt /tmp/requirements/dev-requirements.in
 
