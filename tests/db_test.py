@@ -51,7 +51,6 @@ async def test_provision_db_subsequent_run(mocker, fresh_pool):
         assert not result
 
 
-
 @pytest.mark.asyncio
 async def test_provision_db(mocker, fresh_pool):
     await db.provision_db(pool=fresh_pool)
@@ -60,7 +59,6 @@ async def test_provision_db(mocker, fresh_pool):
 
 @pytest.mark.asyncio
 async def test_provision_db_force_setup(mocker, fresh_pool):
-
     await db.provision_db(force=True, pool=fresh_pool)
     # TODO: add meaningful tests
 

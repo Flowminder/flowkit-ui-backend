@@ -19,7 +19,10 @@ import asyncio
 import aiomysql
 from http import HTTPStatus
 from fastapi import FastAPI, Request
-from fastapi.exceptions import RequestValidationError, HTTPException as StarletteHTTPException
+from fastapi.exceptions import (
+    RequestValidationError,
+    HTTPException as StarletteHTTPException,
+)
 from fastapi.exception_handlers import (
     http_exception_handler,
     request_validation_exception_handler,
@@ -33,15 +36,16 @@ from timing_asgi.integrations import StarletteScopeToName
 from flowkit_ui_backend.util import logging, gzip
 from flowkit_ui_backend.db import db
 
-default_log_level = 'DEBUG' if (int(os.getenv('DEV_MODE', 0)) == 1) else 'WARNING'
-log_level = os.getenv('LOG_LEVEL')
+default_log_level = "DEBUG" if (int(os.getenv("DEV_MODE", 0)) == 1) else "WARNING"
+log_level = os.getenv("LOG_LEVEL")
 if not log_level:
     log_level = default_log_level
 log_level = log_level.upper()
-logging.setup_logging(log_level=log_level, dev_mode=int(os.getenv('DEV_MODE', 0)) == 1)
+logging.setup_logging(log_level=log_level, dev_mode=int(os.getenv("DEV_MODE", 0)) == 1)
 logger = structlog.get_logger("flowkit_ui_backend.log")
-logger.debug(f"Using log level {log_level} (default: {default_log_level}, dev mode: {bool(os.getenv('DEV_MODE', 0))})")
-
+logger.debug(
+    f"Using log level {log_level} (default: {default_log_level}, dev mode: {bool(os.getenv('DEV_MODE', 0))})"
+)
 
 
 from flowkit_ui_backend.apis.accounts_api import router as AccountsApiRouter
@@ -49,44 +53,47 @@ from flowkit_ui_backend.apis.data_api import router as DataApiRouter
 from flowkit_ui_backend.apis.general_api import router as GeneralApiRouter
 from flowkit_ui_backend.apis.maintenance_api import router as MaintenanceApiRouter
 
+
 class LogTimings(TimingClient):
     def timing(self, metric_name, timing, tags):
         logger.debug("Timing", metric_name=metric_name, timing=timing, tags=tags)
+
 
 logger.debug(f"Starting {os.getenv('APP_NAME')}...")
 app = FastAPI(
     title="FlowKitUI Backend",
     description="A REST API for managing and postprocessing Flowkit data",
-    version="1.3.0"
+    version="1.3.0",
 )
 
 app.add_middleware(
     TimingMiddleware,
-    client=LogTimings(
-    ),
-    metric_namer=StarletteScopeToName(
-        prefix="FlowKitUI Backend",
-        starlette_app=app
-    )
+    client=LogTimings(),
+    metric_namer=StarletteScopeToName(prefix="FlowKitUI Backend", starlette_app=app),
 )
+
 
 @app.exception_handler(NotImplementedError)
 async def not_implemented_exception_handler(request: Request, e: NotImplementedError):
     return JSONResponse(status_code=HTTPStatus.NOT_IMPLEMENTED, content=str(e))
 
+
 @app.exception_handler(PermissionError)
 async def permission_exception_handler(request: Request, e: PermissionError):
     return JSONResponse(status_code=HTTPStatus.UNAUTHORIZED, content=str(e))
+
 
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request, e):
     logger.error(f"{type(e)}: {str(e)}")
     return await http_exception_handler(request, e)
 
+
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, e):
     logger.error(f"{type(e)}: {str(e)}")
     return await request_validation_exception_handler(request, e)
+
 
 @app.on_event("startup")
 async def _startup():
@@ -96,7 +103,10 @@ async def _startup():
     logger.debug("Adding CORS middleware...")
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[os.getenv('FLOWKIT_UI_URL'), f"http://localhost:{os.getenv('JUPYTER_PORT')}"],
+        allow_origins=[
+            os.getenv("FLOWKIT_UI_URL"),
+            f"http://localhost:{os.getenv('JUPYTER_PORT')}",
+        ],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -109,10 +119,18 @@ async def _startup():
     app.router.route_class = gzip.GzipRoute
 
     logger.debug("Setting up routing...")
-    app.include_router(AccountsApiRouter, prefix=f"/{os.getenv('API_VERSION_URL_APPENDIX')}")
-    app.include_router(DataApiRouter, prefix=f"/{os.getenv('API_VERSION_URL_APPENDIX')}")
-    app.include_router(GeneralApiRouter, prefix=f"/{os.getenv('API_VERSION_URL_APPENDIX')}")
-    app.include_router(MaintenanceApiRouter, prefix=f"/{os.getenv('API_VERSION_URL_APPENDIX')}")
+    app.include_router(
+        AccountsApiRouter, prefix=f"/{os.getenv('API_VERSION_URL_APPENDIX')}"
+    )
+    app.include_router(
+        DataApiRouter, prefix=f"/{os.getenv('API_VERSION_URL_APPENDIX')}"
+    )
+    app.include_router(
+        GeneralApiRouter, prefix=f"/{os.getenv('API_VERSION_URL_APPENDIX')}"
+    )
+    app.include_router(
+        MaintenanceApiRouter, prefix=f"/{os.getenv('API_VERSION_URL_APPENDIX')}"
+    )
 
     logger.debug("Creating db connection pool...")
     app.state.pool = await aiomysql.create_pool(
@@ -125,16 +143,18 @@ async def _startup():
         autocommit=True,
         local_infile=True,
         minsize=1,
-        maxsize=100
+        maxsize=100,
     )
     logger.debug("Done.")
 
+    logger.info(
+        f"Check the server is running on http://localhost:{os.getenv('SERVER_PORT_HOST')}/{os.getenv('API_VERSION_URL_APPENDIX')}/heartbeat"
+    )
 
-
-    logger.info(f"Check the server is running on http://localhost:{os.getenv('SERVER_PORT_HOST')}/{os.getenv('API_VERSION_URL_APPENDIX')}/heartbeat")
-
-    if os.getenv('JUPYTER_ENABLED') == '1':
-        logger.info(f"Jupyter lab running on http://localhost:{os.getenv('JUPYTER_PORT')}/lab?token=jupyter")
+    if os.getenv("JUPYTER_ENABLED") == "1":
+        logger.info(
+            f"Jupyter lab running on http://localhost:{os.getenv('JUPYTER_PORT')}/lab?token=jupyter"
+        )
 
 
 @app.on_event("shutdown")

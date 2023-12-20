@@ -39,20 +39,29 @@ logger = structlog.get_logger("flowkit_ui_backend.log")
 @router.get(
     "/setup",
     responses={
-        200: {"model": Config, "description": "OK: The results for this request were retrieved successfully."},
-        429: {"description": "Too Many Requests: The user has exceeded the limit of allowed simultaneous requests."},
-        500: {"description": "Internal Server Error: Something went wrong on the server while retrieving the data."},
-        503: {"description": "Service Unavailable: The server is currently down, e.g. for maintenance. Please try again later."},
+        200: {
+            "model": Config,
+            "description": "OK: The results for this request were retrieved successfully.",
+        },
+        429: {
+            "description": "Too Many Requests: The user has exceeded the limit of allowed simultaneous requests."
+        },
+        500: {
+            "description": "Internal Server Error: Something went wrong on the server while retrieving the data."
+        },
+        503: {
+            "description": "Service Unavailable: The server is currently down, e.g. for maintenance. Please try again later."
+        },
     },
     tags=["general"],
-    response_class=ORJSONResponse
+    response_class=ORJSONResponse,
 )
-async def get_setup(
-    request: Request = None
-) -> Config:
+async def get_setup(request: Request = None) -> Config:
     """Get the current config for this flowkit-ui-backend server."""
 
-    if not hasattr(general_api_impl, 'get_setup') or not callable(getattr(general_api_impl, 'get_setup')):
+    if not hasattr(general_api_impl, "get_setup") or not callable(
+        getattr(general_api_impl, "get_setup")
+    ):
         raise NotImplementedError("The /get_setup endpoint is not yet implemented")
 
     try:
@@ -65,38 +74,61 @@ async def get_setup(
         # default to status 200/204 but give the impl the option to define a different status code when returning content
         status_code = impl_result[1] if isinstance(impl_result, tuple) else None
         if content is not None:
-            return ORJSONResponse(status_code=status_code if status_code is not None else HTTPStatus.OK, content=jsonable_encoder(content))
+            return ORJSONResponse(
+                status_code=status_code if status_code is not None else HTTPStatus.OK,
+                content=jsonable_encoder(content),
+            )
         else:
-            return Response(status_code=status_code if status_code is not None else HTTPStatus.NO_CONTENT)
+            return Response(
+                status_code=status_code
+                if status_code is not None
+                else HTTPStatus.NO_CONTENT
+            )
 
     # This is where we handle status codes via exceptions as raised by the impl methods
     except HTTPException as e:
-        logger.debug("Request failed", code=e.status_code, content=e.detail, traceback=traceback.print_exception(type(e), e, e.__traceback__))
+        logger.debug(
+            "Request failed",
+            code=e.status_code,
+            content=e.detail,
+            traceback=traceback.print_exception(type(e), e, e.__traceback__),
+        )
         return JSONResponse(status_code=e.status_code, content=e.detail)
     except Exception as e:
         logger.error(e)
         traceback.print_exception(type(e), e, e.__traceback__)
-        return JSONResponse(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, content=f"Something went wrong: {e}")
-    
+        return JSONResponse(
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            content=f"Something went wrong: {e}",
+        )
 
 
 @router.get(
     "/heartbeat",
     responses={
-        200: {"model": Heartbeat, "description": "OK: The results for this request were retrieved successfully."},
-        429: {"description": "Too Many Requests: The user has exceeded the limit of allowed simultaneous requests."},
-        500: {"description": "Internal Server Error: Something went wrong on the server while retrieving the data."},
-        503: {"description": "Service Unavailable: The server is currently down, e.g. for maintenance. Please try again later."},
+        200: {
+            "model": Heartbeat,
+            "description": "OK: The results for this request were retrieved successfully.",
+        },
+        429: {
+            "description": "Too Many Requests: The user has exceeded the limit of allowed simultaneous requests."
+        },
+        500: {
+            "description": "Internal Server Error: Something went wrong on the server while retrieving the data."
+        },
+        503: {
+            "description": "Service Unavailable: The server is currently down, e.g. for maintenance. Please try again later."
+        },
     },
     tags=["general"],
-    response_class=ORJSONResponse
+    response_class=ORJSONResponse,
 )
-async def heartbeat(
-    request: Request = None
-) -> Heartbeat:
+async def heartbeat(request: Request = None) -> Heartbeat:
     """Checks whether the API is up and running"""
 
-    if not hasattr(general_api_impl, 'heartbeat') or not callable(getattr(general_api_impl, 'heartbeat')):
+    if not hasattr(general_api_impl, "heartbeat") or not callable(
+        getattr(general_api_impl, "heartbeat")
+    ):
         raise NotImplementedError("The /heartbeat endpoint is not yet implemented")
 
     try:
@@ -109,43 +141,70 @@ async def heartbeat(
         # default to status 200/204 but give the impl the option to define a different status code when returning content
         status_code = impl_result[1] if isinstance(impl_result, tuple) else None
         if content is not None:
-            return ORJSONResponse(status_code=status_code if status_code is not None else HTTPStatus.OK, content=jsonable_encoder(content))
+            return ORJSONResponse(
+                status_code=status_code if status_code is not None else HTTPStatus.OK,
+                content=jsonable_encoder(content),
+            )
         else:
-            return Response(status_code=status_code if status_code is not None else HTTPStatus.NO_CONTENT)
+            return Response(
+                status_code=status_code
+                if status_code is not None
+                else HTTPStatus.NO_CONTENT
+            )
 
     # This is where we handle status codes via exceptions as raised by the impl methods
     except HTTPException as e:
-        logger.debug("Request failed", code=e.status_code, content=e.detail, traceback=traceback.print_exception(type(e), e, e.__traceback__))
+        logger.debug(
+            "Request failed",
+            code=e.status_code,
+            content=e.detail,
+            traceback=traceback.print_exception(type(e), e, e.__traceback__),
+        )
         return JSONResponse(status_code=e.status_code, content=e.detail)
     except Exception as e:
         logger.error(e)
         traceback.print_exception(type(e), e, e.__traceback__)
-        return JSONResponse(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, content=f"Something went wrong: {e}")
-    
+        return JSONResponse(
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            content=f"Something went wrong: {e}",
+        )
 
 
 @router.get(
     "/data_providers",
     responses={
-        200: {"model": DataProviders, "description": "OK: The results for this request were retrieved successfully."},
-        429: {"description": "Too Many Requests: The user has exceeded the limit of allowed simultaneous requests."},
-        500: {"description": "Internal Server Error: Something went wrong on the server while retrieving the data."},
-        503: {"description": "Service Unavailable: The server is currently down, e.g. for maintenance. Please try again later."},
+        200: {
+            "model": DataProviders,
+            "description": "OK: The results for this request were retrieved successfully.",
+        },
+        429: {
+            "description": "Too Many Requests: The user has exceeded the limit of allowed simultaneous requests."
+        },
+        500: {
+            "description": "Internal Server Error: Something went wrong on the server while retrieving the data."
+        },
+        503: {
+            "description": "Service Unavailable: The server is currently down, e.g. for maintenance. Please try again later."
+        },
     },
     tags=["general"],
-    response_class=ORJSONResponse
+    response_class=ORJSONResponse,
 )
-async def list_data_providers(
-    request: Request = None
-) -> DataProviders:
+async def list_data_providers(request: Request = None) -> DataProviders:
     """Gets a list of all data providers configured for this flowkit-ui-backend instance"""
 
-    if not hasattr(general_api_impl, 'list_data_providers') or not callable(getattr(general_api_impl, 'list_data_providers')):
-        raise NotImplementedError("The /list_data_providers endpoint is not yet implemented")
+    if not hasattr(general_api_impl, "list_data_providers") or not callable(
+        getattr(general_api_impl, "list_data_providers")
+    ):
+        raise NotImplementedError(
+            "The /list_data_providers endpoint is not yet implemented"
+        )
 
     try:
         logger.debug("Starting request")
-        impl_result = await general_api_impl.list_data_providers(pool=request.app.state.pool)
+        impl_result = await general_api_impl.list_data_providers(
+            pool=request.app.state.pool
+        )
         logger.debug("Request ready")
         content = impl_result[0] if isinstance(impl_result, tuple) else impl_result
         if isinstance(impl_result, Response):
@@ -153,16 +212,30 @@ async def list_data_providers(
         # default to status 200/204 but give the impl the option to define a different status code when returning content
         status_code = impl_result[1] if isinstance(impl_result, tuple) else None
         if content is not None:
-            return ORJSONResponse(status_code=status_code if status_code is not None else HTTPStatus.OK, content=jsonable_encoder(content))
+            return ORJSONResponse(
+                status_code=status_code if status_code is not None else HTTPStatus.OK,
+                content=jsonable_encoder(content),
+            )
         else:
-            return Response(status_code=status_code if status_code is not None else HTTPStatus.NO_CONTENT)
+            return Response(
+                status_code=status_code
+                if status_code is not None
+                else HTTPStatus.NO_CONTENT
+            )
 
     # This is where we handle status codes via exceptions as raised by the impl methods
     except HTTPException as e:
-        logger.debug("Request failed", code=e.status_code, content=e.detail, traceback=traceback.print_exception(type(e), e, e.__traceback__))
+        logger.debug(
+            "Request failed",
+            code=e.status_code,
+            content=e.detail,
+            traceback=traceback.print_exception(type(e), e, e.__traceback__),
+        )
         return JSONResponse(status_code=e.status_code, content=e.detail)
     except Exception as e:
         logger.error(e)
         traceback.print_exception(type(e), e, e.__traceback__)
-        return JSONResponse(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, content=f"Something went wrong: {e}")
-    
+        return JSONResponse(
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            content=f"Something went wrong: {e}",
+        )

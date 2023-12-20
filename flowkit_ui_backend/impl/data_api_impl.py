@@ -39,11 +39,15 @@ FETCH_CHUNK_SIZE = 150
 
 async def list_categories(pool: Pool, token_model: TokenModel) -> Optional[Categories]:
     logger.warn("TODO: check permissions", token_model=token_model.permissions)
-    categories = await db.select_data(base_model=Category, pool=pool, token_model=token_model)
+    categories = await db.select_data(
+        base_model=Category, pool=pool, token_model=token_model
+    )
     return Categories(categories=categories)
 
 
-async def get_category(category_id: str, pool: Pool, token_model: TokenModel) -> Category:
+async def get_category(
+    category_id: str, pool: Pool, token_model: TokenModel
+) -> Category:
     categories = await db.select_data(
         base_model=Category,
         pool=pool,
@@ -52,16 +56,22 @@ async def get_category(category_id: str, pool: Pool, token_model: TokenModel) ->
         token_model=token_model,
     )
     if len(categories) == 0:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Category not found")
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail="Category not found"
+        )
     return categories[0]
 
 
 async def list_indicators(pool: Pool, token_model: TokenModel) -> Optional[Indicators]:
-    indicators = await db.select_data(base_model=Indicator, pool=pool, token_model=token_model)
+    indicators = await db.select_data(
+        base_model=Indicator, pool=pool, token_model=token_model
+    )
     return Indicators(indicators=indicators)
 
 
-async def get_indicator(indicator_id: str, pool: Pool, token_model: TokenModel) -> Indicator:
+async def get_indicator(
+    indicator_id: str, pool: Pool, token_model: TokenModel
+) -> Indicator:
     indicators = await db.select_data(
         base_model=Indicator,
         pool=pool,
@@ -70,7 +80,9 @@ async def get_indicator(indicator_id: str, pool: Pool, token_model: TokenModel) 
         token_model=token_model,
     )
     if len(indicators) == 0:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Indicator not found")
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail="Indicator not found"
+        )
     return indicators[0]
 
 
@@ -110,7 +122,9 @@ async def get_spatial_resolution(
         token_model=token_model,
     )
     if len(spatial_resolutions) == 0:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Spatial resolution not found")
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail="Spatial resolution not found"
+        )
     return spatial_resolutions[0]
 
 
@@ -265,7 +279,9 @@ async def get_table_name(
     """
     Gets the base- and specific- table names
     """
-    category = await get_category(query_parameters.category_id, token_model=token_model, pool=pool)
+    category = await get_category(
+        query_parameters.category_id, token_model=token_model, pool=pool
+    )
     if category.type not in ["single_location", "flow"]:
         raise HTTPException(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
@@ -295,7 +311,9 @@ async def run_query(
         table_name=table_name,
     )
     # get temporal resolution to know how to format the spatial entities
-    tr = await get_temporal_resolution(query_parameters.trid, token_model=token_model, pool=pool)
+    tr = await get_temporal_resolution(
+        query_parameters.trid, token_model=token_model, pool=pool
+    )
 
     metadata = await get_metadata(query_parameters, tr, pool, token_model)
 
@@ -354,10 +372,10 @@ async def run_query(
     return new_result
 
 
-async def get_column_names(table_name: str, metadata: List[Metadata], pool: Pool) -> List:
-    select_query = (
-        f"SELECT * FROM `{os.getenv('DB_NAME')}`.`{table_name}_{metadata[0].mdid}` LIMIT 1;"
-    )
+async def get_column_names(
+    table_name: str, metadata: List[Metadata], pool: Pool
+) -> List:
+    select_query = f"SELECT * FROM `{os.getenv('DB_NAME')}`.`{table_name}_{metadata[0].mdid}` LIMIT 1;"
     logger.debug("Getting column names", table_name=table_name)
     async with pool.acquire() as conn, conn.cursor() as cursor:
         await cursor.execute(select_query)
@@ -368,8 +386,12 @@ async def stream_query(
     base_table_name: str, metadata: List[Metadata], pool: Pool, table_name: str
 ) -> AsyncGenerator[list[dict], None]:
     # table_names is consumed twice, so it needs to be a list
-    table_names = [f"`{os.getenv('DB_NAME')}`.`{table_name}_{m.mdid}`" for m in metadata]
-    short_names = (table_name.rpartition(".")[2].strip("`") for table_name in table_names)
+    table_names = [
+        f"`{os.getenv('DB_NAME')}`.`{table_name}_{m.mdid}`" for m in metadata
+    ]
+    short_names = (
+        table_name.rpartition(".")[2].strip("`") for table_name in table_names
+    )
 
     partition_queries = (
         f"SELECT `{short_name}`.*, `dt` FROM {table_name} AS `{short_name}` LEFT JOIN metadata USING (mdid)"
@@ -431,9 +453,12 @@ async def get_metadata(query_parameters, temp_res, pool, token_model) -> List[Me
     (column_names, result) = await db.run(sql, pool=pool, args=args)
     logger.debug("Finished running metadata query")
     if not result:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="No metadata found")
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail="No metadata found"
+        )
     metadata_args = [
-        {col_name: value for col_name, value in zip(column_names, row)} for row in result
+        {col_name: value for col_name, value in zip(column_names, row)}
+        for row in result
     ]
     return [Metadata(**metadata_item) for metadata_item in metadata_args]
 
@@ -450,7 +475,9 @@ async def stream_csv(
     base_table_name, table_name = await get_table_name(
         query_parameters, pool=pool, token_model=token_model
     )
-    tr = await get_temporal_resolution(query_parameters.trid, token_model=token_model, pool=pool)
+    tr = await get_temporal_resolution(
+        query_parameters.trid, token_model=token_model, pool=pool
+    )
     metadata = await get_metadata(query_parameters, tr, pool, token_model)
     query_stream_generator = stream_query(base_table_name, metadata, pool, table_name)
     if query_parameters.category_id.lower() in ["residents", "presence"]:

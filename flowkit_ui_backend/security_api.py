@@ -6,7 +6,9 @@
 import os
 import structlog
 from typing import List, Optional
-from auth0.v3.authentication.async_token_verifier import AsyncAsymmetricSignatureVerifier
+from auth0.v3.authentication.async_token_verifier import (
+    AsyncAsymmetricSignatureVerifier,
+)
 
 
 from fastapi import Depends, Security  # noqa: F401
@@ -21,7 +23,11 @@ from fastapi.security import (  # noqa: F401
     OAuth2PasswordBearer,
     SecurityScopes,
 )
-from fastapi.security.api_key import APIKeyCookie, APIKeyHeader, APIKeyQuery  # noqa: F401
+from fastapi.security.api_key import (
+    APIKeyCookie,
+    APIKeyHeader,
+    APIKeyQuery,
+)  # noqa: F401
 
 from flowkit_ui_backend.models.extra_models import TokenModel
 
@@ -37,11 +43,13 @@ oauth2_code = OAuth2AuthorizationCodeBearer(
         "read:premium_data": "Get the premium data",
         "write:data": "Add and modify data",
         "admin": "Modify config",
-    }
+    },
 )
 
 # TODO: ideally move this to the app startup
-sv = AsyncAsymmetricSignatureVerifier(f"https://{os.getenv('AUTH0_DOMAIN')}/.well-known/jwks.json")
+sv = AsyncAsymmetricSignatureVerifier(
+    f"https://{os.getenv('AUTH0_DOMAIN')}/.well-known/jwks.json"
+)
 
 
 async def get_token_auth0(
@@ -56,7 +64,11 @@ async def get_token_auth0(
     :rtype: TokenModel | None
     """
 
-    logger.debug("Validate token", client_id=os.getenv('AUTH0_AUDIENCE'), domain=os.getenv('AUTH0_DOMAIN'))
+    logger.debug(
+        "Validate token",
+        client_id=os.getenv("AUTH0_AUDIENCE"),
+        domain=os.getenv("AUTH0_DOMAIN"),
+    )
 
     try:
         # TODO: this currently only works for ID tokens, not access tokens; see https://github.com/auth0/auth0-PHP/issues/422
@@ -72,14 +84,14 @@ async def get_token_auth0(
     logger.debug("Checking claims", claims=claims)
     valid = validate_scope_auth0(security_scopes.scopes, claims)
     if not valid:
-        raise PermissionError(f"Invalid token: Required permissions {security_scopes.scopes} not present")
+        raise PermissionError(
+            f"Invalid token: Required permissions {security_scopes.scopes} not present"
+        )
 
-    return TokenModel(sub=claims['sub'], permissions=claims['permissions'])
+    return TokenModel(sub=claims["sub"], permissions=claims["permissions"])
 
 
-def validate_scope_auth0(
-    required_scopes: SecurityScopes, claims: dict
-) -> bool:
+def validate_scope_auth0(required_scopes: SecurityScopes, claims: dict) -> bool:
     """
     Validate required scopes are included in token scope
 
@@ -91,9 +103,15 @@ def validate_scope_auth0(
     :rtype: bool
     """
 
-    token_scopes = claims['scope'].split(' ') # We want to check scope here, rather than permission
+    token_scopes = claims["scope"].split(
+        " "
+    )  # We want to check scope here, rather than permission
     valid = all(item in token_scopes for item in required_scopes)
-    logger.debug(f"Validating scopes", valid=valid, required=required_scopes, received=token_scopes)
+    logger.debug(
+        f"Validating scopes",
+        valid=valid,
+        required=required_scopes,
+        received=token_scopes,
+    )
 
     return valid
-

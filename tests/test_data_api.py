@@ -13,78 +13,74 @@ from flowkit_ui_backend.models.indicators import Indicators  # noqa: F401
 from flowkit_ui_backend.models.query_parameters import QueryParameters  # noqa: F401
 from flowkit_ui_backend.models.query_result import QueryResult  # noqa: F401
 from flowkit_ui_backend.models.spatial_resolution import SpatialResolution  # noqa: F401
-from flowkit_ui_backend.models.spatial_resolutions import SpatialResolutions  # noqa: F401
-from flowkit_ui_backend.models.temporal_resolution import TemporalResolution  # noqa: F401
-from flowkit_ui_backend.models.temporal_resolutions import TemporalResolutions  # noqa: F401
+from flowkit_ui_backend.models.spatial_resolutions import (
+    SpatialResolutions,
+)  # noqa: F401
+from flowkit_ui_backend.models.temporal_resolution import (
+    TemporalResolution,
+)  # noqa: F401
+from flowkit_ui_backend.models.temporal_resolutions import (
+    TemporalResolutions,
+)  # noqa: F401
 from flowkit_ui_backend.models.time_range import TimeRange  # noqa: F401
 
 
 @pytest.mark.asyncio
 async def test_get_category(client: TestClient):
-    """Test case for get_category
-
-    
-    """
+    """Test case for get_category"""
 
     headers = {
         "Authorization": "Bearer special-key",
     }
     response = client.request(
         "GET",
-        "/categories/{category_id}".format(category_id='category_id_example'),
+        "/categories/{category_id}".format(category_id="category_id_example"),
         headers=headers,
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.asyncio
 async def test_get_indicator(client: TestClient):
-    """Test case for get_indicator
-
-    
-    """
+    """Test case for get_indicator"""
 
     headers = {
         "Authorization": "Bearer special-key",
     }
     response = client.request(
         "GET",
-        "/indicators/{indicator_id}".format(indicator_id='indicator_id_example'),
+        "/indicators/{indicator_id}".format(indicator_id="indicator_id_example"),
         headers=headers,
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.asyncio
 async def test_get_indicators_for_category(client: TestClient):
-    """Test case for get_indicators_for_category
-
-    
-    """
+    """Test case for get_indicators_for_category"""
 
     headers = {
         "Authorization": "Bearer special-key",
     }
     response = client.request(
         "GET",
-        "/indicators_for_category/{category_id}".format(category_id='category_id_example'),
+        "/indicators_for_category/{category_id}".format(
+            category_id="category_id_example"
+        ),
         headers=headers,
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.asyncio
 async def test_get_spatial_resolution(client: TestClient):
-    """Test case for get_spatial_resolution
-
-    
-    """
+    """Test case for get_spatial_resolution"""
 
     headers = {
         "Authorization": "Bearer special-key",
@@ -96,35 +92,31 @@ async def test_get_spatial_resolution(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.asyncio
 async def test_get_spatial_resolutions_for_category(client: TestClient):
-    """Test case for get_spatial_resolutions_for_category
-
-    
-    """
+    """Test case for get_spatial_resolutions_for_category"""
 
     headers = {
         "Authorization": "Bearer special-key",
     }
     response = client.request(
         "GET",
-        "/spatial_resolutions_for_category/{category_id}".format(category_id='category_id_example'),
+        "/spatial_resolutions_for_category/{category_id}".format(
+            category_id="category_id_example"
+        ),
         headers=headers,
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.asyncio
 async def test_get_temporal_resolution(client: TestClient):
-    """Test case for get_temporal_resolution
-
-    
-    """
+    """Test case for get_temporal_resolution"""
 
     headers = {
         "Authorization": "Bearer special-key",
@@ -136,55 +128,53 @@ async def test_get_temporal_resolution(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.asyncio
 async def test_get_temporal_resolutions_for_category(client: TestClient):
-    """Test case for get_temporal_resolutions_for_category
-
-    
-    """
+    """Test case for get_temporal_resolutions_for_category"""
 
     headers = {
         "Authorization": "Bearer special-key",
     }
     response = client.request(
         "GET",
-        "/temporal_resolutions_for_category/{category_id}".format(category_id='category_id_example'),
+        "/temporal_resolutions_for_category/{category_id}".format(
+            category_id="category_id_example"
+        ),
         headers=headers,
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.asyncio
 async def test_get_time_range(client: TestClient):
-    """Test case for get_time_range
-
-    
-    """
+    """Test case for get_time_range"""
 
     headers = {
         "Authorization": "Bearer special-key",
     }
     response = client.request(
         "GET",
-        "/timerange/{category_id}/{indicator_id}/{srid}/{trid}".format(category_id='category_id_example', indicator_id='indicator_id_example', srid=56, trid=56),
+        "/timerange/{category_id}/{indicator_id}/{srid}/{trid}".format(
+            category_id="category_id_example",
+            indicator_id="indicator_id_example",
+            srid=56,
+            trid=56,
+        ),
         headers=headers,
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.asyncio
 async def test_list_categories(client: TestClient):
-    """Test case for list_categories
-
-    
-    """
+    """Test case for list_categories"""
 
     headers = {
         "Authorization": "Bearer special-key",
@@ -196,15 +186,12 @@ async def test_list_categories(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.asyncio
 async def test_list_indicators(client: TestClient):
-    """Test case for list_indicators
-
-    
-    """
+    """Test case for list_indicators"""
 
     headers = {
         "Authorization": "Bearer special-key",
@@ -216,15 +203,12 @@ async def test_list_indicators(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.asyncio
 async def test_list_spatial_resolutions(client: TestClient):
-    """Test case for list_spatial_resolutions
-
-    
-    """
+    """Test case for list_spatial_resolutions"""
 
     headers = {
         "Authorization": "Bearer special-key",
@@ -236,15 +220,12 @@ async def test_list_spatial_resolutions(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.asyncio
 async def test_list_temporal_resolutions(client: TestClient):
-    """Test case for list_temporal_resolutions
-
-    
-    """
+    """Test case for list_temporal_resolutions"""
 
     headers = {
         "Authorization": "Bearer special-key",
@@ -256,16 +237,13 @@ async def test_list_temporal_resolutions(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.skip("Post tests are broken")
 @pytest.mark.asyncio
 async def test_run_csv_query(client: TestClient):
-    """Test case for run_csv_query
-
-    
-    """
+    """Test case for run_csv_query"""
     query_parameters = flowkit_ui_backend.QueryParameters()
 
     headers = {
@@ -279,16 +257,13 @@ async def test_run_csv_query(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.skip("Post tests are broken")
 @pytest.mark.asyncio
 async def test_run_query(client: TestClient):
-    """Test case for run_query
-
-    
-    """
+    """Test case for run_query"""
     query_parameters = flowkit_ui_backend.QueryParameters()
 
     headers = {
@@ -302,5 +277,4 @@ async def test_run_query(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
-
+    # assert response.status_code == 200

@@ -51,7 +51,9 @@ async def test_list_categories_empty(mocker, fresh_pool, token_model):
         side_effect=[[]],
     )
 
-    result = await data_api_impl.list_categories(pool=fresh_pool, token_model=token_model)
+    result = await data_api_impl.list_categories(
+        pool=fresh_pool, token_model=token_model
+    )
     assert result == Categories(categories=[])
 
 
@@ -62,7 +64,9 @@ async def test_get_category(mocker, fresh_pool, token_model):
         side_effect=[[cat]],
     )
 
-    result = await data_api_impl.get_category("foo", pool=fresh_pool, token_model=token_model)
+    result = await data_api_impl.get_category(
+        "foo", pool=fresh_pool, token_model=token_model
+    )
     assert result == cat
 
 
@@ -74,7 +78,9 @@ async def test_get_category_invalid(mocker, fresh_pool, token_model):
     )
 
     with pytest.raises(HTTPException):
-        await data_api_impl.get_category("foo", pool=fresh_pool, token_model=token_model)
+        await data_api_impl.get_category(
+            "foo", pool=fresh_pool, token_model=token_model
+        )
 
 
 @pytest.mark.asyncio
@@ -84,7 +90,9 @@ async def test_list_indicators_empty(mocker, fresh_pool, token_model):
         side_effect=[[]],
     )
 
-    result = await data_api_impl.list_indicators(pool=fresh_pool, token_model=token_model)
+    result = await data_api_impl.list_indicators(
+        pool=fresh_pool, token_model=token_model
+    )
     assert result == Indicators(indicators=[])
 
 
@@ -95,7 +103,9 @@ async def test_get_indicator(mocker, fresh_pool, token_model):
         side_effect=[[ind]],
     )
 
-    result = await data_api_impl.get_indicator("foo", pool=fresh_pool, token_model=token_model)
+    result = await data_api_impl.get_indicator(
+        "foo", pool=fresh_pool, token_model=token_model
+    )
     assert result == ind
 
 
@@ -107,7 +117,9 @@ async def test_get_indicator_invalid(mocker, fresh_pool, token_model):
     )
 
     with pytest.raises(HTTPException):
-        await data_api_impl.get_indicator("foo", pool=fresh_pool, token_model=token_model)
+        await data_api_impl.get_indicator(
+            "foo", pool=fresh_pool, token_model=token_model
+        )
 
 
 @pytest.mark.asyncio
@@ -130,7 +142,9 @@ async def test_list_spatial_resolutions_empty(mocker, fresh_pool, token_model):
         side_effect=[[]],
     )
 
-    result = await data_api_impl.list_spatial_resolutions(pool=fresh_pool, token_model=token_model)
+    result = await data_api_impl.list_spatial_resolutions(
+        pool=fresh_pool, token_model=token_model
+    )
     assert result == SpatialResolutions(spatial_resolutions=[])
 
 
@@ -155,7 +169,9 @@ async def test_get_spatial_resolution_invalid(mocker, fresh_pool, token_model):
     )
 
     with pytest.raises(HTTPException):
-        await data_api_impl.get_spatial_resolution("foo", pool=fresh_pool, token_model=token_model)
+        await data_api_impl.get_spatial_resolution(
+            "foo", pool=fresh_pool, token_model=token_model
+        )
 
 
 @pytest.mark.asyncio
@@ -172,7 +188,9 @@ async def test_get_spatial_resolutions_for_category(mocker, fresh_pool, token_mo
 
 
 @pytest.mark.asyncio
-async def test_get_spatial_resolutions_for_category_error(mocker, fresh_pool, token_model):
+async def test_get_spatial_resolutions_for_category_error(
+    mocker, fresh_pool, token_model
+):
     mocker.patch(
         "flowkit_ui_backend.impl.data_api_impl.db.select_data",
         side_effect=[[], HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR)],
@@ -191,7 +209,9 @@ async def test_list_temporal_resolutions_empty(mocker, fresh_pool, token_model):
         side_effect=[[]],
     )
 
-    result = await data_api_impl.list_temporal_resolutions(pool=fresh_pool, token_model=token_model)
+    result = await data_api_impl.list_temporal_resolutions(
+        pool=fresh_pool, token_model=token_model
+    )
     assert result == TemporalResolutions(temporal_resolutions=[])
 
 
@@ -216,7 +236,9 @@ async def test_get_temporal_resolution_invalid(mocker, fresh_pool, token_model):
     )
 
     with pytest.raises(HTTPException):
-        await data_api_impl.get_temporal_resolution("foo", pool=fresh_pool, token_model=token_model)
+        await data_api_impl.get_temporal_resolution(
+            "foo", pool=fresh_pool, token_model=token_model
+        )
 
 
 @pytest.mark.asyncio
@@ -233,7 +255,9 @@ async def test_get_temporal_resolutions_for_category(mocker, fresh_pool, token_m
 
 
 @pytest.mark.asyncio
-async def test_get_temporal_resolutions_for_category_error(mocker, fresh_pool, token_model):
+async def test_get_temporal_resolutions_for_category_error(
+    mocker, fresh_pool, token_model
+):
     mocker.patch(
         "flowkit_ui_backend.impl.data_api_impl.db.select_data",
         side_effect=[[], HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR)],

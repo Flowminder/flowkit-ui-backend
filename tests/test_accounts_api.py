@@ -11,71 +11,59 @@ from flowkit_ui_backend.models.user_metadata import UserMetadata  # noqa: F401
 
 @pytest.mark.asyncio
 async def test_delete_user(client: TestClient):
-    """Test case for delete_user
-
-    
-    """
+    """Test case for delete_user"""
 
     headers = {
         "Authorization": "Bearer special-key",
     }
     response = client.request(
         "DELETE",
-        "/users/{uid}".format(uid='user-4e128f03-a086-4167-81bd-bcfcc0175744'),
+        "/users/{uid}".format(uid="user-4e128f03-a086-4167-81bd-bcfcc0175744"),
         headers=headers,
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.asyncio
 async def test_get_user(client: TestClient):
-    """Test case for get_user
-
-    
-    """
+    """Test case for get_user"""
 
     headers = {
         "Authorization": "Bearer special-key",
     }
     response = client.request(
         "GET",
-        "/users/{uid}".format(uid='user-4e128f03-a086-4167-81bd-bcfcc0175744'),
+        "/users/{uid}".format(uid="user-4e128f03-a086-4167-81bd-bcfcc0175744"),
         headers=headers,
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.asyncio
 async def test_reset_password(client: TestClient):
-    """Test case for reset_password
-
-    
-    """
+    """Test case for reset_password"""
 
     headers = {
         "Authorization": "Bearer special-key",
     }
     response = client.request(
         "GET",
-        "/reset_password/{email}".format(email='user@example.com'),
+        "/reset_password/{email}".format(email="user@example.com"),
         headers=headers,
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.skip("Patch tests are broken")
 @pytest.mark.asyncio
 async def test_update_user(client: TestClient):
-    """Test case for update_user
-
-    
-    """
+    """Test case for update_user"""
     user_metadata = flowkit_ui_backend.UserMetadata()
 
     headers = {
@@ -83,11 +71,10 @@ async def test_update_user(client: TestClient):
     }
     response = client.request(
         "PATCH",
-        "/users/{uid}".format(uid='user-4e128f03-a086-4167-81bd-bcfcc0175744'),
+        "/users/{uid}".format(uid="user-4e128f03-a086-4167-81bd-bcfcc0175744"),
         headers=headers,
         json=user_metadata,
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
-
+    # assert response.status_code == 200

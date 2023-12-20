@@ -24,14 +24,10 @@ def test_load_config_from_json():
         util.load_config_from_json("")
 
     # invalid file
-    config = util.load_config_from_json(
-        f"{os.getenv('PWD')}/../resources/test.csv"
-    )
+    config = util.load_config_from_json(f"{os.getenv('PWD')}/../resources/test.csv")
     assert config is None
 
-    config = util.load_config_from_json(
-        f"{os.getenv('PWD')}/../resources/config.json"
-    )
+    config = util.load_config_from_json(f"{os.getenv('PWD')}/../resources/config.json")
     print(config)
     assert type(config) == Config
 
@@ -75,12 +71,16 @@ async def test_add_translation(mocker):
     assert getattr(result, "translation") is None
 
     # empty translation
-    cat = Category(category_id="foo", type="single_location", label="foo", label_ba=None)
+    cat = Category(
+        category_id="foo", type="single_location", label="foo", label_ba=None
+    )
     result = await util.add_translation(resource=cat, pool=None, props=["label"])
     assert getattr(result, "translation") is None
 
     # existing translation
-    cat = Category(category_id="foo", type="single_location", label="foo", label_ba="bar")
+    cat = Category(
+        category_id="foo", type="single_location", label="foo", label_ba="bar"
+    )
     result = await util.add_translation(resource=cat, pool=None, props=["label"])
     assert getattr(result, "translation") == '{"ba": {"label": "bar"}}'
 
@@ -92,7 +92,9 @@ def test_restore_translation():
     assert hasattr(result, "label_ba") == False
 
     # empty translation
-    cat = Category(category_id="foo", type="single_location", label="foo", translation="{}")
+    cat = Category(
+        category_id="foo", type="single_location", label="foo", translation="{}"
+    )
     result = util.restore_translation(obj=cat)
     assert hasattr(result, "label_ba") == False
 

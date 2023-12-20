@@ -13,13 +13,9 @@ from flowkit_ui_backend.models.heartbeat import Heartbeat  # noqa: F401
 
 @pytest.mark.asyncio
 async def test_get_setup(client: TestClient):
-    """Test case for get_setup
+    """Test case for get_setup"""
 
-    
-    """
-
-    headers = {
-    }
+    headers = {}
     response = client.request(
         "GET",
         "/setup",
@@ -27,18 +23,14 @@ async def test_get_setup(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.asyncio
 async def test_heartbeat(client: TestClient):
-    """Test case for heartbeat
+    """Test case for heartbeat"""
 
-    
-    """
-
-    headers = {
-    }
+    headers = {}
     response = client.request(
         "GET",
         "/heartbeat",
@@ -46,18 +38,14 @@ async def test_heartbeat(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.asyncio
 async def test_list_data_providers(client: TestClient):
-    """Test case for list_data_providers
+    """Test case for list_data_providers"""
 
-    
-    """
-
-    headers = {
-    }
+    headers = {}
     response = client.request(
         "GET",
         "/data_providers",
@@ -65,5 +53,4 @@ async def test_list_data_providers(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
-
+    # assert response.status_code == 200

@@ -26,7 +26,6 @@ def client(app) -> TestClient:
     return TestClient(app)
 
 
-
 @pytest.fixture()
 def event_loop():
     policy = asyncio.get_event_loop_policy()
@@ -82,7 +81,9 @@ async def provisioned_db(fresh_pool, monkey_session):
 @pytest_asyncio.fixture()
 async def populated_db(provisioned_db):
     print("Populating db")
-    await run_script(str(pathlib.Path(__file__).parent / "test_data.sql"), pool=provisioned_db)
+    await run_script(
+        str(pathlib.Path(__file__).parent / "test_data.sql"), pool=provisioned_db
+    )
     yield provisioned_db
 
 

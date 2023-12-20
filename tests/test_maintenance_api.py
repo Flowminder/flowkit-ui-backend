@@ -13,16 +13,15 @@ from flowkit_ui_backend.models.dataset import Dataset  # noqa: F401
 from flowkit_ui_backend.models.indicator import Indicator  # noqa: F401
 from flowkit_ui_backend.models.scope_mapping import ScopeMapping  # noqa: F401
 from flowkit_ui_backend.models.spatial_resolution import SpatialResolution  # noqa: F401
-from flowkit_ui_backend.models.temporal_resolution import TemporalResolution  # noqa: F401
+from flowkit_ui_backend.models.temporal_resolution import (
+    TemporalResolution,
+)  # noqa: F401
 
 
 @pytest.mark.skip("Post tests are broken")
 @pytest.mark.asyncio
 async def test_add_scope_mapping(client: TestClient):
-    """Test case for add_scope_mapping
-
-    
-    """
+    """Test case for add_scope_mapping"""
     scope_mapping = flowkit_ui_backend.ScopeMapping()
 
     headers = {
@@ -36,16 +35,13 @@ async def test_add_scope_mapping(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.skip("Post tests are broken")
 @pytest.mark.asyncio
 async def test_create_category(client: TestClient):
-    """Test case for create_category
-
-    
-    """
+    """Test case for create_category"""
     category = flowkit_ui_backend.Category()
 
     headers = {
@@ -59,16 +55,13 @@ async def test_create_category(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.skip("Post tests are broken")
 @pytest.mark.asyncio
 async def test_create_data_provider(client: TestClient):
-    """Test case for create_data_provider
-
-    
-    """
+    """Test case for create_data_provider"""
     data_provider = flowkit_ui_backend.DataProvider()
 
     headers = {
@@ -82,16 +75,13 @@ async def test_create_data_provider(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.skip("Post tests are broken")
 @pytest.mark.asyncio
 async def test_create_dataset(client: TestClient):
-    """Test case for create_dataset
-
-    
-    """
+    """Test case for create_dataset"""
     dataset = flowkit_ui_backend.Dataset()
 
     headers = {
@@ -105,16 +95,13 @@ async def test_create_dataset(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.skip("Post tests are broken")
 @pytest.mark.asyncio
 async def test_create_indicator(client: TestClient):
-    """Test case for create_indicator
-
-    
-    """
+    """Test case for create_indicator"""
     indicator = flowkit_ui_backend.Indicator()
 
     headers = {
@@ -128,16 +115,13 @@ async def test_create_indicator(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.skip("Post tests are broken")
 @pytest.mark.asyncio
 async def test_create_spatial_resolution(client: TestClient):
-    """Test case for create_spatial_resolution
-
-    
-    """
+    """Test case for create_spatial_resolution"""
     spatial_resolution = flowkit_ui_backend.SpatialResolution()
 
     headers = {
@@ -151,16 +135,13 @@ async def test_create_spatial_resolution(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.skip("Post tests are broken")
 @pytest.mark.asyncio
 async def test_create_temporal_resolution(client: TestClient):
-    """Test case for create_temporal_resolution
-
-    
-    """
+    """Test case for create_temporal_resolution"""
     temporal_resolution = flowkit_ui_backend.TemporalResolution()
 
     headers = {
@@ -174,35 +155,29 @@ async def test_create_temporal_resolution(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.asyncio
 async def test_delete_category(client: TestClient):
-    """Test case for delete_category
-
-    
-    """
+    """Test case for delete_category"""
 
     headers = {
         "Authorization": "Bearer special-key",
     }
     response = client.request(
         "DELETE",
-        "/categories/{category_id}".format(category_id='category_id_example'),
+        "/categories/{category_id}".format(category_id="category_id_example"),
         headers=headers,
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.asyncio
 async def test_delete_data_provider(client: TestClient):
-    """Test case for delete_data_provider
-
-    
-    """
+    """Test case for delete_data_provider"""
 
     headers = {
         "Authorization": "Bearer special-key",
@@ -214,16 +189,13 @@ async def test_delete_data_provider(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.skip("This delete test is currently broken.")
 @pytest.mark.asyncio
 async def test_delete_dataset(client: TestClient):
-    """Test case for delete_dataset
-
-    
-    """
+    """Test case for delete_dataset"""
     dataset = flowkit_ui_backend.Dataset()
 
     headers = {
@@ -237,36 +209,30 @@ async def test_delete_dataset(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.asyncio
 async def test_delete_indicator(client: TestClient):
-    """Test case for delete_indicator
-
-    
-    """
+    """Test case for delete_indicator"""
 
     headers = {
         "Authorization": "Bearer special-key",
     }
     response = client.request(
         "DELETE",
-        "/indicators/{indicator_id}".format(indicator_id='indicator_id_example'),
+        "/indicators/{indicator_id}".format(indicator_id="indicator_id_example"),
         headers=headers,
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.skip("This delete test is currently broken.")
 @pytest.mark.asyncio
 async def test_delete_scope_mapping(client: TestClient):
-    """Test case for delete_scope_mapping
-
-    
-    """
+    """Test case for delete_scope_mapping"""
     scope_mapping = flowkit_ui_backend.ScopeMapping()
 
     headers = {
@@ -280,15 +246,12 @@ async def test_delete_scope_mapping(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.asyncio
 async def test_delete_setup(client: TestClient):
-    """Test case for delete_setup
-
-    
-    """
+    """Test case for delete_setup"""
 
     headers = {
         "Authorization": "Bearer special-key",
@@ -300,15 +263,12 @@ async def test_delete_setup(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.asyncio
 async def test_delete_spatial_resolution(client: TestClient):
-    """Test case for delete_spatial_resolution
-
-    
-    """
+    """Test case for delete_spatial_resolution"""
 
     headers = {
         "Authorization": "Bearer special-key",
@@ -320,15 +280,12 @@ async def test_delete_spatial_resolution(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.asyncio
 async def test_delete_temporal_resolution(client: TestClient):
-    """Test case for delete_temporal_resolution
-
-    
-    """
+    """Test case for delete_temporal_resolution"""
 
     headers = {
         "Authorization": "Bearer special-key",
@@ -340,16 +297,13 @@ async def test_delete_temporal_resolution(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.skip("Post tests are broken")
 @pytest.mark.asyncio
 async def test_replace_setup(client: TestClient):
-    """Test case for replace_setup
-
-    
-    """
+    """Test case for replace_setup"""
     config = flowkit_ui_backend.Config()
 
     headers = {
@@ -363,16 +317,13 @@ async def test_replace_setup(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.skip("Patch tests are broken")
 @pytest.mark.asyncio
 async def test_update_category(client: TestClient):
-    """Test case for update_category
-
-    
-    """
+    """Test case for update_category"""
     category = flowkit_ui_backend.Category()
 
     headers = {
@@ -380,22 +331,19 @@ async def test_update_category(client: TestClient):
     }
     response = client.request(
         "PATCH",
-        "/categories/{category_id}".format(category_id='category_id_example'),
+        "/categories/{category_id}".format(category_id="category_id_example"),
         headers=headers,
         json=category,
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.skip("Patch tests are broken")
 @pytest.mark.asyncio
 async def test_update_data_provider(client: TestClient):
-    """Test case for update_data_provider
-
-    
-    """
+    """Test case for update_data_provider"""
     data_provider = flowkit_ui_backend.DataProvider()
 
     headers = {
@@ -409,16 +357,13 @@ async def test_update_data_provider(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.skip("Patch tests are broken")
 @pytest.mark.asyncio
 async def test_update_dataset(client: TestClient):
-    """Test case for update_dataset
-
-    
-    """
+    """Test case for update_dataset"""
     dataset = flowkit_ui_backend.Dataset()
 
     headers = {
@@ -432,16 +377,13 @@ async def test_update_dataset(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.skip("Patch tests are broken")
 @pytest.mark.asyncio
 async def test_update_indicator(client: TestClient):
-    """Test case for update_indicator
-
-    
-    """
+    """Test case for update_indicator"""
     indicator = flowkit_ui_backend.Indicator()
 
     headers = {
@@ -449,22 +391,19 @@ async def test_update_indicator(client: TestClient):
     }
     response = client.request(
         "PATCH",
-        "/indicators/{indicator_id}".format(indicator_id='indicator_id_example'),
+        "/indicators/{indicator_id}".format(indicator_id="indicator_id_example"),
         headers=headers,
         json=indicator,
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.skip("Patch tests are broken")
 @pytest.mark.asyncio
 async def test_update_setup(client: TestClient):
-    """Test case for update_setup
-
-    
-    """
+    """Test case for update_setup"""
     config = flowkit_ui_backend.Config()
 
     headers = {
@@ -478,16 +417,13 @@ async def test_update_setup(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.skip("Patch tests are broken")
 @pytest.mark.asyncio
 async def test_update_spatial_resolution(client: TestClient):
-    """Test case for update_spatial_resolution
-
-    
-    """
+    """Test case for update_spatial_resolution"""
     spatial_resolution = flowkit_ui_backend.SpatialResolution()
 
     headers = {
@@ -501,16 +437,13 @@ async def test_update_spatial_resolution(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    # assert response.status_code == 200
 
 
 @pytest.mark.skip("Patch tests are broken")
 @pytest.mark.asyncio
 async def test_update_temporal_resolution(client: TestClient):
-    """Test case for update_temporal_resolution
-
-    
-    """
+    """Test case for update_temporal_resolution"""
     temporal_resolution = flowkit_ui_backend.TemporalResolution()
 
     headers = {
@@ -524,5 +457,4 @@ async def test_update_temporal_resolution(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
-
+    # assert response.status_code == 200
