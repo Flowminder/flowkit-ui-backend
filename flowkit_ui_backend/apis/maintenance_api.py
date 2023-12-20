@@ -781,7 +781,7 @@ async def create_temporal_resolution(
     response_class=ORJSONResponse,
 )
 async def delete_category(
-    category_id: str = Path(None, description="The category ID", max_length=255),
+    category_id: str = Path(description="The category ID", max_length=255),
     token_auth0: TokenModel = Security(get_token_auth0, scopes=["admin"]),
     request: Request = None,
 ) -> None:
@@ -860,7 +860,7 @@ async def delete_category(
     response_class=ORJSONResponse,
 )
 async def delete_data_provider(
-    dpid: int = Path(None, description="The data provider ID"),
+    dpid: int = Path(description="The data provider ID"),
     token_auth0: TokenModel = Security(get_token_auth0, scopes=["admin"]),
     request: Request = None,
 ) -> None:
@@ -1019,7 +1019,7 @@ async def delete_dataset(
     response_class=ORJSONResponse,
 )
 async def delete_indicator(
-    indicator_id: str = Path(None, description="The indicator ID", max_length=255),
+    indicator_id: str = Path(description="The indicator ID", max_length=255),
     token_auth0: TokenModel = Security(get_token_auth0, scopes=["admin"]),
     request: Request = None,
 ) -> None:
@@ -1255,7 +1255,7 @@ async def delete_setup(
     response_class=ORJSONResponse,
 )
 async def delete_spatial_resolution(
-    srid: int = Path(None, description="The spatial resolution ID", ge=1),
+    srid: int = Path(description="The spatial resolution ID", ge=1),
     token_auth0: TokenModel = Security(get_token_auth0, scopes=["admin"]),
     request: Request = None,
 ) -> None:
@@ -1334,7 +1334,7 @@ async def delete_spatial_resolution(
     response_class=ORJSONResponse,
 )
 async def delete_temporal_resolution(
-    trid: int = Path(None, description="The temporal resolution ID", ge=1),
+    trid: int = Path(description="The temporal resolution ID", ge=1),
     token_auth0: TokenModel = Security(get_token_auth0, scopes=["admin"]),
     request: Request = None,
 ) -> None:
@@ -1489,7 +1489,7 @@ async def replace_setup(
     response_class=ORJSONResponse,
 )
 async def update_category(
-    category_id: str = Path(None, description="The category ID", max_length=255),
+    category_id: str = Path(description="The category ID", max_length=255),
     category: Category = Body(None, description="The new resource"),
     token_auth0: TokenModel = Security(get_token_auth0, scopes=["admin"]),
     request: Request = None,
@@ -1569,7 +1569,7 @@ async def update_category(
     response_class=ORJSONResponse,
 )
 async def update_data_provider(
-    dpid: int = Path(None, description="The data provider ID"),
+    dpid: int = Path(description="The data provider ID"),
     data_provider: DataProvider = Body(None, description="The new resource"),
     token_auth0: TokenModel = Security(get_token_auth0, scopes=["write:data"]),
     request: Request = None,
@@ -1727,7 +1727,7 @@ async def update_dataset(
     response_class=ORJSONResponse,
 )
 async def update_indicator(
-    indicator_id: str = Path(None, description="The indicator ID", max_length=255),
+    indicator_id: str = Path(description="The indicator ID", max_length=255),
     indicator: Indicator = Body(None, description="The new resource"),
     token_auth0: TokenModel = Security(get_token_auth0, scopes=["admin"]),
     request: Request = None,
@@ -1886,7 +1886,7 @@ async def update_setup(
     response_class=ORJSONResponse,
 )
 async def update_spatial_resolution(
-    srid: int = Path(None, description="The spatial resolution ID", ge=1),
+    srid: int = Path(description="The spatial resolution ID", ge=1),
     spatial_resolution: SpatialResolution = Body(None, description="The new resource"),
     token_auth0: TokenModel = Security(get_token_auth0, scopes=["admin"]),
     request: Request = None,
@@ -1969,7 +1969,7 @@ async def update_spatial_resolution(
     response_class=ORJSONResponse,
 )
 async def update_temporal_resolution(
-    trid: int = Path(None, description="The temporal resolution ID", ge=1),
+    trid: int = Path(description="The temporal resolution ID", ge=1),
     temporal_resolution: TemporalResolution = Body(
         None, description="The new resource"
     ),

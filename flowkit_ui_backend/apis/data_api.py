@@ -72,7 +72,7 @@ logger = structlog.get_logger("flowkit_ui_backend.log")
     response_class=ORJSONResponse,
 )
 async def get_category(
-    category_id: str = Path(None, description="The category ID", max_length=255),
+    category_id: str = Path(description="The category ID", max_length=255),
     token_auth0: TokenModel = Security(get_token_auth0, scopes=["read:free_data"]),
     request: Request = None,
 ) -> Category:
@@ -148,7 +148,7 @@ async def get_category(
     response_class=ORJSONResponse,
 )
 async def get_indicator(
-    indicator_id: str = Path(None, description="The indicator ID", max_length=255),
+    indicator_id: str = Path(description="The indicator ID", max_length=255),
     token_auth0: TokenModel = Security(get_token_auth0, scopes=["read:free_data"]),
     request: Request = None,
 ) -> Indicator:
@@ -224,7 +224,7 @@ async def get_indicator(
     response_class=ORJSONResponse,
 )
 async def get_indicators_for_category(
-    category_id: str = Path(None, description="The category ID", max_length=255),
+    category_id: str = Path(description="The category ID", max_length=255),
     token_auth0: TokenModel = Security(get_token_auth0, scopes=["read:free_data"]),
     request: Request = None,
 ) -> Indicators:
@@ -302,7 +302,7 @@ async def get_indicators_for_category(
     response_class=ORJSONResponse,
 )
 async def get_spatial_resolution(
-    srid: int = Path(None, description="The spatial resolution ID", ge=1),
+    srid: int = Path(description="The spatial resolution ID", ge=1),
     token_auth0: TokenModel = Security(get_token_auth0, scopes=["read:free_data"]),
     request: Request = None,
 ) -> SpatialResolution:
@@ -380,7 +380,7 @@ async def get_spatial_resolution(
     response_class=ORJSONResponse,
 )
 async def get_spatial_resolutions_for_category(
-    category_id: str = Path(None, description="The category ID", max_length=255),
+    category_id: str = Path(description="The category ID", max_length=255),
     token_auth0: TokenModel = Security(get_token_auth0, scopes=["read:free_data"]),
     request: Request = None,
 ) -> SpatialResolutions:
@@ -458,7 +458,7 @@ async def get_spatial_resolutions_for_category(
     response_class=ORJSONResponse,
 )
 async def get_temporal_resolution(
-    trid: int = Path(None, description="The temporal resolution ID", ge=1),
+    trid: int = Path(description="The temporal resolution ID", ge=1),
     token_auth0: TokenModel = Security(get_token_auth0, scopes=["read:free_data"]),
     request: Request = None,
 ) -> TemporalResolution:
@@ -536,7 +536,7 @@ async def get_temporal_resolution(
     response_class=ORJSONResponse,
 )
 async def get_temporal_resolutions_for_category(
-    category_id: str = Path(None, description="The category ID", max_length=255),
+    category_id: str = Path(description="The category ID", max_length=255),
     token_auth0: TokenModel = Security(get_token_auth0, scopes=["read:free_data"]),
     request: Request = None,
 ) -> TemporalResolutions:
@@ -618,10 +618,10 @@ async def get_temporal_resolutions_for_category(
     response_class=ORJSONResponse,
 )
 async def get_time_range(
-    category_id: str = Path(None, description="The category ID", max_length=255),
-    indicator_id: str = Path(None, description="The indicator ID", max_length=255),
-    srid: int = Path(None, description="The spatial resolution ID", ge=1),
-    trid: int = Path(None, description="The temporal resolution ID", ge=1),
+    category_id: str = Path(description="The category ID", max_length=255),
+    indicator_id: str = Path(description="The indicator ID", max_length=255),
+    srid: int = Path(description="The spatial resolution ID", ge=1),
+    trid: int = Path(description="The temporal resolution ID", ge=1),
     token_auth0: TokenModel = Security(get_token_auth0, scopes=["read:free_data"]),
     request: Request = None,
 ) -> TimeRange:

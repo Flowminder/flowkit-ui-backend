@@ -24,10 +24,10 @@ def test_load_config_from_json():
         util.load_config_from_json("")
 
     # invalid file
-    config = util.load_config_from_json(f"{os.getenv('PWD')}/../resources/test.csv")
+    config = util.load_config_from_json(Path(__file__).parent.parent / "resources" / "test.csv")
     assert config is None
 
-    config = util.load_config_from_json(f"{os.getenv('PWD')}/../resources/config.json")
+    config = util.load_config_from_json(Path(__file__).parent.parent / "resources"/"config.json")
     print(config)
     assert type(config) == Config
 

@@ -59,7 +59,7 @@ logger = structlog.get_logger("flowkit_ui_backend.log")
     response_class=ORJSONResponse,
 )
 async def delete_user(
-    uid: str = Path(None, description="The user ID"),
+    uid: str = Path(description="The user ID"),
     token_auth0: TokenModel = Security(get_token_auth0, scopes=["profile"]),
     request: Request = None,
 ) -> None:
@@ -139,7 +139,7 @@ async def delete_user(
     response_class=ORJSONResponse,
 )
 async def get_user(
-    uid: str = Path(None, description="The user ID"),
+    uid: str = Path(description="The user ID"),
     token_auth0: TokenModel = Security(get_token_auth0, scopes=["profile"]),
     request: Request = None,
 ) -> UserMetadata:
@@ -218,7 +218,7 @@ async def get_user(
     response_class=ORJSONResponse,
 )
 async def reset_password(
-    email: str = Path(None, description="The user&#39;s email address"),
+    email: str = Path(description="The user&#39;s email address"),
     token_auth0: TokenModel = Security(get_token_auth0, scopes=["profile"]),
     request: Request = None,
 ) -> None:
@@ -295,7 +295,7 @@ async def reset_password(
     response_class=ORJSONResponse,
 )
 async def update_user(
-    uid: str = Path(None, description="The user ID"),
+    uid: str = Path(description="The user ID"),
     user_metadata: UserMetadata = Body(None, description="The user to update"),
     token_auth0: TokenModel = Security(get_token_auth0, scopes=["profile"]),
     request: Request = None,

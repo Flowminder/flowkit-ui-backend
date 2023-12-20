@@ -58,7 +58,7 @@ async def heartbeat(pool: Pool) -> Heartbeat:
     heartbeat = Heartbeat(
         api_version=os.getenv("API_VERSION"),
         api_version_url_appendix=os.getenv("API_VERSION_URL_APPENDIX"),
-        datetime=f"{datetime.datetime.utcnow().isoformat()}Z",
+        datetime=datetime.datetime.utcnow(),
         docker_image=os.getenv("IMAGE_NAME"),
         git_branch=os.getenv("GIT_BRANCH"),
         git_commit=os.getenv("GIT_COMMIT"),

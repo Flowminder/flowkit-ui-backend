@@ -26,7 +26,6 @@ GIT_COMMIT:=$$(git rev-parse --short HEAD)
 GIT_BRANCH:=$$(if [[ -n $$(git branch --show-current) ]]; then git branch --show-current; else git branch -a --contains $$(git rev-parse --short HEAD) | sed '/HEAD/d' | sed 's/remotes\/origin\///g' | sed 's/\*//g' | sed 's/ *//g' | awk '!_[$$0]++'; fi)
 GIT_TAG:=$$(git describe --exact-match --tags --abbrev=0 2>/dev/null)
 IMAGE_NAME:=flowminder/$(APP_NAME):$$(TAG=$(GIT_TAG) && [[ -n $$TAG ]] && echo $$TAG || echo $(GIT_COMMIT))
-IMAGE_NAME_DB:=$(subst $(APP_NAME),$(APP_NAME_DB),$(IMAGE_NAME))
 IMAGE_NAME_TEST:=$(subst $(APP_NAME),$(APP_NAME_TEST),$(IMAGE_NAME))
 PACKAGE_NAME:=$(subst -,_,$(APP_NAME))
 APP_DIR:=$(CONTAINER_USER)/$(PACKAGE_NAME)
@@ -51,7 +50,6 @@ else
 	RELOAD:=
 	IMAGE_NAME_ACTUAL:=$(IMAGE_NAME)
 endif
-IMAGE_NAME_DB_ACTUAL:=$(subst $(APP_NAME),$(APP_NAME_DB),$(IMAGE_NAME_ACTUAL))
 IMAGE_NAME_TEST_ACTUAL:=$(subst $(APP_NAME),$(APP_NAME_TEST),$(IMAGE_NAME_ACTUAL))
 
 # set flag for docker cache
@@ -91,7 +89,6 @@ else
 endif
 
 # Don't print verbose output from make target - only print output of commands.
-.SILENT:
 
 # Targets #####################################################################
 
@@ -165,28 +162,23 @@ build: --clean --codegen
 	-t $(IMAGE_NAME_DB) $(subst $(APP_NAME),$(APP_NAME_DB),$(DOCKER_LATEST_TAG)) .
 	echo "Done. Built docker images \"$(IMAGE_NAME)\", \"$(IMAGE_NAME_TEST)\" and \"$(IMAGE_NAME_DB)\" for API version $(API_VERSION)."
 
-test:
-	$(eval CONTAINER_NAME:=$(CONTAINER_NAME)_test)
-	$(eval CONTAINER_NAME_DB:=$(CONTAINER_NAME_DB)_test)
-	$(eval SERVER_PORT_HOST:=$(shell echo $$(($(SERVER_PORT_HOST)+1))))
-	$(eval DB_PORT_HOST:=$(shell echo $$(($(DB_PORT_HOST)+1))))
-	export IMAGE_NAME_DB_ACTUAL=$(IMAGE_NAME_DB_ACTUAL); \
-		docker compose -p $(APP_NAME_TEST) --env-file ./.env up -d --always-recreate-deps db
+run-db:
+	docker compose -f docker-compose-mysql.yml --env-file ./development_env up -d --always-recreate-deps db
 	while [ $$(docker inspect --format "{{json .State.Health.Status }}" $(CONTAINER_NAME_DB)) != "\"healthy\"" ]; do echo "Waiting for db..."; sleep 1; done
-		export IMAGE_NAME_ACTUAL=$(IMAGE_NAME_TEST_ACTUAL); \
-		docker compose -p $(APP_NAME_TEST) --env-file ./.env run web \
-			"python -m pytest $(SELECTED_TESTS) \
-			--disable-pytest-warnings -p no:warnings -vvvv \
-			-o log_cli=false --show-capture=all \
-			--cov-config=/home/$(APP_DIR)/.coveragerc \
-			--cov=$(PACKAGE_NAME) \
-			--cov-report term-missing \
-			--cov-report xml:/home/$(APP_DIR)/test_results/coverage.xml \
-			--junit-xml=/home/$(APP_DIR)/test_results/results.xml \
-			/home/$(APP_DIR)/src-generated/tests /home/$(APP_DIR)/src-generated/src/$(PACKAGE_NAME)/impl/tests"; \
-		ERR=$$?; \
-		docker compose -p $(APP_NAME_TEST) down ;\
-		exit $$ERR
+
+test: run-db
+	source venv/bin/activate; python -m pytest $(SELECTED_TESTS) \
+		--disable-pytest-warnings -p no:warnings -vvvv \
+		-o log_cli=false --show-capture=all \
+		--cov-config=.coveragerc \
+		--cov=$(PACKAGE_NAME) \
+		--cov-report term-missing \
+		--cov-report xml:./test_results/coverage.xml \
+		--junit-xml=./test_results/results.xml \
+		tests; \
+	ERR=$$?; \
+	docker compose -f docker-compose-mysql.yml down ;\
+	exit $$ERR
 
 clear: 
 	$(info Clearing old containers...)

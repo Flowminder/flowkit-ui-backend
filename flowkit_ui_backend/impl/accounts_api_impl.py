@@ -11,9 +11,9 @@ from fastapi import HTTPException
 from dotenv import load_dotenv
 from flowkit_ui_backend.models.extra_models import TokenModel
 from flowkit_ui_backend.models.user_metadata import UserMetadata
-from auth0.v3.asyncify import asyncify
-from auth0.v3.management import Auth0
-from auth0.v3.authentication import GetToken
+from auth0.asyncify import asyncify
+from auth0.management import Auth0
+from auth0.authentication import GetToken
 
 load_dotenv()
 

@@ -4,13 +4,13 @@
 import pytest
 from unittest.mock import patch, AsyncMock
 from fastapi import HTTPException
-from auth0.v3.exceptions import Auth0Error
+from auth0.exceptions import Auth0Error
 from flowkit_ui_backend.models.user_metadata import UserMetadata
 from flowkit_ui_backend.models.signup_cache import SignupCache
 from flowkit_ui_backend.impl import accounts_api_impl
 
 
-@patch("auth0.v3.management.auth0", side_effect=Auth0Error)
+@patch("auth0.management.auth0", side_effect=Auth0Error)
 @pytest.mark.asyncio
 async def test_get_user_invalid_token(mock_auth0):
     with pytest.raises(Auth0Error):
@@ -18,7 +18,7 @@ async def test_get_user_invalid_token(mock_auth0):
 
 
 @patch(
-    "auth0.v3.management.users.Users.get",
+    "auth0.management.users.Users.get",
     side_effect=AsyncMock(return_value="user-bob"),
 )
 @pytest.mark.asyncio
@@ -29,7 +29,7 @@ async def test_get_user_valid_token(mock_auth0):
 
 @pytest.mark.asyncio
 @patch(
-    "auth0.v3.management.users.Users.get",
+    "auth0.management.users.Users.get",
     side_effect=AsyncMock(return_value=None),
 )
 async def test_get_user_invalid(mock_auth0):
@@ -37,7 +37,7 @@ async def test_get_user_invalid(mock_auth0):
         await accounts_api_impl.get_user("bob")
 
 
-@patch("auth0.v3.management.auth0", side_effect=Auth0Error)
+@patch("auth0.management.auth0", side_effect=Auth0Error)
 @pytest.mark.asyncio
 async def test_update_user_invalid_token(mock_auth0):
     metadata = UserMetadata(
@@ -60,7 +60,7 @@ async def test_update_user_invalid_token(mock_auth0):
 
 
 @patch(
-    "auth0.v3.management.users.Users.update",
+    "auth0.management.users.Users.update",
     side_effect=AsyncMock(return_value="success"),
 )
 @pytest.mark.asyncio
@@ -85,7 +85,7 @@ async def test_update_user_valid_token(mock_auth0):
 
 
 @patch(
-    "auth0.v3.management.users.Users.delete",
+    "auth0.management.users.Users.delete",
     side_effect=AsyncMock(return_value="success"),
 )
 @pytest.mark.asyncio
@@ -95,7 +95,7 @@ async def test_delete_user_valid_token(mock_auth0):
 
 
 @patch(
-    "auth0.v3.asyncify.asyncify",
+    "auth0.asyncify.asyncify",
     side_effect=AsyncMock(side_effect=Auth0Error),
 )
 @pytest.mark.asyncio

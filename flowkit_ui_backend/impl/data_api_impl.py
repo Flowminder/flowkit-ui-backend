@@ -319,7 +319,7 @@ async def run_query(
 
     # support getting mdids only
     if query_parameters.mdids_only is True:
-        return QueryResult(mdids=[m.mdid for m in metadata])
+        return QueryResult(mdids=[f"{m.mdid}" for m in metadata])
 
     logger.debug(f"Found metadata objects, now getting data...", num=len(metadata))
 
