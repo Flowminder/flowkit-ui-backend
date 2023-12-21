@@ -65,6 +65,9 @@ jobs:
       - run:
           name: Run unit tests (use container-internal data dir)
           command: |
+            python -m venv ./venv
+            source venv/bin/activate
+            pip install -r dev-requirements.txt
             mkdir test_results
             export DATA_DIR_LOCAL= && make -e test
       - store_test_results:
