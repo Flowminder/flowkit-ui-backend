@@ -62,6 +62,7 @@ app = FastAPI(
     title="FlowKitUI Backend",
     description="A REST API for managing and postprocessing Flowkit data",
     version="1.3.0",
+    openapi_url=f"/{os.environ['API_VERSION_URL_APPENDIX']}openapi.json",
 )
 
 app.add_middleware(

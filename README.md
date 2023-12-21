@@ -38,6 +38,43 @@ You can use the following targets:
 Access the API at [http://localhost:5000](http://localhost:5000).
 The API document can be viewed at [http://localhost:5000/openapi.json](http://localhost:5000/openapi.json).
 
-### Adding new dependencies
+## Adding new dependencies
 
 If you need to add any dependencies, add them to `src/impl/requirements.in` or `src/impl/dev-requirements.in` and refer to the section above as the docker image will have to be rebuilt.
+
+## Building without make
+
+### Build Args
+
+- API_VERSION
+- API_VERSION_URL_APPENDIX
+- GIT_BRANCH
+- GIT_COMMIT
+- GIT_TAG
+- APP_NAME
+- IMAGE_NAME
+
+## Running
+
+
+
+### Required env vars
+
+* DB_NAME
+* DB_PORT_CONTAINER
+* DB_PW
+* DB_USER
+* FLOWKIT_UI_URL
+* CONTAINER_NAME_DB
+* SERVER_PORT_HOST
+* AUTH0_DOMAIN
+* AUTH0_CLIENT_ID
+* AUTH0_CLIENT_SECRET
+* AUTH0_AUDIENCE
+
+### Optional env vars
+
+* DEV_MODE (default 0, set to 1 to enable)
+* LOG_LEVEL (default to warning, default to debug if DEV_MODE=1)
+* JUPYTER_ENABLED (default 0, set to 1 if using jupyter locally)
+* JUPYTER_PORT

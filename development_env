@@ -11,8 +11,6 @@ APP_NAME=flowkit-ui-backend
 PYTHON_VERSION=3.9
 # Whether docker should make use of its cache resulting in faster builds
 DOCKER_CACHE_ENABLED=1
-# The user of the web service docker container
-CONTAINER_USER=hamster
 # The directory inside the container where data will be stored
 DATA_DIR_CONTAINER=/home/hamster/data
 # The port used inside the container for the web service
