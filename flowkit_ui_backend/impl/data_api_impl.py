@@ -33,7 +33,7 @@ load_dotenv()
 logger = structlog.get_logger("flowkit_ui_backend.log")
 
 DEFAULT_NUM_BINS = 7
-DB_NAME = os.getenv("DB_NAME")
+DB_NAME = os.environ["DB_NAME"]
 FETCH_CHUNK_SIZE = 150
 
 
@@ -375,7 +375,7 @@ async def run_query(
 async def get_column_names(
     table_name: str, metadata: List[Metadata], pool: Pool
 ) -> List:
-    select_query = f"SELECT * FROM `{os.getenv('DB_NAME')}`.`{table_name}_{metadata[0].mdid}` LIMIT 1;"
+    select_query = f"SELECT * FROM `{os.environ['DB_NAME']}`.`{table_name}_{metadata[0].mdid}` LIMIT 1;"
     logger.debug("Getting column names", table_name=table_name)
     async with pool.acquire() as conn, conn.cursor() as cursor:
         await cursor.execute(select_query)
@@ -387,7 +387,7 @@ async def stream_query(
 ) -> AsyncGenerator[list[dict], None]:
     # table_names is consumed twice, so it needs to be a list
     table_names = [
-        f"`{os.getenv('DB_NAME')}`.`{table_name}_{m.mdid}`" for m in metadata
+        f"`{os.environ['DB_NAME']}`.`{table_name}_{m.mdid}`" for m in metadata
     ]
     short_names = (
         table_name.rpartition(".")[2].strip("`") for table_name in table_names

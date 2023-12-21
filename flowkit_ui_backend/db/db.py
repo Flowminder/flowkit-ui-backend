@@ -37,14 +37,14 @@ async def provision_db(pool: Pool, force: bool = False) -> boolean:
         logger.debug(f"Force DB setup? {force}")
         # Check for existing db
         (column_names, result) = await run(
-            f"SHOW TABLES FROM {os.getenv('DB_NAME')};", pool=pool
+            f"SHOW TABLES FROM {os.environ['DB_NAME']};", pool=pool
         )
         logger.debug(f"Force DB setup? {force}", existing_tables=result)
         if len(result) > 0 and force:
             logger.debug(f"Deleting {len(result)} existing tables")
             # delete existing tables
             await run(
-                f"DROP TABLE IF EXISTS `{'`, `'.join([os.getenv('DB_NAME') + '`.`' + i[0] for i in result])}`",
+                f"DROP TABLE IF EXISTS `{'`, `'.join([os.environ['DB_NAME'] + '`.`' + i[0] for i in result])}`",
                 pool=pool,
             )
             logger.debug("Done.")
@@ -80,7 +80,7 @@ async def provision_db(pool: Pool, force: bool = False) -> boolean:
 
 async def get_index(table: str, column: str, pool: Pool) -> str:
     (columns_names, result) = await run(
-        f"SHOW INDEXES FROM `{os.getenv('DB_NAME')}`.`{table}` WHERE `Column_name`='{column}'",
+        f"SHOW INDEXES FROM `{os.environ['DB_NAME']}`.`{table}` WHERE `Column_name`='{column}'",
         pool=pool,
     )
     if result is None or len(result) == 0:
@@ -95,7 +95,7 @@ async def add_index(table: str, column: str, pool: Pool) -> str:
     index_name = f"index_{table}_{column}"
     logger.debug(f"Adding index `{index_name}` to table `{table}`, column {column}...")
     await run(
-        f"ALTER TABLE `{os.getenv('DB_NAME')}`.`{table}` ADD INDEX `{index_name}` (`{column}`)",
+        f"ALTER TABLE `{os.environ['DB_NAME']}`.`{table}` ADD INDEX `{index_name}` (`{column}`)",
         pool=pool,
     )
     logger.debug("Done.")
@@ -106,7 +106,7 @@ async def drop_index(table: str, column: str, pool: Pool):
     index_name = f"index_{table}_{column}"
     logger.debug(f"Dropping index `{index_name}`...")
     await run(
-        f"DROP INDEX `{index_name}` ON `{os.getenv('DB_NAME')}`.`{table}`", pool=pool
+        f"DROP INDEX `{index_name}` ON `{os.environ['DB_NAME']}`.`{table}`", pool=pool
     )
     logger.debug("Done.")
 
@@ -192,7 +192,7 @@ async def select_data(
         ", ".join(f"`{field}`" for field in fields) if fields is not None else "*"
     )
     select_query = (
-        f"SELECT {fields_string} FROM `{os.getenv('DB_NAME')}`.`{table_name}`"
+        f"SELECT {fields_string} FROM `{os.environ['DB_NAME']}`.`{table_name}`"
     )
 
     # permissions apply to these objects
@@ -208,8 +208,8 @@ async def select_data(
         id_key = object_mapping_ids[table_name] if id_key is None else id_key
         # get all IDs for objects of this type that are permissible for the token
         permissible_ids_query = f"""
-        SELECT md.`{id_key}` FROM `{os.getenv("DB_NAME")}`.`metadata` AS md
-        LEFT JOIN `{os.getenv("DB_NAME")}`.`scope_mapping` AS sm
+        SELECT md.`{id_key}` FROM `{os.environ["DB_NAME"]}`.`metadata` AS md
+        LEFT JOIN `{os.environ["DB_NAME"]}`.`scope_mapping` AS sm
         ON sm.mdid=md.mdid
         WHERE sm.scope IN ("{'", "'.join(token_model.permissions)}")
         GROUP BY md.`{id_key}`"""
@@ -356,7 +356,7 @@ async def insert_data(
                 sql = f"""
                 LOAD DATA LOCAL
                 INFILE '{tmpfile.name}'
-                INTO TABLE `{os.getenv('DB_NAME')}`.`{table_name}`
+                INTO TABLE `{os.environ['DB_NAME']}`.`{table_name}`
                 FIELDS TERMINATED BY '{field_sep}'
                 LINES TERMINATED BY '{line_sep}'
                 (`{'`,`'.join(props)}`)

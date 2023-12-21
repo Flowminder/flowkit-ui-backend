@@ -6,6 +6,7 @@ FROM python:3.9-slim as prod
 # start as root
 USER root
 
+
 # install os-level dependencies & set up dedicated user for this container
 RUN apt-get update && \
     apt-get install -y --no-install-recommends python3-pip build-essential && \
@@ -35,8 +36,20 @@ RUN pip install --no-cache-dir -r /tmp/requirements.txt  && pip cache purge
 COPY --chown=hamster:hamster ./flowkit_ui_backend /home/hamster/flowkit_ui_backend
 
 # run the actual (generated) app inside its directory
-WORKDIR /home/hamster/flowkit_ui_backend
+WORKDIR /home/hamster
 
 ENV PYTHONPATH="${PYTHONPATH}:/home/hamster/flowkit_ui_backend"
 
 ENTRYPOINT ["uvicorn" , "flowkit_ui_backend.main:app", "--host", "0.0.0.0", "--port",  "5000"]
+
+ARG IMAGE_NAME
+ARG GIT_BRANCH
+ARG GIT_COMMIT
+ARG GIT_TAG
+ARG APP_NAME=flowkit-ui-backend
+ENV IMAGE_NAME=$IMAGE_NAME
+ENV GIT_BRANCH=$GIT_BRANCH
+ENV GIT_COMMIT=$GIT_COMMIT
+ENV GIT_TAG=$GIT_TAG
+ENV API_VERSION_URL_APPENDIX=""
+ENV APP_NAME=$APP_NAME

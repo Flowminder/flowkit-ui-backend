@@ -14,9 +14,6 @@ MAKEFLAGS+=--always-make # same as declaring all targets phony
 SHELL:=/bin/bash # Use bash syntax
 UID:=$(shell id -u)
 GID:=333
-API_VERSION:=$$(cat ./src/api.json | grep \"version\": | sed 's/"//g' | sed 's/version://g' | sed 's/ //g' | sed 's/,//g')
-API_VERSION_URL_APPENDIX:=$$(cat ./src/api.json | grep "\"url\":.*localhost.*/v." | sed 's/^.*\///' | sed 's/\",//')
-LOCAL_URL:=$$(cat ./src/api.json | grep "\"url\":.*localhost": | sed 's/"//g' | sed 's/url://g' | sed 's/ //g' | sed 's/,//g')
 APP_NAME_DB=$(APP_NAME)-db
 APP_NAME_TEST=$(APP_NAME)-test
 CONTAINER_NAME:=$(APP_NAME)
@@ -134,33 +131,24 @@ deps:
     --output-file=/tmp/requirements/dev-requirements.txt /tmp/requirements/dev-requirements.in
 
 
-build: --clean --codegen
+build: export API_VERSION=${GIT_TAG}
+build: export GIT_BRANCH?=
+build: export GIT_COMMIT?=
+build: export GIT_TAG?=
+build:
 	$(info Running build...)
-	echo "Copying required files into generated code..."
-	cp ./src/.coveragerc ./src-generated/.coveragerc
-	cp ./src/impl/requirements.txt ./src-generated/requirements.txt
-	cp ./src/impl/dev-requirements.txt ./src-generated/dev-requirements.txt
-	cp ./.env ./src-generated/.env
-	echo "Linking generated code to implementation..." 
-	ln -s ../../../src/impl/ ./src-generated/src/$(PACKAGE_NAME)
-	TEXT="# Generated during build ##########################################################################\n" && \
-	TEXT="$${TEXT}API_VERSION=${API_VERSION}\nAPI_VERSION_URL_APPENDIX=${API_VERSION_URL_APPENDIX}\n" && \
-	TEXT="$${TEXT}GIT_BRANCH=${GIT_BRANCH}\nGIT_COMMIT=${GIT_COMMIT}\nGIT_TAG=${GIT_TAG}\nIMAGE_NAME=${IMAGE_NAME}" && \
-	echo -e $$TEXT >> ./src-generated/.env
 	echo "Building docker image $(IMAGE_NAME)..."
 	docker build --rm \
 	--target prod \
-	-f ./src-generated/Dockerfile $(DOCKER_CACHE_FLAG) \
+	--build-arg API_VERSION=$(API_VERSION) \
+	--build-arg GIT_BRANCH=$(GIT_BRANCH) \
+	--build-arg GIT_COMMIT=$(GIT_COMMIT) \
+	--build-arg GIT_TAG=$(GIT_TAG) \
+	--build-arg APP_NAME=$(APP_NAME) \
+	--build-arg IMAGE_NAME=$(IMAGE_NAME) \
+	-f ./Dockerfile $(DOCKER_CACHE_FLAG) \
 	-t $(IMAGE_NAME) $(DOCKER_LATEST_TAG) .
-	echo "Building tests image $(IMAGE_NAME_TEST)..."
-	docker build --rm \
-	--target test \
-	-f ./src-generated/Dockerfile $(DOCKER_CACHE_FLAG) \
-	-t $(IMAGE_NAME_TEST) $(DOCKER_LATEST_TAG_TEST) .
-	docker build --rm \
-	-f ./src/stash.Dockerfile $(DOCKER_CACHE_FLAG) \
-	-t $(IMAGE_NAME_DB) $(subst $(APP_NAME),$(APP_NAME_DB),$(DOCKER_LATEST_TAG)) .
-	echo "Done. Built docker images \"$(IMAGE_NAME)\", \"$(IMAGE_NAME_TEST)\" and \"$(IMAGE_NAME_DB)\" for API version $(API_VERSION)."
+	echo "Done. Built docker image \"$(IMAGE_NAME)\" for API version $(API_VERSION)."
 
 run-db:
 	docker compose -f docker-compose-mysql.yml --env-file ./development_env up -d --always-recreate-deps db

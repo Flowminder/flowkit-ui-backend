@@ -30,7 +30,7 @@ load_dotenv()
 
 logger = structlog.get_logger("flowkit_ui_backend.log")
 
-DB_NAME = os.getenv("DB_NAME")
+DB_NAME = os.environ["DB_NAME"]
 
 
 async def create_data_provider(

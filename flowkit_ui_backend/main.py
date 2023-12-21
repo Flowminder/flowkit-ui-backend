@@ -37,9 +37,7 @@ from flowkit_ui_backend.util import logging, gzip
 from flowkit_ui_backend.db import db
 
 default_log_level = "DEBUG" if (int(os.getenv("DEV_MODE", 0)) == 1) else "WARNING"
-log_level = os.getenv("LOG_LEVEL")
-if not log_level:
-    log_level = default_log_level
+log_level = os.getenv("LOG_LEVEL", default_log_level)
 log_level = log_level.upper()
 logging.setup_logging(log_level=log_level, dev_mode=int(os.getenv("DEV_MODE", 0)) == 1)
 logger = structlog.get_logger("flowkit_ui_backend.log")
@@ -59,7 +57,7 @@ class LogTimings(TimingClient):
         logger.debug("Timing", metric_name=metric_name, timing=timing, tags=tags)
 
 
-logger.debug(f"Starting {os.getenv('APP_NAME')}...")
+logger.debug(f"Starting {os.environ['APP_NAME']}...")
 app = FastAPI(
     title="FlowKitUI Backend",
     description="A REST API for managing and postprocessing Flowkit data",
@@ -71,6 +69,24 @@ app.add_middleware(
     client=LogTimings(),
     metric_namer=StarletteScopeToName(prefix="FlowKitUI Backend", starlette_app=app),
 )
+
+app.add_middleware(CorrelationIdMiddleware)
+logger.debug("Added correlation id middleware")
+
+logger.debug("Adding CORS middleware...")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        os.environ["FLOWKIT_UI_URL"],
+        f"http://localhost:{os.environ['JUPYTER_PORT']}",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+logger.debug("Adding GZip middleware...")
+app.add_middleware(GZipMiddleware)
 
 
 @app.exception_handler(NotImplementedError)
@@ -97,48 +113,24 @@ async def validation_exception_handler(request, e):
 
 @app.on_event("startup")
 async def _startup():
-    app.add_middleware(CorrelationIdMiddleware)
-    logger.debug("Added correlation id middleware")
-
-    logger.debug("Adding CORS middleware...")
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=[
-            os.getenv("FLOWKIT_UI_URL"),
-            f"http://localhost:{os.getenv('JUPYTER_PORT')}",
-        ],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-
-    logger.debug("Adding GZip middleware...")
-    app.add_middleware(GZipMiddleware)
-
     logger.debug("Adding gzip support for requests...")
     app.router.route_class = gzip.GzipRoute
 
     logger.debug("Setting up routing...")
+    app.include_router(AccountsApiRouter, prefix=os.environ["API_VERSION_URL_APPENDIX"])
+    app.include_router(DataApiRouter, prefix=os.environ["API_VERSION_URL_APPENDIX"])
+    app.include_router(GeneralApiRouter, prefix=os.environ["API_VERSION_URL_APPENDIX"])
     app.include_router(
-        AccountsApiRouter, prefix=f"/{os.getenv('API_VERSION_URL_APPENDIX')}"
-    )
-    app.include_router(
-        DataApiRouter, prefix=f"/{os.getenv('API_VERSION_URL_APPENDIX')}"
-    )
-    app.include_router(
-        GeneralApiRouter, prefix=f"/{os.getenv('API_VERSION_URL_APPENDIX')}"
-    )
-    app.include_router(
-        MaintenanceApiRouter, prefix=f"/{os.getenv('API_VERSION_URL_APPENDIX')}"
+        MaintenanceApiRouter, prefix=os.environ["API_VERSION_URL_APPENDIX"]
     )
 
     logger.debug("Creating db connection pool...")
     app.state.pool = await aiomysql.create_pool(
-        host=os.getenv("CONTAINER_NAME_DB"),
-        port=int(os.getenv("DB_PORT_CONTAINER")),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PW"),
-        db=os.getenv("DB_NAME"),
+        host=os.environ["CONTAINER_NAME_DB"],
+        port=int(os.environ["DB_PORT_CONTAINER"]),
+        user=os.environ["DB_USER"],
+        password=os.environ["DB_PW"],
+        db=os.environ["DB_NAME"],
         loop=asyncio.get_event_loop(),
         autocommit=True,
         local_infile=True,
@@ -148,12 +140,12 @@ async def _startup():
     logger.debug("Done.")
 
     logger.info(
-        f"Check the server is running on http://localhost:{os.getenv('SERVER_PORT_HOST')}/{os.getenv('API_VERSION_URL_APPENDIX')}/heartbeat"
+        f"Check the server is running on http://localhost:{os.environ['SERVER_PORT_HOST']}/{os.environ['API_VERSION_URL_APPENDIX']}/heartbeat"
     )
 
-    if os.getenv("JUPYTER_ENABLED") == "1":
+    if os.environ["JUPYTER_ENABLED"] == "1":
         logger.info(
-            f"Jupyter lab running on http://localhost:{os.getenv('JUPYTER_PORT')}/lab?token=jupyter"
+            f"Jupyter lab running on http://localhost:{os.environ['JUPYTER_PORT']}/lab?token=jupyter"
         )
 
 
