@@ -17,7 +17,7 @@ services:
     ports:
       - "${DB_PORT_HOST}:${DB_PORT_CONTAINER}"
     environment:
-      - MYSQL_USER=$CONTAINER_USER
+      - MYSQL_USER=$DB_USER
       - MYSQL_PASSWORD=$DB_PW
       - MYSQL_ROOT_PASSWORD=$DB_PW
       - MYSQL_DATABASE=$DB_NAME
