@@ -8,7 +8,6 @@ import platform
 from http import HTTPStatus
 from fastapi import HTTPException
 from aiomysql import Pool
-from dotenv import load_dotenv
 from flowkit_ui_backend.models.config import Config
 from flowkit_ui_backend.models.language import Language
 from flowkit_ui_backend.models.data_provider import DataProvider
@@ -16,7 +15,6 @@ from flowkit_ui_backend.models.data_providers import DataProviders
 from flowkit_ui_backend.models.heartbeat import Heartbeat
 from flowkit_ui_backend.db import db
 
-load_dotenv()
 
 logger = structlog.get_logger("flowkit_ui_backend.log")
 

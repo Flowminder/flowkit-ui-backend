@@ -8,14 +8,12 @@ from typing import Optional
 from http import HTTPStatus
 from aiomysql import Pool
 from fastapi import HTTPException
-from dotenv import load_dotenv
 from flowkit_ui_backend.models.extra_models import TokenModel
 from flowkit_ui_backend.models.user_metadata import UserMetadata
 from auth0.asyncify import asyncify
 from auth0.management import Auth0
 from auth0.authentication import GetToken
 
-load_dotenv()
 
 logger = structlog.get_logger("flowkit_ui_backend.log")
 

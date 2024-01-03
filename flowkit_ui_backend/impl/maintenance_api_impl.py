@@ -9,7 +9,6 @@ from datetime import datetime
 from http import HTTPStatus
 from aiomysql import Pool
 from typing import Tuple
-from dotenv import load_dotenv
 from flowkit_ui_backend.models.extra_models import TokenModel
 from flowkit_ui_backend.models.config import Config
 from flowkit_ui_backend.models.language import Language
@@ -26,7 +25,6 @@ from flowkit_ui_backend.models.scope_mapping import ScopeMapping
 from flowkit_ui_backend.db import db
 from flowkit_ui_backend.impl import data_api_impl
 
-load_dotenv()
 
 logger = structlog.get_logger("flowkit_ui_backend.log")
 

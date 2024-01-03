@@ -31,7 +31,6 @@ pendulum
 promise
 pydantic
 python-dateutil
-python-dotenv
 python-jose
 python-multipart
 PyYAML

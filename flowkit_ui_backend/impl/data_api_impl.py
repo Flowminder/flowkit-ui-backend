@@ -11,7 +11,6 @@ from fastapi.responses import StreamingResponse
 from aiomysql import Pool, SSDictCursor
 from dateutil.relativedelta import relativedelta
 from http import HTTPStatus
-from dotenv import load_dotenv
 from flowkit_ui_backend.models.extra_models import TokenModel
 from flowkit_ui_backend.models.query_parameters import QueryParameters
 from flowkit_ui_backend.models.spatial_resolution import SpatialResolution
@@ -28,7 +27,6 @@ from flowkit_ui_backend.models.query_result import QueryResult
 from flowkit_ui_backend.util import util
 from flowkit_ui_backend.db import db
 
-load_dotenv()
 
 logger = structlog.get_logger("flowkit_ui_backend.log")
 
