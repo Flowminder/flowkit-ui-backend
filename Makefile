@@ -154,9 +154,10 @@ run-db:
 	docker compose -f docker-compose-mysql.yml --env-file ./development_env up -d --always-recreate-deps db
 	while [ $$(docker inspect --format "{{json .State.Health.Status }}" $(CONTAINER_NAME_DB)) != "\"healthy\"" ]; do echo "Waiting for db..."; sleep 1; done
 
-venv:
-
-
+test: export API_VERSION=${GIT_TAG}
+test: export GIT_BRANCH?=
+test: export GIT_COMMIT?=
+test: export GIT_TAG?=
 test: run-db
 	source venv/bin/activate; python -m pytest $(SELECTED_TESTS) \
 		--disable-pytest-warnings -p no:warnings -vvvv \
