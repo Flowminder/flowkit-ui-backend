@@ -4,16 +4,17 @@
 import structlog
 import os
 import httpx
-from typing import Optional
+from typing import Optional, Annotated
 from http import HTTPStatus
 from aiomysql import Pool
-from fastapi import HTTPException
+from fastapi import HTTPException, Depends
 from flowkit_ui_backend.models.extra_models import TokenModel
 from flowkit_ui_backend.models.user_metadata import UserMetadata
 from auth0.asyncify import asyncify
 from auth0.management import Auth0
 from auth0.authentication import GetToken
 
+from flowkit_ui_backend.util.config import Settings, get_settings
 
 logger = structlog.get_logger("flowkit_ui_backend.log")
 
@@ -29,20 +30,11 @@ logger = structlog.get_logger("flowkit_ui_backend.log")
 
 async def get_user(
     uid: str,
-    auth0_domain: str,
-    auth0_client_id: str,
-    auth0_client_secret: str,
+    auth0: Auth0,
     pool: Pool = None,
     token_model: TokenModel = None,
 ) -> UserMetadata:
-    user = await Auth0(
-        auth0_domain,
-        await get_management_api_m2m_token(
-            auth0_domain=auth0_domain,
-            auth0_client_id=auth0_client_id,
-            auth0_client_secret=auth0_client_secret.get_secret_value(),
-        ),
-    ).users.get_async(uid)
+    user = await auth0.users.get_async(uid)
     if user is None:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="User not found")
     return user
@@ -51,38 +43,20 @@ async def get_user(
 async def update_user(
     uid: str,
     body: UserMetadata,
-    auth0_domain: str,
-    auth0_client_id: str,
-    auth0_client_secret: str,
+    auth0: Auth0,
     pool: Pool = None,
     token_model: TokenModel = None,
 ) -> None:
-    await Auth0(
-        auth0_domain,
-        await get_management_api_m2m_token(
-            auth0_domain=auth0_domain,
-            auth0_client_id=auth0_client_id,
-            auth0_client_secret=auth0_client_secret.get_secret_value(),
-        ),
-    ).users.update_async(uid, {"user_metadata": body.dict()})
+    await auth0.users.update_async(uid, {"user_metadata": body.dict()})
 
 
 async def delete_user(
     uid: str,
-    auth0_domain: str,
-    auth0_client_id: str,
-    auth0_client_secret: str,
+    auth0: Auth0,
     pool: Pool = None,
     token_model: TokenModel = None,
 ) -> None:
-    await Auth0(
-        auth0_domain,
-        await get_management_api_m2m_token(
-            auth0_domain=auth0_domain,
-            auth0_client_id=auth0_client_id,
-            auth0_client_secret=auth0_client_secret.get_secret_value(),
-        ),
-    ).users.delete_async(uid)
+    await auth0.users.delete_async(uid)
 
 
 async def reset_password(
@@ -119,3 +93,23 @@ async def get_management_api_m2m_token(
     except Exception as e:
         logger.error(f"Could not obtain M2M token: {e}")
         return None
+
+
+async def management_api_m2m_token(
+    settings: Annotated[Settings, Depends(get_settings)]
+) -> Optional[str]:
+    return await get_management_api_m2m_token(
+        auth0_domain=settings.auth0_domain,
+        auth0_client_id=settings.auth0_client_id,
+        auth0_client_secret=settings.auth0_client_secret.get_secret_value(),
+    )
+
+
+async def auth0_management(
+    settings: Annotated[Settings, Depends(get_settings)],
+    management_token: Annotated[str, management_api_m2m_token],
+) -> Auth0:
+    return Auth0(
+        settings.auth0_domain,
+        management_token,
+    )

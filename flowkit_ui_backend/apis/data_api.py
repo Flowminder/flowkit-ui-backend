@@ -1034,7 +1034,6 @@ async def run_csv_query(
             query_parameters,
             pool=request.app.state.pool,
             token_model=token_auth0,
-            db_name=db_name,
         )
         logger.debug("Request ready")
         content = impl_result[0] if isinstance(impl_result, tuple) else impl_result
