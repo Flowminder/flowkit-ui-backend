@@ -7,6 +7,8 @@ from pydantic import BaseSettings, Field
 from pydantic.networks import AnyHttpUrl
 from pydantic.types import SecretStr
 
+from flowkit_ui_backend.util.logging import LogLevel
+
 
 class Settings(BaseSettings):
     db_port_container: int
@@ -29,7 +31,7 @@ class Settings(BaseSettings):
     app_name: str
     git_tag: Optional[str] = None
     dev_mode: int = 0
-    log_level: str = "warning"
+    log_level: LogLevel = LogLevel.WARNING
     jupyter_enabled: int = 0
     jupyter_port: Optional[int] = None
 
