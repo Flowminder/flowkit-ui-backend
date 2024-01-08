@@ -46,7 +46,7 @@ async def fresh_pool(event_loop):
     """
     pool = await aiomysql.create_pool(
         host="localhost",
-        port=int(os.getenv("DB_PORT_HOST")),
+        port=int(os.environ["DB_PORT_HOST"]),
         user=os.getenv("DB_USER"),
         password=os.getenv("DB_PW"),
         db=os.getenv("DB_NAME"),
