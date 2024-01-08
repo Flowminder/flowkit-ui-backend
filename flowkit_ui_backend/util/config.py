@@ -11,7 +11,9 @@ from pydantic.types import SecretStr
 class Settings(BaseSettings):
     db_port_container: int
     db_pw: SecretStr
-    db_name: str = Field("flowkit_ui_backend", const=True) # This should really be configurable but is hardcoded in the schema at present
+    db_name: str = Field(
+        "flowkit_ui_backend", const=True
+    )  # This should really be configurable but is hardcoded in the schema at present
     db_user: str
     container_name_db: str
     flowkit_ui_url: AnyHttpUrl
