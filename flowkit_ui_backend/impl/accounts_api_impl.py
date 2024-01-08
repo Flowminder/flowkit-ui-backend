@@ -28,10 +28,20 @@ logger = structlog.get_logger("flowkit_ui_backend.log")
 
 
 async def get_user(
-    uid: str, pool: Pool = None, token_model: TokenModel = None
+    uid: str,
+    auth0_domain: str,
+    auth0_client_id: str,
+    auth0_client_secret: str,
+    pool: Pool = None,
+    token_model: TokenModel = None,
 ) -> UserMetadata:
     user = await Auth0(
-        os.getenv("AUTH0_DOMAIN"), await get_management_api_m2m_token()
+        auth0_domain,
+        await get_management_api_m2m_token(
+            auth0_domain=auth0_domain,
+            auth0_client_id=auth0_client_id,
+            auth0_client_secret=auth0_client_secret.get_secret_value(),
+        ),
     ).users.get_async(uid)
     if user is None:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="User not found")
@@ -41,29 +51,51 @@ async def get_user(
 async def update_user(
     uid: str,
     body: UserMetadata,
+    auth0_domain: str,
+    auth0_client_id: str,
+    auth0_client_secret: str,
     pool: Pool = None,
     token_model: TokenModel = None,
 ) -> None:
     await Auth0(
-        os.getenv("AUTH0_DOMAIN"), await get_management_api_m2m_token()
+        auth0_domain,
+        await get_management_api_m2m_token(
+            auth0_domain=auth0_domain,
+            auth0_client_id=auth0_client_id,
+            auth0_client_secret=auth0_client_secret.get_secret_value(),
+        ),
     ).users.update_async(uid, {"user_metadata": body.dict()})
 
 
 async def delete_user(
-    uid: str, pool: Pool = None, token_model: TokenModel = None
+    uid: str,
+    auth0_domain: str,
+    auth0_client_id: str,
+    auth0_client_secret: str,
+    pool: Pool = None,
+    token_model: TokenModel = None,
 ) -> None:
     await Auth0(
-        os.getenv("AUTH0_DOMAIN"), await get_management_api_m2m_token()
+        auth0_domain,
+        await get_management_api_m2m_token(
+            auth0_domain=auth0_domain,
+            auth0_client_id=auth0_client_id,
+            auth0_client_secret=auth0_client_secret.get_secret_value(),
+        ),
     ).users.delete_async(uid)
 
 
 async def reset_password(
-    email: str, pool: Pool = None, token_model: TokenModel = None
+    email: str,
+    auth0_domain: str,
+    auth0_client_id: str,
+    pool: Pool = None,
+    token_model: TokenModel = None,
 ) -> None:
     response = httpx.post(
-        url=f"https://{os.getenv('AUTH0_DOMAIN')}/dbconnections/change_password",
+        url=f"https://{auth0_domain}/dbconnections/change_password",
         headers={"Content-Type": "application/json"},
-        data=f'{{"client_id": "{os.getenv("AUTH0_CLIENT_ID")}", "email": "{email}", "connection": "Username-Password-Authentication"}}',
+        data=f'{{"client_id": "{auth0_client_id}", "email": "{email}", "connection": "Username-Password-Authentication"}}',
     )
     if response.status_code != HTTPStatus.OK:
         raise HTTPException(
@@ -72,14 +104,16 @@ async def reset_password(
         )
 
 
-async def get_management_api_m2m_token() -> Optional[str]:
+async def get_management_api_m2m_token(
+    auth0_domain: str, auth0_client_id: str, auth0_client_secret: str
+) -> Optional[str]:
     try:
         # - obtain m2m access token for management API using the flowkit_ui_backend's client grant as set in Auth0 dashboard
-        get_token = asyncify(GetToken)(os.getenv("AUTH0_DOMAIN"))
+        get_token = asyncify(GetToken)(auth0_domain)
         token = await get_token.client_credentials_async(
-            os.getenv("AUTH0_CLIENT_ID"),
-            os.getenv("AUTH0_CLIENT_SECRET"),
-            f"https://{os.getenv('AUTH0_DOMAIN')}/api/v2/",
+            auth0_client_id,
+            auth0_client_secret.get_secret_value(),
+            f"https://{auth0_domain}/api/v2/",
         )
         return token["access_token"]
     except Exception as e:

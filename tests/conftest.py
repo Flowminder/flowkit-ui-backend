@@ -12,6 +12,7 @@ from flowkit_ui_backend.db.db import (
     provision_db,
     run_script,
 )
+from flowkit_ui_backend.util.config import get_settings
 
 
 @pytest.fixture
@@ -34,8 +35,13 @@ def event_loop():
     loop.close()
 
 
+@pytest.fixture
+def settings():
+    return get_settings()
+
+
 @pytest_asyncio.fixture()
-async def fresh_pool(event_loop):
+async def fresh_pool(event_loop, settings):
     """
     Creates and yields up a fresh pool connected to a database, cleans it up at exit
 
@@ -47,9 +53,9 @@ async def fresh_pool(event_loop):
     pool = await aiomysql.create_pool(
         host="localhost",
         port=int(os.environ["DB_PORT_HOST"]),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PW"),
-        db=os.getenv("DB_NAME"),
+        user=settings.db_user,
+        password=settings.db_pw.get_secret_value(),
+        db=settings.db_name,
         loop=asyncio.get_event_loop(),
         autocommit=True,
         local_infile=True,

@@ -14,7 +14,12 @@ from flowkit_ui_backend.impl import accounts_api_impl
 @pytest.mark.asyncio
 async def test_get_user_invalid_token(mock_auth0):
     with pytest.raises(Auth0Error):
-        await accounts_api_impl.get_user("bob")
+        await accounts_api_impl.get_user(
+            "bob",
+            auth0_domain="DUMMY_DOMAIN",
+            auth0_client_id="DUMMY_ID",
+            auth0_client_secret="DUMMY_SECRET",
+        )
 
 
 @patch(
@@ -23,7 +28,12 @@ async def test_get_user_invalid_token(mock_auth0):
 )
 @pytest.mark.asyncio
 async def test_get_user_valid_token(mock_auth0):
-    result = await accounts_api_impl.get_user("bob")
+    result = await accounts_api_impl.get_user(
+        "bob",
+        auth0_domain="DUMMY_DOMAIN",
+        auth0_client_id="DUMMY_ID",
+        auth0_client_secret="DUMMY_SECRET",
+    )
     assert result == "user-bob"
 
 
@@ -34,7 +44,12 @@ async def test_get_user_valid_token(mock_auth0):
 )
 async def test_get_user_invalid(mock_auth0):
     with pytest.raises(HTTPException):
-        await accounts_api_impl.get_user("bob")
+        await accounts_api_impl.get_user(
+            "bob",
+            auth0_domain="DUMMY_DOMAIN",
+            auth0_client_id="DUMMY_ID",
+            auth0_client_secret="DUMMY_SECRET",
+        )
 
 
 @patch("auth0.management.auth0", side_effect=Auth0Error)
@@ -56,7 +71,13 @@ async def test_update_user_invalid_token(mock_auth0):
         ),
     )
     with pytest.raises(Auth0Error):
-        await accounts_api_impl.update_user("bob", metadata)
+        await accounts_api_impl.update_user(
+            "bob",
+            metadata,
+            auth0_domain="DUMMY_DOMAIN",
+            auth0_client_id="DUMMY_ID",
+            auth0_client_secret="DUMMY_SECRET",
+        )
 
 
 @patch(
@@ -80,7 +101,13 @@ async def test_update_user_valid_token(mock_auth0):
             marketing=False,
         ),
     )
-    result = await accounts_api_impl.update_user("bob", metadata)
+    result = await accounts_api_impl.update_user(
+        "bob",
+        metadata,
+        auth0_domain="DUMMY_DOMAIN",
+        auth0_client_id="DUMMY_ID",
+        auth0_client_secret="DUMMY_SECRET",
+    )
     assert result == None
 
 
@@ -90,7 +117,12 @@ async def test_update_user_valid_token(mock_auth0):
 )
 @pytest.mark.asyncio
 async def test_delete_user_valid_token(mock_auth0):
-    result = await accounts_api_impl.delete_user("bob")
+    result = await accounts_api_impl.delete_user(
+        "bob",
+        auth0_domain="DUMMY_DOMAIN",
+        auth0_client_id="DUMMY_ID",
+        auth0_client_secret="DUMMY_SECRET",
+    )
     assert result == None
 
 
@@ -100,6 +132,10 @@ async def test_delete_user_valid_token(mock_auth0):
 )
 @pytest.mark.asyncio
 async def test_get_management_api_m2m_token_fail(mock_auth0):
-    result = await accounts_api_impl.get_management_api_m2m_token()
+    result = await accounts_api_impl.get_management_api_m2m_token(
+        auth0_domain="DUMMY_DOMAIN",
+        auth0_client_id="DUMMY_ID",
+        auth0_client_secret="DUMMY_SECRET",
+    )
     # TODO: this should return None but doesn't. Need to investigate why.
     # assert result is None

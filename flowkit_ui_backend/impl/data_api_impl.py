@@ -31,11 +31,13 @@ from flowkit_ui_backend.db import db
 logger = structlog.get_logger("flowkit_ui_backend.log")
 
 DEFAULT_NUM_BINS = 7
-DB_NAME = os.environ["DB_NAME"]
 FETCH_CHUNK_SIZE = 150
 
 
-async def list_categories(pool: Pool, token_model: TokenModel) -> Optional[Categories]:
+async def list_categories(
+    pool: Pool,
+    token_model: TokenModel,
+) -> Optional[Categories]:
     logger.warn("TODO: check permissions", token_model=token_model.permissions)
     categories = await db.select_data(
         base_model=Category, pool=pool, token_model=token_model
@@ -226,8 +228,8 @@ async def get_time_range(
 
     sql = f"""
     SELECT DISTINCT md.`dt`, md.`min_value`, md.`max_value`
-    FROM `{DB_NAME}`.`metadata` AS md
-    LEFT JOIN `{DB_NAME}`.`scope_mapping` AS sm
+    FROM `metadata` AS md
+    LEFT JOIN `scope_mapping` AS sm
     ON sm.`mdid`=md.`mdid`
     WHERE sm.`scope` IN ("{'", "'.join(token_model.permissions)}")
     AND md.`category_id`=%s
@@ -237,7 +239,7 @@ async def get_time_range(
     ORDER BY md.`dt` ASC
     """
     args = [category_id, indicator_id, srid, trid]
-    (column_names, result) = await db.run(sql, pool=pool, args=args)
+    (column_names, result) = await db.run(pool=pool, sql=sql, args=args)
     logger.debug(f"Found {len(result)} datasets", result=result)
 
     logger.debug(f"Formatting dates...", date_format=date_format)
@@ -278,7 +280,9 @@ async def get_table_name(
     Gets the base- and specific- table names
     """
     category = await get_category(
-        query_parameters.category_id, token_model=token_model, pool=pool
+        query_parameters.category_id,
+        pool=pool,
+        token_model=token_model,
     )
     if category.type not in ["single_location", "flow"]:
         raise HTTPException(
@@ -373,7 +377,7 @@ async def run_query(
 async def get_column_names(
     table_name: str, metadata: List[Metadata], pool: Pool
 ) -> List:
-    select_query = f"SELECT * FROM `{os.environ['DB_NAME']}`.`{table_name}_{metadata[0].mdid}` LIMIT 1;"
+    select_query = f"SELECT * FROM `{table_name}_{metadata[0].mdid}` LIMIT 1;"
     logger.debug("Getting column names", table_name=table_name)
     async with pool.acquire() as conn, conn.cursor() as cursor:
         await cursor.execute(select_query)
@@ -381,12 +385,13 @@ async def get_column_names(
 
 
 async def stream_query(
-    base_table_name: str, metadata: List[Metadata], pool: Pool, table_name: str
+    base_table_name: str,
+    metadata: List[Metadata],
+    pool: Pool,
+    table_name: str,
 ) -> AsyncGenerator[list[dict], None]:
     # table_names is consumed twice, so it needs to be a list
-    table_names = [
-        f"`{os.environ['DB_NAME']}`.`{table_name}_{m.mdid}`" for m in metadata
-    ]
+    table_names = [f"`{table_name}_{m.mdid}`" for m in metadata]
     short_names = (
         table_name.rpartition(".")[2].strip("`") for table_name in table_names
     )
@@ -419,7 +424,12 @@ async def stream_query(
             yield chunk
 
 
-async def get_metadata(query_parameters, temp_res, pool, token_model) -> List[Metadata]:
+async def get_metadata(
+    query_parameters: QueryParameters,
+    temp_res: TemporalResolution,
+    pool: Pool,
+    token_model: TokenModel,
+) -> List[Metadata]:
     # filter by date
     start_date = pendulum.parse(query_parameters.start_date.replace("w", "-W"))
     step = relativedelta()
@@ -427,8 +437,8 @@ async def get_metadata(query_parameters, temp_res, pool, token_model) -> List[Me
     # subtracting 1 here because BETWEEN in the SQL includes the end date
     end_date = start_date + step * (query_parameters.duration - 1)
     sql = f"""
-    SELECT * FROM `{DB_NAME}`.`metadata` AS md
-    LEFT JOIN `{DB_NAME}`.`scope_mapping` AS sm
+    SELECT * FROM `metadata` AS md
+    LEFT JOIN `scope_mapping` AS sm
     ON sm.mdid=md.mdid
     WHERE sm.scope IN ("{'", "'.join(token_model.permissions)}")
     AND md.`category_id`=%s
@@ -448,7 +458,7 @@ async def get_metadata(query_parameters, temp_res, pool, token_model) -> List[Me
         end_date.format("YYYY-MM-DD HH:mm:ss"),
     ]
     logger.debug("Running metadata query", sql=sql, args=args)
-    (column_names, result) = await db.run(sql, pool=pool, args=args)
+    (column_names, result) = await db.run(pool=pool, sql=sql, args=args)
     logger.debug("Finished running metadata query")
     if not result:
         raise HTTPException(
@@ -462,13 +472,23 @@ async def get_metadata(query_parameters, temp_res, pool, token_model) -> List[Me
 
 
 async def run_csv_query(
-    query_parameters: QueryParameters, pool: Pool, token_model: TokenModel
+    query_parameters: QueryParameters,
+    pool: Pool,
+    token_model: TokenModel,
 ) -> StreamingResponse:
-    return StreamingResponse(stream_csv(query_parameters, pool, token_model))
+    return StreamingResponse(
+        stream_csv(
+            query_parameters,
+            pool,
+            token_model,
+        )
+    )
 
 
 async def stream_csv(
-    query_parameters: QueryParameters, pool: Pool, token_model: TokenModel
+    query_parameters: QueryParameters,
+    pool: Pool,
+    token_model: TokenModel,
 ) -> AsyncGenerator[str, None]:
     base_table_name, table_name = await get_table_name(
         query_parameters, pool=pool, token_model=token_model
@@ -476,7 +496,12 @@ async def stream_csv(
     tr = await get_temporal_resolution(
         query_parameters.trid, token_model=token_model, pool=pool
     )
-    metadata = await get_metadata(query_parameters, tr, pool, token_model)
+    metadata = await get_metadata(
+        query_parameters,
+        tr,
+        pool,
+        token_model,
+    )
     query_stream_generator = stream_query(base_table_name, metadata, pool, table_name)
     if query_parameters.category_id.lower() in ["residents", "presence"]:
         async for csv_chunk in stream_region_to_csv(query_stream_generator):
