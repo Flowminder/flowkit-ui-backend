@@ -174,22 +174,19 @@ test: run-db
 
 clear: 
 	$(info Clearing old containers...)
-	docker compose -p $(APP_NAME) down
+	docker compose -p $(APP_NAME) down ;\
+	docker compose -f docker-compose-mysql.yml down
 
-run: clear
+run: run-db
+run:
 	$(info Running application...)
-	echo "Starting $(APP_NAME) dev server docker container \"$(CONTAINER_NAME)\" on http://localhost:$(SERVER_PORT_HOST)/$(API_VERSION_URL_APPENDIX)/heartbeat..."
+	echo "Starting $(APP_NAME) dev server docker container \"$(CONTAINER_NAME)\" on http://localhost:$(SERVER_PORT_HOST)$(API_VERSION_URL_APPENDIX)/heartbeat..."
 	echo "Find the API docs on http://localhost:$(SERVER_PORT_HOST)/docs or http://localhost:$(SERVER_PORT_HOST)/redoc"
 	echo "or download the API spec directly from http://localhost:$(SERVER_PORT_HOST)/openapi.json"
 	echo $(JUPYTER_TEXT)
 	$(JUPYTER_RUN)
-	export IMAGE_NAME_DB_ACTUAL=$(IMAGE_NAME_DB_ACTUAL); \
-		docker compose -p $(APP_NAME) --env-file ./.env up -d --always-recreate-deps db
-	while [ $$(docker inspect --format "{{json .State.Health.Status }}" $(CONTAINER_NAME_DB)) != "\"healthy\"" ]; do echo "Waiting for db..."; sleep 1; done
-		export IMAGE_NAME_ACTUAL=$(IMAGE_NAME_ACTUAL); \
-		docker compose -p $(APP_NAME) --env-file ./.env run --name $(APP_NAME) --service-ports --entrypoint="" web bash -c \
-		"cd ./src; \
-		uvicorn $(PACKAGE_NAME).main:app $(RELOAD) --host 0.0.0.0 --port $(SERVER_PORT_CONTAINER);"
+	export IMAGE_NAME_ACTUAL=$(IMAGE_NAME_ACTUAL); \
+	docker compose -p $(APP_NAME) --env-file ./.env run --name $(APP_NAME) --service-ports web
 
 ingest:
 	$(info Running ingestion script to populate database...)
