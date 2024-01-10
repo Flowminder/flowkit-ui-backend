@@ -30,54 +30,51 @@ make
 
 You can use the following targets:
 
--   `doc`: generate docs, from API spec; to be found at `./doc`
--   `code`: generate code from API spec; to be found at `./src-generated`
 -   `deps`: Regenerate pinned requirements.txt files
--   `build`:
-    -   generate code and docs using the OpenAPI spec at `src/api.json`
-    -   link the implementation code into the generated code
-    -   build a new docker image (i.e. use the latest API spec)
+-   `build`: build a new docker image (i.e. use the latest API spec)
 -   `test`: run all unit tests and produce a coverage report
 -   `run`: start the image, using the implementation directory as a bind mount (i.e. changes will be reflected by the flask server on the next API call)
 
 Access the API at [http://localhost:5000](http://localhost:5000).
 The API document can be viewed at [http://localhost:5000/openapi.json](http://localhost:5000/openapi.json).
 
-## Workflow
-
-### Changing the API
-
-This requires you to update the `src/api.json` file.
-This file is the **single source of truth** and should be the place that contains the API spec and documentation.
-
-Once you're happy, you need to make sure that any endpoints as defined in the spec are reflected in the implementation (located at `src/impl/apis`).
-Each category of endpoints (using OpenAPI's "tag" feature) will require a separate file. So if you tag is e.g. `general` then the file needs to be called `general_api_impl.py`.
-
-Each `api_impl.py` file is just a collection of methods representing the implementation of each endpoint.
-No class is needed; the only requirement is that the controller implementation function uses
-
--   the same name AND
--   the same name and number and types of arguments
-
-as the endpoint. There is no need to add pydoc comments to each function - all documentation lives in the API spec. The only comments you should add are regular in-code comments where necessary. See the example below:
-
-```python
-def heartbeat():
-    # This is printed out by the server
-    print("Request received, checking heartbeat...")
-
-    # Returned response to the client who called the endpoint
-    if is_alive:
-        # HTTP status: OK
-        return "beep-beep-beep", HTTPStatus.OK
-    else:
-        # HTTP status: gone
-        return "beeeeeeeeeeeep", HTTPStatus.GONE
-```
-
-### Changing the implementation
-
-When running a docker container locally, the web server is running in development mode.
-Since we never copied the implementation code onto the container but linked it in as a volume instead, you can just edit the implementation files in `src/impl`. After you save the file, any changes will be picked up by the web server automatically. So after you resend the API request (e.g. by refreshing your page), the updated version is used.
+## Adding new dependencies
 
 If you need to add any dependencies, add them to `src/impl/requirements.in` or `src/impl/dev-requirements.in` and refer to the section above as the docker image will have to be rebuilt.
+
+## Building without make
+
+### Build Args
+
+- API_VERSION
+- API_VERSION_URL_APPENDIX
+- GIT_BRANCH
+- GIT_COMMIT
+- GIT_TAG
+- APP_NAME
+- IMAGE_NAME
+
+## Running
+
+
+
+### Required env vars
+
+* DB_NAME
+* DB_PORT_CONTAINER
+* DB_PW
+* DB_USER
+* FLOWKIT_UI_URL
+* CONTAINER_NAME_DB
+* SERVER_PORT_HOST
+* AUTH0_DOMAIN
+* AUTH0_CLIENT_ID
+* AUTH0_CLIENT_SECRET
+* AUTH0_AUDIENCE
+
+### Optional env vars
+
+* DEV_MODE (default 0, set to 1 to enable)
+* LOG_LEVEL (default to warning, default to debug if DEV_MODE=1)
+* JUPYTER_ENABLED (default 0, set to 1 if using jupyter locally)
+* JUPYTER_PORT

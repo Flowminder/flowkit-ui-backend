@@ -36,7 +36,7 @@ jobs:
       - image: cimg/python:3.8
     steps:
       - checkout
-      - run: pip install --force-reinstall -v "black[jupyter]==23.1.0"
+      - run: pip install --force-reinstall -v "black[jupyter]==23.12.0"
       - run: black --check .
 
   build:
@@ -63,8 +63,12 @@ jobs:
           command: |
             make -e build
       - run:
-          name: Run unit tests (use container-internal data dir)
+          name: Run unit tests
           command: |
+            pyenv local 3.11.2
+            python -m venv ./venv
+            source venv/bin/activate
+            pip install -r dev-requirements.txt
             mkdir test_results
             export DATA_DIR_LOCAL= && make -e test
       - store_test_results:
@@ -74,16 +78,6 @@ jobs:
           command: |
             echo "$DOCKER_ACCESS_TOKEN" | docker login -u "$DOCKER_USER" --password-stdin
             docker push -a flowminder/flowkit-ui-backend
-            docker push -a flowminder/flowkit-ui-backend-db
-      - run:
-          name: Prepare files for persisting
-          command: |
-            mkdir ./deploy
-            cp src-generated/.env ./deploy/.env
-      - persist_to_workspace:
-          root: /tmp/flowkit-ui-backend
-          paths:
-            - deploy
       - upload_codecov:
           test: test_results
 

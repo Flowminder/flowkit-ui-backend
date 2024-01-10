@@ -1,0 +1,75 @@
+# This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+# If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+# ################################################################################################
+# Compile-time config
+# These settings will be used on build and may be baked into the image.
+# Whenever these are changed the image needs to be re-built before they come into effect.
+# ################################################################################################
+# The name of the application python package
+APP_NAME=flowkit-ui-backend
+PYTHON_VERSION=3.9
+# Whether docker should make use of its cache resulting in faster builds
+DOCKER_CACHE_ENABLED=1
+# The directory inside the container where data will be stored
+DATA_DIR_CONTAINER=/home/hamster/data
+# The port used inside the container for the web service
+SERVER_PORT_CONTAINER=5000
+# The port used inside the container for the db
+DB_PORT_CONTAINER=3306
+# The name of the database/schema
+DB_NAME=flowkit_ui_backend
+# The database user with which the web service will try to connect to the database
+DB_USER=hamster
+# The database password. This is currently used for both the user and the admin
+DB_PW=TEST_PASSWORD
+# FlowKit UI - this is required for CORS to allow the UI to access the API
+FLOWKIT_UI_URL=
+# The port on which a local jupyter lab can run
+JUPYTER_PORT=8888
+# stub for api urls
+API_VERSION_URL_APPENDIX=/v1
+# Auth0 integration
+AUTH0_DOMAIN=
+AUTH0_CLIENT_ID=
+AUTH0_CLIENT_SECRET=
+AUTH0_AUDIENCE=
+
+# ################################################################################################
+# Run-time config
+# These settings define environment variables that will be available on the containers.
+# They can be changed without having to re-build the image.
+# ################################################################################################
+# Dev mode does 3 things. It
+# - forces reload of the web server when any files have changed
+# - overrides the implementation files in the container with the local implementation files
+# - ensures the latest docker image is used
+DEV_MODE=0
+# Log Level. Options: DEBUG, INFO, WARNING, ERROR.
+# WARNING by default, DEBUG when DEV_MODE is ENABLED.
+# The env var always overrides all defaults.
+LOG_LEVEL=DEBUG
+# On start the web server will attempt to create the db schema if it doesn't exist.
+# This setting allows to force re-create the schema even if it exists
+FORCE_DB_SETUP=0
+# Whether to also spin up a jupyter lab instance
+JUPYTER_ENABLED=0
+# The external port on which the web service can be reached on the host
+SERVER_PORT_HOST=
+# The external port on which the database can be reached on the host
+DB_PORT_HOST=3306
+# Optional path to mount a local data directory into the web service container
+DATA_DIR_LOCAL=
+# Auth0 credentials for ingestion script
+INGESTION_BASE_URL=
+INGESTION_AUTH0_DOMAIN=
+INGESTION_AUTH0_CLIENT_ID_UPDATER=
+INGESTION_AUTH0_CLIENT_SECRET_UPDATER=
+INGESTION_AUTH0_CLIENT_ID_ADMIN=
+INGESTION_AUTH0_CLIENT_SECRET_ADMIN=
+
+# Dev settings
+
+CONTAINER_NAME_DB=flowkit-ui-db
+IMAGE_NAME_DB_ACTUAL=mysql:8.0
+SERVER_PORT_HOST=5000
