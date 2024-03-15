@@ -5,7 +5,7 @@
 
 import os
 import structlog
-from typing import List, Optional
+from typing import List, Annotated
 
 from auth0.authentication.async_token_verifier import AsyncAsymmetricSignatureVerifier
 from fastapi import Depends, Security  # noqa: F401
@@ -20,13 +20,9 @@ from fastapi.security import (  # noqa: F401
     OAuth2PasswordBearer,
     SecurityScopes,
 )
-from fastapi.security.api_key import (
-    APIKeyCookie,
-    APIKeyHeader,
-    APIKeyQuery,
-)  # noqa: F401
 
 from flowkit_ui_backend.models.extra_models import TokenModel
+from flowkit_ui_backend.util.config import get_settings, Settings
 
 logger = structlog.get_logger("flowkit_ui_backend.log")
 
@@ -45,12 +41,14 @@ oauth2_code = OAuth2AuthorizationCodeBearer(
 
 # TODO: ideally move this to the app startup
 sv = AsyncAsymmetricSignatureVerifier(
-    f"https://{os.getenv('AUTH0_DOMAIN')}/.well-known/jwks.json"
+    f"https://{get_settings().auth0_domain}/.well-known/jwks.json"
 )
 
 
 async def get_token_auth0(
-    security_scopes: SecurityScopes, token: str = Depends(oauth2_code)
+    settings: Annotated[Settings, Depends(get_settings)],
+    security_scopes: SecurityScopes,
+    token: str = Depends(oauth2_code),
 ) -> TokenModel:
     """
     Validate and decode token.
@@ -63,15 +61,15 @@ async def get_token_auth0(
 
     logger.debug(
         "Validate token",
-        client_id=os.getenv("AUTH0_AUDIENCE"),
-        domain=os.getenv("AUTH0_DOMAIN"),
+        client_id=settings.auth0_client_id,
+        domain=settings.auth0_domain,
     )
 
     try:
         # TODO: this currently only works for ID tokens, not access tokens; see https://github.com/auth0/auth0-PHP/issues/422
         # eventually we should use AsyncTokenVerifier instead of AsyncAsymmetricSignatureVerifier
         # see https://github.com/auth0/auth0-python/tree/f15520b8390ee7ba131a2dc45b0f96591b96bd95#id-token-validation
-        # tv = AsyncTokenVerifier(signature_verifier=sv, issuer=f"https://{os.getenv('AUTH0_DOMAIN')}/", audience=os.getenv('AUTH0_AUDIENCE'))
+        # tv = AsyncTokenVerifier(signature_verifier=sv, issuer=f"https://{auth0_domain}/", audience=auth0_audience)
         # claims = await tv.verify(token)
         claims = await sv.verify_signature(token)
     except Exception as e:

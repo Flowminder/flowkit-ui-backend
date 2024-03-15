@@ -34,18 +34,27 @@ INDICES = {
 async def provision_db(pool: Pool, force: bool = False) -> boolean:
     try:
         # Force delete existing tables
-        logger.debug(f"Force DB setup? {force}")
+        logger.debug(
+            "Provision db", db_name="flowkit_ui_backend", force_provision=force
+        )
         # Check for existing db
         (column_names, result) = await run(
-            f"SHOW TABLES FROM {os.environ['DB_NAME']};", pool=pool
+            pool=pool, sql=f"SHOW DATABASES LIKE 'flowkit_ui_backend';"
         )
+        if len(result) > 0:
+            logger.debug("Existing database found.", db_name="flowkit_ui_backend")
+            (column_names, result) = await run(
+                pool=pool, sql=f"SHOW TABLES FROM flowkit_ui_backend;"
+            )
+        else:
+            logger.debug("No existing database found.", db_name="flowkit_ui_backend")
         logger.debug(f"Force DB setup? {force}", existing_tables=result)
         if len(result) > 0 and force:
-            logger.debug(f"Deleting {len(result)} existing tables")
+            logger.debug(f"Deleting {len(result)} existing tables", tables=result)
             # delete existing tables
             await run(
-                f"DROP TABLE IF EXISTS `{'`, `'.join([os.environ['DB_NAME'] + '`.`' + i[0] for i in result])}`",
                 pool=pool,
+                sql=f"DROP TABLE IF EXISTS {', '.join(f'`flowkit_ui_backend`.`{i[0]}`' for i in result)}",
             )
             logger.debug("Done.")
         elif len(result) > 0:
@@ -80,8 +89,8 @@ async def provision_db(pool: Pool, force: bool = False) -> boolean:
 
 async def get_index(table: str, column: str, pool: Pool) -> str:
     (columns_names, result) = await run(
-        f"SHOW INDEXES FROM `{os.environ['DB_NAME']}`.`{table}` WHERE `Column_name`='{column}'",
         pool=pool,
+        sql=f"SHOW INDEXES FROM `{table}` WHERE `Column_name`='{column}'",
     )
     if result is None or len(result) == 0:
         logger.debug(f"No index found on table `{table}` for column `{column}`")
@@ -95,8 +104,8 @@ async def add_index(table: str, column: str, pool: Pool) -> str:
     index_name = f"index_{table}_{column}"
     logger.debug(f"Adding index `{index_name}` to table `{table}`, column {column}...")
     await run(
-        f"ALTER TABLE `{os.environ['DB_NAME']}`.`{table}` ADD INDEX `{index_name}` (`{column}`)",
         pool=pool,
+        sql=f"ALTER TABLE `{table}` ADD INDEX `{index_name}` (`{column}`)",
     )
     logger.debug("Done.")
     return index_name
@@ -106,7 +115,8 @@ async def drop_index(table: str, column: str, pool: Pool):
     index_name = f"index_{table}_{column}"
     logger.debug(f"Dropping index `{index_name}`...")
     await run(
-        f"DROP INDEX `{index_name}` ON `{os.environ['DB_NAME']}`.`{table}`", pool=pool
+        pool=pool,
+        sql=f"DROP INDEX `{index_name}` ON `{table}`",
     )
     logger.debug("Done.")
 
@@ -137,7 +147,7 @@ async def load_prepared_sql(base_model: BaseModel, query_type: str) -> str:
 
 
 async def run(
-    sql: str, pool: Pool, args: Optional[list] = None
+    pool: Pool, sql: str, args: Optional[list] = None
 ) -> Tuple[List[str], List[tuple]]:
     async with pool.acquire() as conn, conn.cursor() as cursor:
         if args is not None:
@@ -191,9 +201,7 @@ async def select_data(
     fields_string = (
         ", ".join(f"`{field}`" for field in fields) if fields is not None else "*"
     )
-    select_query = (
-        f"SELECT {fields_string} FROM `{os.environ['DB_NAME']}`.`{table_name}`"
-    )
+    select_query = f"SELECT {fields_string} FROM `{table_name}`"
 
     # permissions apply to these objects
     object_mapping_ids = {
@@ -208,8 +216,8 @@ async def select_data(
         id_key = object_mapping_ids[table_name] if id_key is None else id_key
         # get all IDs for objects of this type that are permissible for the token
         permissible_ids_query = f"""
-        SELECT md.`{id_key}` FROM `{os.environ["DB_NAME"]}`.`metadata` AS md
-        LEFT JOIN `{os.environ["DB_NAME"]}`.`scope_mapping` AS sm
+        SELECT md.`{id_key}` FROM `metadata` AS md
+        LEFT JOIN `scope_mapping` AS sm
         ON sm.mdid=md.mdid
         WHERE sm.scope IN ("{'", "'.join(token_model.permissions)}")
         GROUP BY md.`{id_key}`"""
@@ -356,7 +364,7 @@ async def insert_data(
                 sql = f"""
                 LOAD DATA LOCAL
                 INFILE '{tmpfile.name}'
-                INTO TABLE `{os.environ['DB_NAME']}`.`{table_name}`
+                INTO TABLE `{table_name}`
                 FIELDS TERMINATED BY '{field_sep}'
                 LINES TERMINATED BY '{line_sep}'
                 (`{'`,`'.join(props)}`)

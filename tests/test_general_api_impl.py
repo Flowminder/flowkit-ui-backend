@@ -10,7 +10,6 @@ from flowkit_ui_backend.models.data_provider import DataProvider
 from flowkit_ui_backend.models.language import Language
 from flowkit_ui_backend.models.config import Config
 
-
 DPS = DataProviders(
     data_providers=[
         DataProvider(dpid=1, name="Foo", logo="logo.png", url="https://foo.bar"),
@@ -73,6 +72,6 @@ async def test_get_data_provider(mocker, provisioned_db):
 
 
 @pytest.mark.asyncio
-async def test_heartbeat(provisioned_db):
-    result = await general_api_impl.heartbeat(pool=provisioned_db)
-    assert result.python_package == os.getenv("APP_NAME")
+async def test_heartbeat(provisioned_db, settings):
+    result = await general_api_impl.heartbeat(pool=provisioned_db, settings=settings)
+    assert result.config.app_name == os.getenv("APP_NAME")

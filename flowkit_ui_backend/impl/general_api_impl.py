@@ -14,7 +14,7 @@ from flowkit_ui_backend.models.data_provider import DataProvider
 from flowkit_ui_backend.models.data_providers import DataProviders
 from flowkit_ui_backend.models.heartbeat import Heartbeat
 from flowkit_ui_backend.db import db
-
+from flowkit_ui_backend.util.config import Settings
 
 logger = structlog.get_logger("flowkit_ui_backend.log")
 
@@ -51,17 +51,11 @@ async def get_data_provider(dpid: int, pool: Pool) -> DataProvider:
     return data_providers[0]
 
 
-async def heartbeat(pool: Pool) -> Heartbeat:
+async def heartbeat(pool: Pool, settings: Settings) -> Heartbeat:
     logger.info("Request received, sending heartbeat...")
     heartbeat = Heartbeat(
-        api_version=os.environ["API_VERSION"],
-        api_version_url_appendix=os.environ["API_VERSION_URL_APPENDIX"],
         datetime=datetime.datetime.utcnow(),
-        docker_image=os.environ["IMAGE_NAME"],
-        git_branch=os.environ["GIT_BRANCH"],
-        git_commit=os.environ["GIT_COMMIT"],
-        git_tag=os.environ["GIT_TAG"] if os.environ["GIT_TAG"] != "" else None,
-        python_package=os.environ["APP_NAME"],
         python_version=platform.python_version(),
+        config=settings,
     )
     return heartbeat
