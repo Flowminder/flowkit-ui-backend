@@ -11,14 +11,13 @@ services:
   web:
     container_name: $CONTAINER_NAME
     image: $IMAGE_NAME_ACTUAL
-    user: $CONTAINER_USER:$CONTAINER_USER
     restart: unless-stopped
     ports:
       - "${SERVER_PORT_HOST}:${SERVER_PORT_CONTAINER}"
     volumes:
       - $VOLUME_IMPL
       - $VOLUME_DATA
-      - $PWD/.env:/home/$APP_DIR/src/.env:ro
+      - $PWD/development_env:/home/$APP_DIR/src/development_env:ro
       - $PWD/test_results/:/home/$APP_DIR/test_results:rw
       - $PWD/doc/:/home/$APP_DIR/doc:rw
     environment:
@@ -48,7 +47,6 @@ services:
       - DATA_DIR_LOCAL=$DATA_DIR_LOCAL
       - CONTAINER_NAME=$CONTAINER_NAME
       - CONTAINER_NAME_DB=$CONTAINER_NAME_DB
-    command: bash -c "set -a; source .env; cd ./src; uvicorn $APP_NAME.main:app $RELOAD --host 0.0.0.0 --port $SERVER_PORT_CONTAINER";
     networks:
       docker_nw:
 
