@@ -520,8 +520,8 @@ async def add_dataset(
     logger.debug(
         f"Converting data to appropriate data type...", data_type=dataset.data_type
     )
-    data_func = (
-        lambda input_data: SingleLocationData(
+    data_func = lambda input_data: (
+        SingleLocationData(
             mdid=mdid,
             spatial_unit_id=input_data.spatial_unit_ids[0],
             data=input_data.data,

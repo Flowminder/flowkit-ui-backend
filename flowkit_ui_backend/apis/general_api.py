@@ -80,9 +80,9 @@ async def get_setup(request: Request = None) -> Config:
             )
         else:
             return Response(
-                status_code=status_code
-                if status_code is not None
-                else HTTPStatus.NO_CONTENT
+                status_code=(
+                    status_code if status_code is not None else HTTPStatus.NO_CONTENT
+                )
             )
 
     # This is where we handle status codes via exceptions as raised by the impl methods
@@ -147,9 +147,9 @@ async def heartbeat(request: Request = None) -> Heartbeat:
             )
         else:
             return Response(
-                status_code=status_code
-                if status_code is not None
-                else HTTPStatus.NO_CONTENT
+                status_code=(
+                    status_code if status_code is not None else HTTPStatus.NO_CONTENT
+                )
             )
 
     # This is where we handle status codes via exceptions as raised by the impl methods
@@ -218,9 +218,9 @@ async def list_data_providers(request: Request = None) -> DataProviders:
             )
         else:
             return Response(
-                status_code=status_code
-                if status_code is not None
-                else HTTPStatus.NO_CONTENT
+                status_code=(
+                    status_code if status_code is not None else HTTPStatus.NO_CONTENT
+                )
             )
 
     # This is where we handle status codes via exceptions as raised by the impl methods
