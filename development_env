@@ -24,7 +24,7 @@ DB_USER=hamster
 # The database password. This is currently used for both the user and the admin
 DB_PW=TEST_PASSWORD
 # FlowKit UI - this is required for CORS to allow the UI to access the API
-FLOWKIT_UI_URL=
+FLOWKIT_UI_URL=http://localhost:5000
 # The port on which a local jupyter lab can run
 JUPYTER_PORT=8888
 # stub for api urls
@@ -72,4 +72,7 @@ INGESTION_AUTH0_CLIENT_SECRET_ADMIN=
 
 CONTAINER_NAME_DB=flowkit-ui-db
 IMAGE_NAME_DB_ACTUAL=mysql:8.0
+IMAGE_NAME=flowkit_ui_backend
+GIT_BRANCH=local
+GIT_COMMIT=dirty
 SERVER_PORT_HOST=5000

@@ -14,11 +14,14 @@
 
 
 import os
+from functools import lru_cache
+from typing import Annotated
+
 import structlog
 import asyncio
 import aiomysql
 from http import HTTPStatus
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends
 from fastapi.exceptions import (
     RequestValidationError,
     HTTPException as StarletteHTTPException,
@@ -33,23 +36,14 @@ from fastapi.middleware.gzip import GZipMiddleware
 from asgi_correlation_id import CorrelationIdMiddleware
 from timing_asgi import TimingMiddleware, TimingClient
 from timing_asgi.integrations import StarletteScopeToName
-from flowkit_ui_backend.util import logging, gzip
-from flowkit_ui_backend.db import db
-
-default_log_level = "DEBUG" if (int(os.getenv("DEV_MODE", 0)) == 1) else "WARNING"
-log_level = os.getenv("LOG_LEVEL", default_log_level)
-log_level = log_level.upper()
-logging.setup_logging(log_level=log_level, dev_mode=int(os.getenv("DEV_MODE", 0)) == 1)
-logger = structlog.get_logger("flowkit_ui_backend.log")
-logger.debug(
-    f"Using log level {log_level} (default: {default_log_level}, dev mode: {bool(os.getenv('DEV_MODE', 0))})"
-)
-
-
+from flowkit_ui_backend.util import gzip
+from flowkit_ui_backend.util.config import Settings, get_settings
 from flowkit_ui_backend.apis.accounts_api import router as AccountsApiRouter
 from flowkit_ui_backend.apis.data_api import router as DataApiRouter
 from flowkit_ui_backend.apis.general_api import router as GeneralApiRouter
 from flowkit_ui_backend.apis.maintenance_api import router as MaintenanceApiRouter
+
+logger = structlog.get_logger("flowkit_ui_backend.log")
 
 
 class LogTimings(TimingClient):
@@ -57,12 +51,12 @@ class LogTimings(TimingClient):
         logger.debug("Timing", metric_name=metric_name, timing=timing, tags=tags)
 
 
-logger.debug(f"Starting {os.environ['APP_NAME']}...")
+logger.debug(f"Starting {get_settings().app_name}...")
 app = FastAPI(
     title="FlowKitUI Backend",
     description="A REST API for managing and postprocessing Flowkit data",
     version="1.3.0",
-    openapi_url=f"/{os.environ['API_VERSION_URL_APPENDIX']}openapi.json",
+    openapi_url=f"/{get_settings().api_version_url_appendix}openapi.json",
 )
 
 app.add_middleware(
@@ -78,8 +72,8 @@ logger.debug("Adding CORS middleware...")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        os.environ["FLOWKIT_UI_URL"],
-        f"http://localhost:{os.environ['JUPYTER_PORT']}",
+        get_settings().flowkit_ui_url,
+        f"http://localhost:{get_settings().jupyter_port}",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -113,25 +107,23 @@ async def validation_exception_handler(request, e):
 
 
 @app.on_event("startup")
-async def _startup():
+async def _startup(settings: Annotated[Settings, Depends(get_settings)]):
     logger.debug("Adding gzip support for requests...")
     app.router.route_class = gzip.GzipRoute
 
     logger.debug("Setting up routing...")
-    app.include_router(AccountsApiRouter, prefix=os.environ["API_VERSION_URL_APPENDIX"])
-    app.include_router(DataApiRouter, prefix=os.environ["API_VERSION_URL_APPENDIX"])
-    app.include_router(GeneralApiRouter, prefix=os.environ["API_VERSION_URL_APPENDIX"])
-    app.include_router(
-        MaintenanceApiRouter, prefix=os.environ["API_VERSION_URL_APPENDIX"]
-    )
+    app.include_router(AccountsApiRouter, prefix=settings.api_version_url_appendix)
+    app.include_router(DataApiRouter, prefix=settings.api_version_url_appendix)
+    app.include_router(GeneralApiRouter, prefix=settings.api_version_url_appendix)
+    app.include_router(MaintenanceApiRouter, prefix=settings.api_version_url_appendix)
 
     logger.debug("Creating db connection pool...")
     app.state.pool = await aiomysql.create_pool(
-        host=os.environ["CONTAINER_NAME_DB"],
-        port=int(os.environ["DB_PORT_CONTAINER"]),
-        user=os.environ["DB_USER"],
-        password=os.environ["DB_PW"],
-        db=os.environ["DB_NAME"],
+        host=settings.container_name_db,
+        port=settings.db_port_container,
+        user=settings.db_user,
+        password=settings.db_pw.get_secret_value(),
+        db=settings.db_name,
         loop=asyncio.get_event_loop(),
         autocommit=True,
         local_infile=True,
@@ -141,12 +133,12 @@ async def _startup():
     logger.debug("Done.")
 
     logger.info(
-        f"Check the server is running on http://localhost:{os.environ['SERVER_PORT_HOST']}/{os.environ['API_VERSION_URL_APPENDIX']}/heartbeat"
+        f"Check the server is running on http://localhost:{settings.server_port_host}/{settings.api_version_url_appendix}/heartbeat"
     )
 
-    if os.environ["JUPYTER_ENABLED"] == "1":
+    if settings.jupyter_enabled == 1:
         logger.info(
-            f"Jupyter lab running on http://localhost:{os.environ['JUPYTER_PORT']}/lab?token=jupyter"
+            f"Jupyter lab running on http://localhost:{settings.jupyter_port}/lab?token=jupyter"
         )
 
 
