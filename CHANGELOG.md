@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Fixed profile page erroring due to a change in the auth0 api
+- Fixed not deleting data when patching a dataset
 
 ### Removed
 
