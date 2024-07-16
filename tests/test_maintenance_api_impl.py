@@ -712,8 +712,6 @@ async def test_update_dataset(mocker, provisioned_db):
             (None, [(1,)]),
             # get number of existing datasets
             (None, [(1,)]),
-            # check dataset exists (again, in delete func)
-            (None, [(1,)]),
             # delete existing dataset
             (None, None),
             # delete metadata

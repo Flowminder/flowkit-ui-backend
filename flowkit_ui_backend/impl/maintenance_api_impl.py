@@ -438,28 +438,19 @@ async def delete_dataset(
             if dataset.data_type == "single_location"
             else "flow_data"
         )
-        table_name = f"{base_table_name}_{dataset.metadata.indicator_id}"
+        table_name = f"{base_table_name}_{dataset.metadata.indicator_id}_{mdid}"
         logger.debug(
             "Using indicator-specific data table",
             base_table_name=base_table_name,
             table_name=table_name,
         )
 
-        # check if data table exists
-        sql = f"""
-        SELECT COUNT(*) AS num
-        FROM information_schema.tables
-        WHERE table_schema = '{DB_NAME}'
-        AND table_name = '{table_name}'
-        """
-        (column_names, result) = await db.run(sql=sql, pool=pool)
+        # drop the data table if it exists
 
-        if result[0][0] > 0:
-            sql = f"""
-            DELETE FROM `{DB_NAME}`.`{table_name}`
-            WHERE `mdid`={mdid}
-            """
-            await db.run(sql=sql, pool=pool)
+        sql = f"""
+        DROP TABLE IF EXISTS `{DB_NAME}`.`{table_name}`
+        """
+        await db.run(sql=sql, pool=pool)
         logger.debug(
             "Deleting metadata",
             mdid=mdid,
