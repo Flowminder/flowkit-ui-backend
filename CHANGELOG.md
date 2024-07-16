@@ -6,17 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-
 ### Added
-- Added new endpoint 'csv' to return a query as a CSV text object.
-
 
 ### Changed
 
 ### Fixed
-- Fixed users not being able to view their own profile
+- Fixed profile page erroring due to a change in the auth0 api
+- Fixed not deleting data when patching a dataset
 
 ### Removed
+
+## [1.3.1]
+### Added
+- Added new endpoint 'csv' to return a query as a CSV text object.
+
+
+### Fixed
+- Fixed users not being able to view their own profile
+
 
 ## [1.3.0]
 ### Added
@@ -81,7 +88,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -   The db schema
 
-[unreleased]: https://github.com/Flowminder/flowkit-ui-backend/compare/v1.3.0...HEAD
+[unreleased]: https://github.com/Flowminder/flowkit-ui-backend/compare/v1.3.1...HEAD
+[1.3.1]: https://github.com/Flowminder/flowkit-ui-backend/releases/tag/v1.3.1
 [1.3.0]: https://github.com/Flowminder/flowkit-ui-backend/releases/tag/v1.3.0
 [1.2.1]: https://github.com/Flowminder/flowkit-ui-backend/releases/tag/v1.2.1
 [1.1.1]: https://github.com/Flowminder/flowkit-ui-backend/releases/tag/v1.1.1

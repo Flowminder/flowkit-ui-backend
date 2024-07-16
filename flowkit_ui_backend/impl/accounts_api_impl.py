@@ -83,10 +83,9 @@ async def get_management_api_m2m_token(
 ) -> Optional[str]:
     try:
         # - obtain m2m access token for management API using the flowkit_ui_backend's client grant as set in Auth0 dashboard
-        get_token = asyncify(GetToken)(auth0_domain)
+        get_token = asyncify(GetToken)(auth0_domain, auth0_client_id,
+            auth0_client_secret.get_secret_value())
         token = await get_token.client_credentials_async(
-            auth0_client_id,
-            auth0_client_secret.get_secret_value(),
             f"https://{auth0_domain}/api/v2/",
         )
         return token["access_token"]

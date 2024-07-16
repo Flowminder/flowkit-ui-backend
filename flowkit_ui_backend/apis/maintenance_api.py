@@ -87,9 +87,9 @@ async def provision_db(
         else:
             status_code = 500
         return Response(
-            status_code=status_code
-            if status_code is not None
-            else HTTPStatus.NO_CONTENT
+            status_code=(
+                status_code if status_code is not None else HTTPStatus.NO_CONTENT
+            )
         )
 
     # This is where we handle status codes via exceptions as raised by the impl methods
@@ -153,9 +153,9 @@ async def force_provision_db(
         else:
             status_code = 500
         return Response(
-            status_code=status_code
-            if status_code is not None
-            else HTTPStatus.NO_CONTENT
+            status_code=(
+                status_code if status_code is not None else HTTPStatus.NO_CONTENT
+            )
         )
 
     # This is where we handle status codes via exceptions as raised by the impl methods
@@ -236,9 +236,9 @@ async def add_scope_mapping(
             )
         else:
             return Response(
-                status_code=status_code
-                if status_code is not None
-                else HTTPStatus.NO_CONTENT
+                status_code=(
+                    status_code if status_code is not None else HTTPStatus.NO_CONTENT
+                )
             )
 
     # This is where we handle status codes via exceptions as raised by the impl methods
@@ -321,9 +321,9 @@ async def create_category(
             )
         else:
             return Response(
-                status_code=status_code
-                if status_code is not None
-                else HTTPStatus.NO_CONTENT
+                status_code=(
+                    status_code if status_code is not None else HTTPStatus.NO_CONTENT
+                )
             )
 
     # This is where we handle status codes via exceptions as raised by the impl methods
@@ -406,9 +406,9 @@ async def create_data_provider(
             )
         else:
             return Response(
-                status_code=status_code
-                if status_code is not None
-                else HTTPStatus.NO_CONTENT
+                status_code=(
+                    status_code if status_code is not None else HTTPStatus.NO_CONTENT
+                )
             )
 
     # This is where we handle status codes via exceptions as raised by the impl methods
@@ -487,9 +487,9 @@ async def create_dataset(
             )
         else:
             return Response(
-                status_code=status_code
-                if status_code is not None
-                else HTTPStatus.NO_CONTENT
+                status_code=(
+                    status_code if status_code is not None else HTTPStatus.NO_CONTENT
+                )
             )
 
     # This is where we handle status codes via exceptions as raised by the impl methods
@@ -569,9 +569,9 @@ async def create_indicator(
             )
         else:
             return Response(
-                status_code=status_code
-                if status_code is not None
-                else HTTPStatus.NO_CONTENT
+                status_code=(
+                    status_code if status_code is not None else HTTPStatus.NO_CONTENT
+                )
             )
 
     # This is where we handle status codes via exceptions as raised by the impl methods
@@ -653,9 +653,9 @@ async def create_spatial_resolution(
             )
         else:
             return Response(
-                status_code=status_code
-                if status_code is not None
-                else HTTPStatus.NO_CONTENT
+                status_code=(
+                    status_code if status_code is not None else HTTPStatus.NO_CONTENT
+                )
             )
 
     # This is where we handle status codes via exceptions as raised by the impl methods
@@ -737,9 +737,9 @@ async def create_temporal_resolution(
             )
         else:
             return Response(
-                status_code=status_code
-                if status_code is not None
-                else HTTPStatus.NO_CONTENT
+                status_code=(
+                    status_code if status_code is not None else HTTPStatus.NO_CONTENT
+                )
             )
 
     # This is where we handle status codes via exceptions as raised by the impl methods
@@ -816,9 +816,9 @@ async def delete_category(
             )
         else:
             return Response(
-                status_code=status_code
-                if status_code is not None
-                else HTTPStatus.NO_CONTENT
+                status_code=(
+                    status_code if status_code is not None else HTTPStatus.NO_CONTENT
+                )
             )
 
     # This is where we handle status codes via exceptions as raised by the impl methods
@@ -895,9 +895,9 @@ async def delete_data_provider(
             )
         else:
             return Response(
-                status_code=status_code
-                if status_code is not None
-                else HTTPStatus.NO_CONTENT
+                status_code=(
+                    status_code if status_code is not None else HTTPStatus.NO_CONTENT
+                )
             )
 
     # This is where we handle status codes via exceptions as raised by the impl methods
@@ -977,9 +977,9 @@ async def delete_dataset(
             )
         else:
             return Response(
-                status_code=status_code
-                if status_code is not None
-                else HTTPStatus.NO_CONTENT
+                status_code=(
+                    status_code if status_code is not None else HTTPStatus.NO_CONTENT
+                )
             )
 
     # This is where we handle status codes via exceptions as raised by the impl methods
@@ -1058,9 +1058,9 @@ async def delete_indicator(
             )
         else:
             return Response(
-                status_code=status_code
-                if status_code is not None
-                else HTTPStatus.NO_CONTENT
+                status_code=(
+                    status_code if status_code is not None else HTTPStatus.NO_CONTENT
+                )
             )
 
     # This is where we handle status codes via exceptions as raised by the impl methods
@@ -1140,9 +1140,9 @@ async def delete_scope_mapping(
             )
         else:
             return Response(
-                status_code=status_code
-                if status_code is not None
-                else HTTPStatus.NO_CONTENT
+                status_code=(
+                    status_code if status_code is not None else HTTPStatus.NO_CONTENT
+                )
             )
 
     # This is where we handle status codes via exceptions as raised by the impl methods
@@ -1215,9 +1215,9 @@ async def delete_setup(
             )
         else:
             return Response(
-                status_code=status_code
-                if status_code is not None
-                else HTTPStatus.NO_CONTENT
+                status_code=(
+                    status_code if status_code is not None else HTTPStatus.NO_CONTENT
+                )
             )
 
     # This is where we handle status codes via exceptions as raised by the impl methods
@@ -1294,9 +1294,9 @@ async def delete_spatial_resolution(
             )
         else:
             return Response(
-                status_code=status_code
-                if status_code is not None
-                else HTTPStatus.NO_CONTENT
+                status_code=(
+                    status_code if status_code is not None else HTTPStatus.NO_CONTENT
+                )
             )
 
     # This is where we handle status codes via exceptions as raised by the impl methods
@@ -1373,9 +1373,9 @@ async def delete_temporal_resolution(
             )
         else:
             return Response(
-                status_code=status_code
-                if status_code is not None
-                else HTTPStatus.NO_CONTENT
+                status_code=(
+                    status_code if status_code is not None else HTTPStatus.NO_CONTENT
+                )
             )
 
     # This is where we handle status codes via exceptions as raised by the impl methods
@@ -1449,9 +1449,9 @@ async def replace_setup(
             )
         else:
             return Response(
-                status_code=status_code
-                if status_code is not None
-                else HTTPStatus.NO_CONTENT
+                status_code=(
+                    status_code if status_code is not None else HTTPStatus.NO_CONTENT
+                )
             )
 
     # This is where we handle status codes via exceptions as raised by the impl methods
@@ -1529,9 +1529,9 @@ async def update_category(
             )
         else:
             return Response(
-                status_code=status_code
-                if status_code is not None
-                else HTTPStatus.NO_CONTENT
+                status_code=(
+                    status_code if status_code is not None else HTTPStatus.NO_CONTENT
+                )
             )
 
     # This is where we handle status codes via exceptions as raised by the impl methods
@@ -1609,9 +1609,9 @@ async def update_data_provider(
             )
         else:
             return Response(
-                status_code=status_code
-                if status_code is not None
-                else HTTPStatus.NO_CONTENT
+                status_code=(
+                    status_code if status_code is not None else HTTPStatus.NO_CONTENT
+                )
             )
 
     # This is where we handle status codes via exceptions as raised by the impl methods
@@ -1687,9 +1687,9 @@ async def update_dataset(
             )
         else:
             return Response(
-                status_code=status_code
-                if status_code is not None
-                else HTTPStatus.NO_CONTENT
+                status_code=(
+                    status_code if status_code is not None else HTTPStatus.NO_CONTENT
+                )
             )
 
     # This is where we handle status codes via exceptions as raised by the impl methods
@@ -1770,9 +1770,9 @@ async def update_indicator(
             )
         else:
             return Response(
-                status_code=status_code
-                if status_code is not None
-                else HTTPStatus.NO_CONTENT
+                status_code=(
+                    status_code if status_code is not None else HTTPStatus.NO_CONTENT
+                )
             )
 
     # This is where we handle status codes via exceptions as raised by the impl methods
@@ -1848,9 +1848,9 @@ async def update_setup(
             )
         else:
             return Response(
-                status_code=status_code
-                if status_code is not None
-                else HTTPStatus.NO_CONTENT
+                status_code=(
+                    status_code if status_code is not None else HTTPStatus.NO_CONTENT
+                )
             )
 
     # This is where we handle status codes via exceptions as raised by the impl methods
@@ -1931,9 +1931,9 @@ async def update_spatial_resolution(
             )
         else:
             return Response(
-                status_code=status_code
-                if status_code is not None
-                else HTTPStatus.NO_CONTENT
+                status_code=(
+                    status_code if status_code is not None else HTTPStatus.NO_CONTENT
+                )
             )
 
     # This is where we handle status codes via exceptions as raised by the impl methods
@@ -2016,9 +2016,9 @@ async def update_temporal_resolution(
             )
         else:
             return Response(
-                status_code=status_code
-                if status_code is not None
-                else HTTPStatus.NO_CONTENT
+                status_code=(
+                    status_code if status_code is not None else HTTPStatus.NO_CONTENT
+                )
             )
 
     # This is where we handle status codes via exceptions as raised by the impl methods

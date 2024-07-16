@@ -96,9 +96,9 @@ async def delete_user(
             )
         else:
             return Response(
-                status_code=status_code
-                if status_code is not None
-                else HTTPStatus.NO_CONTENT
+                status_code=(
+                    status_code if status_code is not None else HTTPStatus.NO_CONTENT
+                )
             )
 
     # This is where we handle status codes via exceptions as raised by the impl methods
@@ -180,9 +180,9 @@ async def get_user(
             )
         else:
             return Response(
-                status_code=status_code
-                if status_code is not None
-                else HTTPStatus.NO_CONTENT
+                status_code=(
+                    status_code if status_code is not None else HTTPStatus.NO_CONTENT
+                )
             )
 
     # This is where we handle status codes via exceptions as raised by the impl methods
@@ -264,9 +264,9 @@ async def reset_password(
             )
         else:
             return Response(
-                status_code=status_code
-                if status_code is not None
-                else HTTPStatus.NO_CONTENT
+                status_code=(
+                    status_code if status_code is not None else HTTPStatus.NO_CONTENT
+                )
             )
 
     # This is where we handle status codes via exceptions as raised by the impl methods
@@ -347,9 +347,9 @@ async def update_user(
             )
         else:
             return Response(
-                status_code=status_code
-                if status_code is not None
-                else HTTPStatus.NO_CONTENT
+                status_code=(
+                    status_code if status_code is not None else HTTPStatus.NO_CONTENT
+                )
             )
 
     # This is where we handle status codes via exceptions as raised by the impl methods
