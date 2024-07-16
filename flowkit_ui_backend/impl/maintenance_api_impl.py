@@ -466,7 +466,7 @@ async def delete_dataset(
         # drop the data table if it exists
 
         sql = f"""
-        DROP TABLE IF EXISTS `{DB_NAME}`.`{table_name}`
+        DROP TABLE IF EXISTS `{table_name}`
         """
         await db.run(sql=sql, pool=pool)
         logger.debug(
