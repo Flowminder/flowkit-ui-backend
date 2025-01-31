@@ -261,9 +261,11 @@ async def select_data(
     actual_types = dict(
         (
             t,
-            typing.get_args(types[t])[0]
-            if typing.get_origin(types[t]) == typing.Union
-            else types[t],
+            (
+                typing.get_args(types[t])[0]
+                if typing.get_origin(types[t]) == typing.Union
+                else types[t]
+            ),
         )
         for t in types
     )
