@@ -703,9 +703,7 @@ async def get_time_range(
     response_class=ORJSONResponse,
 
 )
-async def get_latest_date(request: Request=None):
-    breakpoint()    
-
+async def get_latest_date(request: Request=None) -> LatestDate | JSONResponse:
     try:
         return data_api_impl.get_latest_date(request.app.state.pool)
         
