@@ -1,3 +1,4 @@
+from typing import Generator
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -22,11 +23,13 @@ def app() -> FastAPI:
 
 
 @pytest.fixture
-def client(app) -> TestClient:
-    return TestClient(app)
+def client(app, populated_db) -> Generator[TestClient, None, None]:
+    with TestClient(app) as client:
+        # Note; this will call on_event("startup"), which will try to create a new pool
+        yield client
 
 
-@pytest.fixture()
+@pytest.fixture(scope="module")
 def event_loop():
     policy = asyncio.get_event_loop_policy()
     loop = policy.new_event_loop()
@@ -34,7 +37,7 @@ def event_loop():
     loop.close()
 
 
-@pytest_asyncio.fixture()
+@pytest_asyncio.fixture(scope="module")
 async def fresh_pool(event_loop):
     """
     Creates and yields up a fresh pool connected to a database, cleans it up at exit
@@ -65,20 +68,20 @@ async def fresh_pool(event_loop):
         await pool.wait_closed()
 
 
-@pytest_asyncio.fixture()
+@pytest_asyncio.fixture(scope="module")
 def monkey_session():
     with pytest.MonkeyPatch.context() as mp:
         yield mp
 
 
-@pytest_asyncio.fixture()
+@pytest_asyncio.fixture(scope="module")
 async def provisioned_db(fresh_pool, monkey_session):
     monkey_session.setenv("FORCE_DB_SETUP", "1")
     await provision_db(fresh_pool)
     yield fresh_pool
 
 
-@pytest_asyncio.fixture()
+@pytest_asyncio.fixture(scope="module")
 async def populated_db(provisioned_db):
     print("Populating db")
     await run_script(
