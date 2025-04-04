@@ -1,5 +1,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 # If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
+import os
 
 # coding: utf-8
 
@@ -13,15 +14,6 @@ from flowkit_ui_backend.models.indicators import Indicators  # noqa: F401
 from flowkit_ui_backend.models.query_parameters import QueryParameters  # noqa: F401
 from flowkit_ui_backend.models.query_result import QueryResult  # noqa: F401
 from flowkit_ui_backend.models.spatial_resolution import SpatialResolution  # noqa: F401
-from flowkit_ui_backend.models.spatial_resolutions import (
-    SpatialResolutions,
-)  # noqa: F401
-from flowkit_ui_backend.models.temporal_resolution import (
-    TemporalResolution,
-)  # noqa: F401
-from flowkit_ui_backend.models.temporal_resolutions import (
-    TemporalResolutions,
-)  # noqa: F401
 from flowkit_ui_backend.models.time_range import TimeRange  # noqa: F401
 
 
@@ -32,9 +24,7 @@ async def test_get_category(client: TestClient):
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
-        "GET",
-        "/categories/{category_id}".format(category_id="category_id_example"),
+    response = client.get("categories/category_id_example",
         headers=headers,
     )
 
@@ -51,7 +41,7 @@ async def test_get_indicator(client: TestClient):
     }
     response = client.request(
         "GET",
-        "/indicators/{indicator_id}".format(indicator_id="indicator_id_example"),
+        f"/{os.environ['API_VERSION_URL_APPENDIX']}/indicators/indicator_id_example",
         headers=headers,
     )
 
@@ -68,9 +58,7 @@ async def test_get_indicators_for_category(client: TestClient):
     }
     response = client.request(
         "GET",
-        "/indicators_for_category/{category_id}".format(
-            category_id="category_id_example"
-        ),
+        f"/{os.environ['API_VERSION_URL_APPENDIX']}/indicators_for_category/category_id_example",
         headers=headers,
     )
 
@@ -87,7 +75,7 @@ async def test_get_spatial_resolution(client: TestClient):
     }
     response = client.request(
         "GET",
-        "/spatial_resolutions/{srid}".format(srid=56),
+        f"/{os.environ['API_VERSION_URL_APPENDIX']}/spatial_resolutions/56",
         headers=headers,
     )
 
@@ -104,9 +92,7 @@ async def test_get_spatial_resolutions_for_category(client: TestClient):
     }
     response = client.request(
         "GET",
-        "/spatial_resolutions_for_category/{category_id}".format(
-            category_id="category_id_example"
-        ),
+        f"/{os.environ['API_VERSION_URL_APPENDIX']}/spatial_resolutions_for_category/category_id_example",
         headers=headers,
     )
 
@@ -123,7 +109,7 @@ async def test_get_temporal_resolution(client: TestClient):
     }
     response = client.request(
         "GET",
-        "/temporal_resolutions/{trid}".format(trid=56),
+        f"/{os.environ['API_VERSION_URL_APPENDIX']}/temporal_resolutions/56",
         headers=headers,
     )
 
@@ -140,9 +126,8 @@ async def test_get_temporal_resolutions_for_category(client: TestClient):
     }
     response = client.request(
         "GET",
-        "/temporal_resolutions_for_category/{category_id}".format(
-            category_id="category_id_example"
-        ),
+        f"/{os.environ['API_VERSION_URL_APPENDIX']}/temporal_resolutions_for_category/category_id_example"
+        ,
         headers=headers,
     )
 
@@ -159,12 +144,7 @@ async def test_get_time_range(client: TestClient):
     }
     response = client.request(
         "GET",
-        "/timerange/{category_id}/{indicator_id}/{srid}/{trid}".format(
-            category_id="category_id_example",
-            indicator_id="indicator_id_example",
-            srid=56,
-            trid=56,
-        ),
+        f"/{os.environ['API_VERSION_URL_APPENDIX']}/timerange/category_id_example/indicator_id_example/56/56",
         headers=headers,
     )
 
@@ -181,7 +161,7 @@ async def test_list_categories(client: TestClient):
     }
     response = client.request(
         "GET",
-        "/categories",
+        f"/{os.environ['API_VERSION_URL_APPENDIX']}/categories",
         headers=headers,
     )
 
@@ -198,7 +178,7 @@ async def test_list_indicators(client: TestClient):
     }
     response = client.request(
         "GET",
-        "/indicators",
+        f"/{os.environ['API_VERSION_URL_APPENDIX']}/indicators",
         headers=headers,
     )
 
@@ -215,7 +195,7 @@ async def test_list_spatial_resolutions(client: TestClient):
     }
     response = client.request(
         "GET",
-        "/spatial_resolutions",
+        f"/{os.environ['API_VERSION_URL_APPENDIX']}/spatial_resolutions",
         headers=headers,
     )
 
@@ -232,7 +212,7 @@ async def test_list_temporal_resolutions(client: TestClient):
     }
     response = client.request(
         "GET",
-        "/temporal_resolutions",
+        f"/{os.environ['API_VERSION_URL_APPENDIX']}/temporal_resolutions",
         headers=headers,
     )
 
@@ -251,7 +231,7 @@ async def test_run_csv_query(client: TestClient):
     }
     response = client.request(
         "POST",
-        "/csv",
+        f"/{os.environ['API_VERSION_URL_APPENDIX']}/csv",
         headers=headers,
         json=query_parameters,
     )
@@ -271,7 +251,7 @@ async def test_run_query(client: TestClient):
     }
     response = client.request(
         "POST",
-        "/query",
+        f"/{os.environ['API_VERSION_URL_APPENDIX']}/query",
         headers=headers,
         json=query_parameters,
     )
