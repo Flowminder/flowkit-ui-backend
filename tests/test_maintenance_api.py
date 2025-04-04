@@ -35,7 +35,7 @@ async def test_add_scope_mapping(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.skip("Post tests are broken")
@@ -55,7 +55,7 @@ async def test_create_category(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.skip("Post tests are broken")
@@ -75,7 +75,7 @@ async def test_create_data_provider(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.skip("Post tests are broken")
@@ -95,7 +95,7 @@ async def test_create_dataset(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.skip("Post tests are broken")
@@ -115,7 +115,7 @@ async def test_create_indicator(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.skip("Post tests are broken")
@@ -135,7 +135,7 @@ async def test_create_spatial_resolution(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.skip("Post tests are broken")
@@ -155,7 +155,7 @@ async def test_create_temporal_resolution(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.asyncio
@@ -172,7 +172,7 @@ async def test_delete_category(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.asyncio
@@ -189,7 +189,7 @@ async def test_delete_data_provider(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.skip("This delete test is currently broken.")
@@ -209,7 +209,7 @@ async def test_delete_dataset(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.asyncio
@@ -226,7 +226,7 @@ async def test_delete_indicator(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.skip("This delete test is currently broken.")
@@ -246,7 +246,7 @@ async def test_delete_scope_mapping(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.asyncio
@@ -263,7 +263,7 @@ async def test_delete_setup(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.asyncio
@@ -280,7 +280,7 @@ async def test_delete_spatial_resolution(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.asyncio
@@ -297,7 +297,7 @@ async def test_delete_temporal_resolution(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.skip("Post tests are broken")
@@ -317,7 +317,7 @@ async def test_replace_setup(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.skip("Patch tests are broken")
@@ -337,7 +337,7 @@ async def test_update_category(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.skip("Patch tests are broken")
@@ -357,7 +357,7 @@ async def test_update_data_provider(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.skip("Patch tests are broken")
@@ -377,7 +377,7 @@ async def test_update_dataset(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.skip("Patch tests are broken")
@@ -397,7 +397,7 @@ async def test_update_indicator(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.skip("Patch tests are broken")
@@ -417,7 +417,7 @@ async def test_update_setup(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.skip("Patch tests are broken")
@@ -437,7 +437,7 @@ async def test_update_spatial_resolution(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.skip("Patch tests are broken")
@@ -457,4 +457,4 @@ async def test_update_temporal_resolution(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200

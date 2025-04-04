@@ -39,7 +39,7 @@ async def test_get_category(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.asyncio
@@ -56,7 +56,7 @@ async def test_get_indicator(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.asyncio
@@ -75,7 +75,7 @@ async def test_get_indicators_for_category(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.asyncio
@@ -92,7 +92,7 @@ async def test_get_spatial_resolution(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.asyncio
@@ -111,7 +111,7 @@ async def test_get_spatial_resolutions_for_category(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.asyncio
@@ -128,7 +128,7 @@ async def test_get_temporal_resolution(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.asyncio
@@ -147,7 +147,7 @@ async def test_get_temporal_resolutions_for_category(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.asyncio
@@ -169,7 +169,7 @@ async def test_get_time_range(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.asyncio
@@ -186,7 +186,7 @@ async def test_list_categories(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.asyncio
@@ -203,7 +203,7 @@ async def test_list_indicators(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.asyncio
@@ -220,7 +220,7 @@ async def test_list_spatial_resolutions(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.asyncio
@@ -237,7 +237,7 @@ async def test_list_temporal_resolutions(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.skip("Post tests are broken")
@@ -257,7 +257,7 @@ async def test_run_csv_query(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.skip("Post tests are broken")
@@ -277,4 +277,4 @@ async def test_run_query(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200

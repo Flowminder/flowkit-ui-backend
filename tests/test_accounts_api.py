@@ -23,7 +23,7 @@ async def test_delete_user(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.asyncio
@@ -40,7 +40,7 @@ async def test_get_user(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.asyncio
@@ -57,7 +57,7 @@ async def test_reset_password(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.skip("Patch tests are broken")
@@ -77,4 +77,4 @@ async def test_update_user(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
