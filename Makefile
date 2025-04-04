@@ -17,7 +17,6 @@ GID:=333
 APP_NAME_DB=$(APP_NAME)-db
 APP_NAME_TEST=$(APP_NAME)-test
 CONTAINER_NAME:=$(APP_NAME)
-CONTAINER_NAME_DB:=$(APP_NAME_DB)
 GIT_COMMIT:=$$(git rev-parse --short HEAD)
 # get branch from commit - needs to work even on CI and when checking out tag
 GIT_BRANCH:=$$(if [[ -n $$(git branch --show-current) ]]; then git branch --show-current; else git branch -a --contains $$(git rev-parse --short HEAD) | sed '/HEAD/d' | sed 's/remotes\/origin\///g' | sed 's/\*//g' | sed 's/ *//g' | awk '!_[$$0]++'; fi)
@@ -159,7 +158,7 @@ test: export GIT_BRANCH?=
 test: export GIT_COMMIT?=
 test: export GIT_TAG?=
 test: run-db
-	source venv/bin/activate; python -m pytest $(SELECTED_TESTS) \
+	source .venv/bin/activate; python -m pytest $(SELECTED_TESTS) \
 		--disable-pytest-warnings -p no:warnings -vvvv \
 		-o log_cli=false --show-capture=all \
 		--cov-config=.coveragerc \
