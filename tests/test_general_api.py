@@ -23,7 +23,7 @@ async def test_get_setup(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.asyncio
@@ -38,7 +38,7 @@ async def test_heartbeat(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.asyncio
@@ -53,4 +53,4 @@ async def test_list_data_providers(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
