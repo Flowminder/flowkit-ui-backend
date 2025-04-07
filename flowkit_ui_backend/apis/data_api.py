@@ -701,12 +701,29 @@ async def get_time_range(
     },
     tags=["data"],
     response_class=ORJSONResponse,
-
 )
-async def get_latest_date(request: Request=None) -> LatestDate | JSONResponse:
+async def get_latest_date(request: Request = None) -> LatestDate:
     try:
-        return data_api_impl.get_latest_date(request.app.state.pool)
-        
+        logger.debug("Starting request")
+        impl_result = await data_api_impl.get_latest_date(pool=request.app.state.pool)
+        logger.debug("Request ready")
+        content = impl_result[0] if isinstance(impl_result, tuple) else impl_result
+        if isinstance(impl_result, Response):
+            return impl_result
+        # default to status 200/204 but give the impl the option to define a different status code when returning content
+        status_code = impl_result[1] if isinstance(impl_result, tuple) else None
+        if content is not None:
+            return ORJSONResponse(
+                status_code=status_code if status_code is not None else HTTPStatus.OK,
+                content=jsonable_encoder(content),
+            )
+        else:
+            return Response(
+                status_code=(
+                    status_code if status_code is not None else HTTPStatus.NO_CONTENT
+                )
+            )
+
     # This is where we handle status codes via exceptions as raised by the impl methods
     except HTTPException as e:
         logger.debug(
