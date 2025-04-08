@@ -514,7 +514,8 @@ async def test_flow_csv_generation(populated_db):
         "value",
     ]
 
+
 @pytest.mark.asyncio
 async def test_get_latest_date(populated_db):
     response = await data_api_impl.get_latest_date(pool=populated_db)
-    assert response.latest_date == datetime.date(2020,7,1)
+    assert response.latest_date == datetime.date(2020, 7, 1)

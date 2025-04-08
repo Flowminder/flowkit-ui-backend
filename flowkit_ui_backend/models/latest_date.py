@@ -4,5 +4,3 @@ from datetime import date
 
 class LatestDate(BaseModel):
     latest_date: date
-
-
