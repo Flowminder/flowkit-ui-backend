@@ -53,15 +53,19 @@ async def get_data_provider(dpid: int, pool: Pool) -> DataProvider:
 
 async def heartbeat(pool: Pool) -> Heartbeat:
     logger.info("Request received, sending heartbeat...")
-    heartbeat = Heartbeat(
-        api_version=os.environ["API_VERSION"],
-        api_version_url_appendix=os.environ["API_VERSION_URL_APPENDIX"],
-        datetime=datetime.datetime.utcnow(),
-        docker_image=os.environ["IMAGE_NAME"],
-        git_branch=os.environ["GIT_BRANCH"],
-        git_commit=os.environ["GIT_COMMIT"],
-        git_tag=os.environ["GIT_TAG"] if os.environ["GIT_TAG"] != "" else None,
-        python_package=os.environ["APP_NAME"],
-        python_version=platform.python_version(),
-    )
+    try:
+        heartbeat = Heartbeat(
+            api_version=os.environ["API_VERSION"],
+            api_version_url_appendix=os.environ["API_VERSION_URL_APPENDIX"],
+            datetime=datetime.datetime.utcnow(),
+            docker_image=os.environ["IMAGE_NAME"],
+            git_branch=os.environ["GIT_BRANCH"],
+            git_commit=os.environ["GIT_COMMIT"],
+            git_tag=os.environ["GIT_TAG"] if os.environ["GIT_TAG"] != "" else None,
+            python_package=os.environ["APP_NAME"],
+            python_version=platform.python_version(),
+        )
+    except KeyError:
+        logger.warn("Missing env vars for heartbeat, returning empty.")
+        heartbeat = Heartbeat()
     return heartbeat
