@@ -1,6 +1,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 # If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+from datetime import datetime
 import structlog
 import math
 import pendulum
@@ -11,6 +12,9 @@ from fastapi.responses import StreamingResponse
 from aiomysql import Pool, SSDictCursor
 from dateutil.relativedelta import relativedelta
 from http import HTTPStatus
+
+from google.cloud import storage
+
 from flowkit_ui_backend.models.extra_models import TokenModel
 from flowkit_ui_backend.models.query_parameters import QueryParameters
 from flowkit_ui_backend.models.spatial_resolution import SpatialResolution
@@ -511,3 +515,19 @@ async def stream_flows_to_csv(flow_stream: AsyncGenerator) -> AsyncGenerator[str
                 f"{row['dt'].strftime('%Y-%m-%d')},{row['origin']},{row['destination']},{row['data']}"
                 for row in chunk
             ) + "\r\n"
+
+
+async def generate_signed_dqs_url():
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(os.environ["SECURE_FILE_BUCKET"])
+    blob = bucket.blob(os.environ("DQS_BUCKET_PATH"))
+
+    url = blob.generate_signed_url(
+        version="v4",
+        # This URL is valid for 15 minutes
+        expiration=datetime.timedelta(minutes=15),
+        # Allow GET requests using this URL.
+        method="GET",
+    )
+
+    return url
