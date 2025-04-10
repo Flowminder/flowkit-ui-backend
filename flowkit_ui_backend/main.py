@@ -101,15 +101,18 @@ async def permission_exception_handler(request: Request, e: PermissionError):
 
 
 @app.exception_handler(StarletteHTTPException)
-async def http_exception_handler(request, e):
+async def http_exception_handler(request, e:StarletteHTTPException):
     logger.error(f"{type(e)}: {str(e)}")
-    return await http_exception_handler(request, e)
+    if e.status_code == HTTPStatus.UNAUTHORIZED:
+        # Idk why this is getting thrown for unauthorised instead of the above
+        return await permission_exception_handler(request, e)
+    return JSONResponse(status_code=e.status_code, content="Error")
 
 
 @app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request, e):
+async def validation_exception_handler(request, e:RequestValidationError):
     logger.error(f"{type(e)}: {str(e)}")
-    return await request_validation_exception_handler(request, e)
+    return JSONResponse(status_code=HTTPStatus.BAD_REQUEST, content="Bad or malformed request")
 
 
 @app.on_event("startup")
