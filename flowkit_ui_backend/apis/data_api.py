@@ -705,22 +705,18 @@ async def get_time_range(
 async def get_latest_date(request: Request = None) -> LatestDate:
     try:
         logger.debug("Starting request")
-        impl_result = await data_api_impl.get_latest_date(pool=request.app.state.pool)
+        content = await data_api_impl.get_latest_date(pool=request.app.state.pool)
         logger.debug("Request ready")
-        content = impl_result[0] if isinstance(impl_result, tuple) else impl_result
-        if isinstance(impl_result, Response):
-            return impl_result
-        # default to status 200/204 but give the impl the option to define a different status code when returning content
-        status_code = impl_result[1] if isinstance(impl_result, tuple) else None
+        if isinstance(content, Response):
+            return content
         if content is not None:
             return ORJSONResponse(
-                status_code=status_code if status_code is not None else HTTPStatus.OK,
+                status_code=HTTPStatus.OK,
                 content=jsonable_encoder(content),
             )
         else:
             return Response(
-                status_code=(
-                    status_code if status_code is not None else HTTPStatus.NO_CONTENT
+                status_code=( HTTPStatus.NO_CONTENT
                 )
             )
 
