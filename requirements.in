@@ -48,4 +48,4 @@ watchgod
 websockets
 asgi-correlation-id
 timing-asgi
-google
+google-cloud-storage
