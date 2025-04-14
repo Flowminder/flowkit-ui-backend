@@ -527,9 +527,7 @@ async def generate_signed_dqs_url() -> SignedUrl:
 
     url = blob.generate_signed_url(
         version="v4",
-        # This URL is valid for 15 minutes
         expiration=timedelta(minutes=15),
-        # Allow GET requests using this URL.
         method="GET",
     )
     return SignedUrl(url=url, file_name=filename)
