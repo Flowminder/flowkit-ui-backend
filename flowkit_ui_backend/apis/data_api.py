@@ -1059,6 +1059,7 @@ async def dqs(
             content=f"Something went wrong: {e}",
         )
 
+
 @router.post(
     "/csv",
     responses={
@@ -1217,4 +1218,3 @@ async def run_query(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
             content=f"Something went wrong: {e}",
         )
-
