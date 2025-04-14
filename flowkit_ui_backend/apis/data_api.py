@@ -715,10 +715,7 @@ async def get_latest_date(request: Request = None) -> LatestDate:
                 content=jsonable_encoder(content),
             )
         else:
-            return Response(
-                status_code=( HTTPStatus.NO_CONTENT
-                )
-            )
+            return Response(status_code=(HTTPStatus.NO_CONTENT))
 
     # This is where we handle status codes via exceptions as raised by the impl methods
     except HTTPException as e:
