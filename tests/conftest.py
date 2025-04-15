@@ -24,7 +24,7 @@ def app() -> FastAPI:
 @pytest.fixture
 def client(app) -> TestClient:
     print(f"http://testserver{os.environ['API_VERSION_URL_APPENDIX']}/")
-    with TestClient(app, base_url=f"http://testserver/{os.environ['API_VERSION_URL_APPENDIX']}/") as client:
+    with TestClient(app, base_url=f"http://testserver{os.environ['API_VERSION_URL_APPENDIX']}/") as client:
         yield client
 
 

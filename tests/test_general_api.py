@@ -18,7 +18,7 @@ async def test_get_setup(client: TestClient):
     headers = {}
     response = client.request(
         "GET",
-        "/setup",
+        "setup",
         headers=headers,
     )
 
@@ -33,7 +33,7 @@ async def test_heartbeat(client: TestClient):
     headers = {}
     response = client.request(
         "GET",
-        "/heartbeat",
+        "heartbeat",
         headers=headers,
     )
 
@@ -48,7 +48,7 @@ async def test_list_data_providers(client: TestClient):
     headers = {}
     response = client.request(
         "GET",
-        "/data_providers",
+        "data_providers",
         headers=headers,
     )
 

@@ -18,7 +18,7 @@ async def test_delete_user(client: TestClient):
     }
     response = client.request(
         "DELETE",
-        "/users/{uid}".format(uid="user-4e128f03-a086-4167-81bd-bcfcc0175744"),
+        "users/{uid}".format(uid="user-4e128f03-a086-4167-81bd-bcfcc0175744"),
         headers=headers,
     )
 
@@ -35,7 +35,7 @@ async def test_get_user(client: TestClient):
     }
     response = client.request(
         "GET",
-        "/users/{uid}".format(uid="user-4e128f03-a086-4167-81bd-bcfcc0175744"),
+        "users/{uid}".format(uid="user-4e128f03-a086-4167-81bd-bcfcc0175744"),
         headers=headers,
     )
 
@@ -52,7 +52,7 @@ async def test_reset_password(client: TestClient):
     }
     response = client.request(
         "GET",
-        "/reset_password/{email}".format(email="user@example.com"),
+        "reset_password/{email}".format(email="user@example.com"),
         headers=headers,
     )
 
@@ -71,7 +71,7 @@ async def test_update_user(client: TestClient):
     }
     response = client.request(
         "PATCH",
-        "/users/{uid}".format(uid="user-4e128f03-a086-4167-81bd-bcfcc0175744"),
+        "users/{uid}".format(uid="user-4e128f03-a086-4167-81bd-bcfcc0175744"),
         headers=headers,
         json=user_metadata,
     )
