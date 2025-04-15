@@ -521,6 +521,8 @@ async def stream_flows_to_csv(flow_stream: AsyncGenerator) -> AsyncGenerator[str
 
 async def generate_signed_dqs_url() -> SignedUrl:
     storage_client = storage.Client()
+    # Exploratory logging
+    logger.warn(storage_client._credentials.get_cred_info())
     bucket = storage_client.bucket(os.environ["SECURE_FILE_BUCKET"])
     blob = bucket.blob(os.environ["DQS_BUCKET_PATH"])
     filename = Path(os.environ["DQS_BUCKET_PATH"]).name
