@@ -167,7 +167,7 @@ async def test_delete_category(client_with_dummied_out_security: TestClient):
     }
     response = client_with_dummied_out_security.request(
         "DELETE",
-        "/categories/{category_id}".format(category_id="category_id_example"),
+        "categories/residents",
         headers=headers,
     )
 
@@ -221,7 +221,7 @@ async def test_delete_indicator(client_with_dummied_out_security: TestClient):
     }
     response = client_with_dummied_out_security.request(
         "DELETE",
-        "indicators/{indicator_id}".format(indicator_id="indicator_id_example"),
+        "indicators/residents.residents",
         headers=headers,
     )
 
