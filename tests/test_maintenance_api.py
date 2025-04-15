@@ -172,7 +172,7 @@ async def test_delete_category(client_with_dummied_out_security: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    assert response.status_code == 200
+    assert response.status_code == 204
 
 
 @pytest.mark.asyncio
@@ -189,7 +189,7 @@ async def test_delete_data_provider(client_with_dummied_out_security: TestClient
     )
 
     # uncomment below to assert the status code of the HTTP response
-    assert response.status_code == 200
+    assert response.status_code == 204
 
 
 @pytest.mark.skip("This delete test is currently broken.")
@@ -209,7 +209,7 @@ async def test_delete_dataset(client_with_dummied_out_security: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    assert response.status_code == 200
+    assert response.status_code == 204
 
 
 @pytest.mark.asyncio
@@ -226,14 +226,13 @@ async def test_delete_indicator(client_with_dummied_out_security: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    assert response.status_code == 200
+    assert response.status_code == 204
 
 
-@pytest.mark.skip("This delete test is currently broken.")
 @pytest.mark.asyncio
 async def test_delete_scope_mapping(client_with_dummied_out_security: TestClient):
     """Test case for delete_scope_mapping"""
-    scope_mapping = flowkit_ui_backend.ScopeMapping()
+    scope_mapping = dict(scope="admin", mdid="1")
 
     headers = {
         "Authorization": "Bearer special-key",
@@ -246,7 +245,7 @@ async def test_delete_scope_mapping(client_with_dummied_out_security: TestClient
     )
 
     # uncomment below to assert the status code of the HTTP response
-    assert response.status_code == 200
+    assert response.status_code == 204
 
 
 @pytest.mark.asyncio
@@ -263,7 +262,7 @@ async def test_delete_setup(client_with_dummied_out_security: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    assert response.status_code == 200
+    assert response.status_code == 204
 
 
 @pytest.mark.asyncio
@@ -280,7 +279,7 @@ async def test_delete_spatial_resolution(client_with_dummied_out_security: TestC
     )
 
     # uncomment below to assert the status code of the HTTP response
-    assert response.status_code == 200
+    assert response.status_code == 204
 
 
 @pytest.mark.asyncio
@@ -297,7 +296,7 @@ async def test_delete_temporal_resolution(client_with_dummied_out_security: Test
     )
 
     # uncomment below to assert the status code of the HTTP response
-    assert response.status_code == 200
+    assert response.status_code == 204
 
 
 @pytest.mark.skip("Post tests are broken")

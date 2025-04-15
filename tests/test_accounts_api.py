@@ -23,7 +23,7 @@ async def test_delete_user(client_with_dummied_out_security: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    assert response.status_code == 200
+    assert response.status_code == 204
 
 
 @pytest.mark.asyncio
