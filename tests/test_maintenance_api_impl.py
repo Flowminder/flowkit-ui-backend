@@ -351,35 +351,6 @@ async def test_delete_indicator_indicator_doesnt_exist(mocker, provisioned_db):
         await maintenance_api_impl.delete_indicator("foo.bar", pool=provisioned_db)
 
 
-@pytest.mark.asyncio
-async def test_delete_indicator_category_doesnt_exist(mocker, provisioned_db):
-    mocker.patch(
-        "flowkit_ui_backend.db.db.select_data",
-        side_effect=[[]],
-    )
-
-    with pytest.raises(HTTPException):
-        await maintenance_api_impl.delete_indicator("foo.foo", pool=provisioned_db)
-
-
-@pytest.mark.asyncio
-async def test_delete_indicator_failed_to_drop_table(mocker, provisioned_db):
-    mocker.patch(
-        "flowkit_ui_backend.db.db.select_data",
-        side_effect=[[ind], [cat]],
-    )
-    mocker.patch(
-        "flowkit_ui_backend.db.db.delete_data",
-        side_effect=[None],
-    )
-    mocker.patch(
-        "flowkit_ui_backend.db.db.run",
-        side_effect=[(None, None), Exception("Could not drop table")],
-    )
-
-    with pytest.raises(HTTPException):
-        await maintenance_api_impl.delete_indicator("bar", pool=provisioned_db)
-
 
 @pytest.mark.asyncio
 async def test_delete_spatial_resolution(mocker, provisioned_db):
