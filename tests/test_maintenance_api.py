@@ -184,7 +184,7 @@ async def test_delete_data_provider(client: TestClient):
     }
     response = client.request(
         "DELETE",
-        "/data_providers/{dpid}".format(dpid=1),
+        "data_providers/{dpid}".format(dpid=1),
         headers=headers,
     )
 
@@ -203,7 +203,7 @@ async def test_delete_dataset(client: TestClient):
     }
     response = client.request(
         "DELETE",
-        "/data",
+        "data",
         headers=headers,
         json=dataset,
     )
@@ -221,7 +221,7 @@ async def test_delete_indicator(client: TestClient):
     }
     response = client.request(
         "DELETE",
-        "/indicators/{indicator_id}".format(indicator_id="indicator_id_example"),
+        "indicators/{indicator_id}".format(indicator_id="indicator_id_example"),
         headers=headers,
     )
 
@@ -240,7 +240,7 @@ async def test_delete_scope_mapping(client: TestClient):
     }
     response = client.request(
         "DELETE",
-        "/scope_mapping",
+        "scope_mapping",
         headers=headers,
         json=scope_mapping,
     )
@@ -258,7 +258,7 @@ async def test_delete_setup(client: TestClient):
     }
     response = client.request(
         "DELETE",
-        "/setup",
+        "setup",
         headers=headers,
     )
 
@@ -275,7 +275,7 @@ async def test_delete_spatial_resolution(client: TestClient):
     }
     response = client.request(
         "DELETE",
-        "/spatial_resolutions/{srid}".format(srid=56),
+        "spatial_resolutions/{srid}".format(srid=56),
         headers=headers,
     )
 
@@ -292,7 +292,7 @@ async def test_delete_temporal_resolution(client: TestClient):
     }
     response = client.request(
         "DELETE",
-        "/temporal_resolutions/{trid}".format(trid=56),
+        "temporal_resolutions/{trid}".format(trid=56),
         headers=headers,
     )
 
@@ -311,7 +311,7 @@ async def test_replace_setup(client: TestClient):
     }
     response = client.request(
         "POST",
-        "/setup",
+        "setup",
         headers=headers,
         json=config,
     )
@@ -331,7 +331,7 @@ async def test_update_category(client: TestClient):
     }
     response = client.request(
         "PATCH",
-        "/categories/{category_id}".format(category_id="category_id_example"),
+        "categories/{category_id}".format(category_id="category_id_example"),
         headers=headers,
         json=category,
     )
@@ -351,7 +351,7 @@ async def test_update_data_provider(client: TestClient):
     }
     response = client.request(
         "PATCH",
-        "/data_providers/{dpid}".format(dpid=1),
+        "data_providers/{dpid}".format(dpid=1),
         headers=headers,
         json=data_provider,
     )
@@ -371,7 +371,7 @@ async def test_update_dataset(client: TestClient):
     }
     response = client.request(
         "PATCH",
-        "/data",
+        "data",
         headers=headers,
         json=dataset,
     )
@@ -391,7 +391,7 @@ async def test_update_indicator(client: TestClient):
     }
     response = client.request(
         "PATCH",
-        "/indicators/{indicator_id}".format(indicator_id="indicator_id_example"),
+        "indicators/{indicator_id}".format(indicator_id="indicator_id_example"),
         headers=headers,
         json=indicator,
     )
@@ -411,7 +411,7 @@ async def test_update_setup(client: TestClient):
     }
     response = client.request(
         "PATCH",
-        "/setup",
+        "setup",
         headers=headers,
         json=config,
     )
@@ -431,7 +431,7 @@ async def test_update_spatial_resolution(client: TestClient):
     }
     response = client.request(
         "PATCH",
-        "/spatial_resolutions/{srid}".format(srid=56),
+        "spatial_resolutions/{srid}".format(srid=56),
         headers=headers,
         json=spatial_resolution,
     )
@@ -451,7 +451,7 @@ async def test_update_temporal_resolution(client: TestClient):
     }
     response = client.request(
         "PATCH",
-        "/temporal_resolutions/{trid}".format(trid=56),
+        "temporal_resolutions/{trid}".format(trid=56),
         headers=headers,
         json=temporal_resolution,
     )
