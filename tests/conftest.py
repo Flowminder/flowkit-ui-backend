@@ -1,32 +1,30 @@
 import pytest
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
+from fastapi.security import SecurityScopes
 from fastapi.testclient import TestClient
 import pytest_asyncio
 import aiomysql
 import asyncio
 import os
 import pathlib
-from flowkit_ui_backend.main import app as application
+
 from flowkit_ui_backend.models.extra_models import TokenModel
 from flowkit_ui_backend.db.db import (
     provision_db,
     run_script,
 )
+import flowkit_ui_backend.security_api
 
 
-@pytest.fixture
-def app() -> FastAPI:
-    application.dependency_overrides = {}
-
-    return application
-
+async def monkey_patched_get_token(security_scopes: SecurityScopes, token: str = Depends(flowkit_ui_backend.security_api.oauth2_code)):
+    return TokenModel(sub="TEST USER", permissions=[])
 
 @pytest.fixture
-def client(app) -> TestClient:
-    print(f"http://testserver{os.environ['API_VERSION_URL_APPENDIX']}/")
-    with TestClient(app, base_url=f"http://testserver{os.environ['API_VERSION_URL_APPENDIX']}/") as client:
-        yield client
-
+def get_dummy_token_auth0(monkeypatch):
+    """
+    Provides a test token.
+    """
+    monkeypatch.setattr("flowkit_ui_backend.security_api.get_token_auth0", monkey_patched_get_token)
 
 @pytest.fixture()
 def event_loop():
@@ -110,3 +108,25 @@ def admin_token_model():
         A token model with admin permissions
     """
     return TokenModel(sub="test_subject", permissions=["admin"])
+
+@pytest.fixture
+def app_with_dummied_out_security(get_dummy_token_auth0, populated_db) -> FastAPI:
+    from flowkit_ui_backend.main import app as application
+    return application
+
+
+@pytest.fixture
+def client_with_dummied_out_security(app_with_dummied_out_security) -> TestClient:
+    with TestClient(app_with_dummied_out_security, base_url=f"http://testserver{os.environ['API_VERSION_URL_APPENDIX']}/") as client:
+        yield client
+
+@pytest.fixture
+def app(get_dummy_token_auth0, populated_db) -> FastAPI:
+    from flowkit_ui_backend.main import app as application
+    return application
+
+
+@pytest.fixture
+def client(app) -> TestClient:
+    with TestClient(app, base_url=f"http://testserver{os.environ['API_VERSION_URL_APPENDIX']}/") as client:
+        yield client

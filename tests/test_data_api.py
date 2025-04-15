@@ -18,13 +18,13 @@ from flowkit_ui_backend.models.time_range import TimeRange  # noqa: F401
 
 
 @pytest.mark.asyncio
-async def test_get_category(client: TestClient):
+async def test_get_category(client_with_dummied_out_security: TestClient):
     """Test case for get_category"""
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.get("categories/category_id_example",
+    response = client_with_dummied_out_security.get("categories/category_id_example",
         headers=headers,
     )
 
@@ -33,13 +33,13 @@ async def test_get_category(client: TestClient):
 
 
 @pytest.mark.asyncio
-async def test_get_indicator(client: TestClient):
+async def test_get_indicator(client_with_dummied_out_security: TestClient):
     """Test case for get_indicator"""
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "GET",
         "indicators/indicator_id_example",
         headers=headers,
@@ -50,13 +50,13 @@ async def test_get_indicator(client: TestClient):
 
 
 @pytest.mark.asyncio
-async def test_get_indicators_for_category(client: TestClient):
+async def test_get_indicators_for_category(client_with_dummied_out_security: TestClient):
     """Test case for get_indicators_for_category"""
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "GET",
         "indicators_for_category/category_id_example",
         headers=headers,
@@ -67,13 +67,13 @@ async def test_get_indicators_for_category(client: TestClient):
 
 
 @pytest.mark.asyncio
-async def test_get_spatial_resolution(client: TestClient):
+async def test_get_spatial_resolution(client_with_dummied_out_security: TestClient):
     """Test case for get_spatial_resolution"""
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "GET",
         "spatial_resolutions/56",
         headers=headers,
@@ -84,13 +84,13 @@ async def test_get_spatial_resolution(client: TestClient):
 
 
 @pytest.mark.asyncio
-async def test_get_spatial_resolutions_for_category(client: TestClient):
+async def test_get_spatial_resolutions_for_category(client_with_dummied_out_security: TestClient):
     """Test case for get_spatial_resolutions_for_category"""
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "GET",
         "spatial_resolutions_for_category/category_id_example",
         headers=headers,
@@ -101,13 +101,13 @@ async def test_get_spatial_resolutions_for_category(client: TestClient):
 
 
 @pytest.mark.asyncio
-async def test_get_temporal_resolution(client: TestClient):
+async def test_get_temporal_resolution(client_with_dummied_out_security: TestClient):
     """Test case for get_temporal_resolution"""
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "GET",
         "temporal_resolutions/56",
         headers=headers,
@@ -118,13 +118,13 @@ async def test_get_temporal_resolution(client: TestClient):
 
 
 @pytest.mark.asyncio
-async def test_get_temporal_resolutions_for_category(client: TestClient):
+async def test_get_temporal_resolutions_for_category(client_with_dummied_out_security: TestClient):
     """Test case for get_temporal_resolutions_for_category"""
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "GET",
         "temporal_resolutions_for_category/category_id_example"
         ,
@@ -136,13 +136,13 @@ async def test_get_temporal_resolutions_for_category(client: TestClient):
 
 
 @pytest.mark.asyncio
-async def test_get_time_range(client: TestClient):
+async def test_get_time_range(client_with_dummied_out_security: TestClient):
     """Test case for get_time_range"""
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "GET",
         "timerange/category_id_example/indicator_id_example/56/56",
         headers=headers,
@@ -153,13 +153,13 @@ async def test_get_time_range(client: TestClient):
 
 
 @pytest.mark.asyncio
-async def test_list_categories(client: TestClient):
+async def test_list_categories(client_with_dummied_out_security: TestClient):
     """Test case for list_categories"""
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "GET",
         "categories",
         headers=headers,
@@ -170,13 +170,13 @@ async def test_list_categories(client: TestClient):
 
 
 @pytest.mark.asyncio
-async def test_list_indicators(client: TestClient):
+async def test_list_indicators(client_with_dummied_out_security: TestClient):
     """Test case for list_indicators"""
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "GET",
         "indicators",
         headers=headers,
@@ -187,13 +187,13 @@ async def test_list_indicators(client: TestClient):
 
 
 @pytest.mark.asyncio
-async def test_list_spatial_resolutions(client: TestClient):
+async def test_list_spatial_resolutions(client_with_dummied_out_security: TestClient):
     """Test case for list_spatial_resolutions"""
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "GET",
         "spatial_resolutions",
         headers=headers,
@@ -204,13 +204,13 @@ async def test_list_spatial_resolutions(client: TestClient):
 
 
 @pytest.mark.asyncio
-async def test_list_temporal_resolutions(client: TestClient):
+async def test_list_temporal_resolutions(client_with_dummied_out_security: TestClient):
     """Test case for list_temporal_resolutions"""
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "GET",
         "temporal_resolutions",
         headers=headers,
@@ -222,14 +222,14 @@ async def test_list_temporal_resolutions(client: TestClient):
 
 @pytest.mark.skip("Post tests are broken")
 @pytest.mark.asyncio
-async def test_run_csv_query(client: TestClient):
+async def test_run_csv_query(client_with_dummied_out_security: TestClient):
     """Test case for run_csv_query"""
     query_parameters = flowkit_ui_backend.QueryParameters()
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "POST",
         "csv",
         headers=headers,
@@ -242,14 +242,14 @@ async def test_run_csv_query(client: TestClient):
 
 @pytest.mark.skip("Post tests are broken")
 @pytest.mark.asyncio
-async def test_run_query(client: TestClient):
+async def test_run_query(client_with_dummied_out_security: TestClient):
     """Test case for run_query"""
     query_parameters = flowkit_ui_backend.QueryParameters()
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "POST",
         "query",
         headers=headers,

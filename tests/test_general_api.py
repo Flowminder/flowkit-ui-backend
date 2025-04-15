@@ -12,11 +12,11 @@ from flowkit_ui_backend.models.heartbeat import Heartbeat  # noqa: F401
 
 
 @pytest.mark.asyncio
-async def test_get_setup(client: TestClient):
+async def test_get_setup(client_with_dummied_out_security: TestClient):
     """Test case for get_setup"""
 
     headers = {}
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "GET",
         "setup",
         headers=headers,
@@ -27,11 +27,11 @@ async def test_get_setup(client: TestClient):
 
 
 @pytest.mark.asyncio
-async def test_heartbeat(client: TestClient):
+async def test_heartbeat(client_with_dummied_out_security: TestClient):
     """Test case for heartbeat"""
 
     headers = {}
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "GET",
         "heartbeat",
         headers=headers,
@@ -42,11 +42,11 @@ async def test_heartbeat(client: TestClient):
 
 
 @pytest.mark.asyncio
-async def test_list_data_providers(client: TestClient):
+async def test_list_data_providers(client_with_dummied_out_security: TestClient):
     """Test case for list_data_providers"""
 
     headers = {}
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "GET",
         "data_providers",
         headers=headers,
