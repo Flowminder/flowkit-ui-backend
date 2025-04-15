@@ -513,3 +513,11 @@ async def test_flow_csv_generation(populated_db):
         "destination_code",
         "value",
     ]
+
+
+@pytest.mark.skip("Development test only - needs a bucket to run correctly")
+@pytest.mark.asyncio
+async def test_generate_signed_dqs_url():
+    url = await data_api_impl.generate_signed_dqs_url()
+    print(url)
+    assert "Mobility" in url.url
