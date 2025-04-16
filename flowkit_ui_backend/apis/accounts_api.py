@@ -74,7 +74,7 @@ async def delete_user(
         if uid != token_auth0.sub:
             return JSONResponse(
                 status_code=HTTPStatus.UNAUTHORIZED,
-                content="You can only request user data on yourself"
+                content="You can only request user data on yourself",
             )
         logger.debug("Starting request")
         impl_result = await accounts_api_impl.delete_user(
@@ -159,7 +159,7 @@ async def get_user(
         if uid != token_auth0.sub:
             return JSONResponse(
                 status_code=HTTPStatus.UNAUTHORIZED,
-                content="You can only request user data on yourself"
+                content="You can only request user data on yourself",
             )
         logger.debug("Starting request")
         impl_result = await accounts_api_impl.get_user(
@@ -243,7 +243,7 @@ async def reset_password(
         if uid != token_auth0.sub:
             return JSONResponse(
                 status_code=HTTPStatus.UNAUTHORIZED,
-                content="You can only request user data on yourself"
+                content="You can only request user data on yourself",
             )
         logger.debug("Starting request")
         impl_result = await accounts_api_impl.reset_password(
@@ -326,7 +326,7 @@ async def update_user(
         if uid != token_auth0.sub:
             return JSONResponse(
                 status_code=HTTPStatus.UNAUTHORIZED,
-                content="You can only request user data on yourself"
+                content="You can only request user data on yourself",
             )
         logger.debug("Starting request")
         impl_result = await accounts_api_impl.update_user(
