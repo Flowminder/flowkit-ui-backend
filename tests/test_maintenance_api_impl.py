@@ -342,10 +342,8 @@ async def test_delete_indicator_success(mocker, provisioned_db):
 
 @pytest.mark.asyncio
 async def test_delete_indicator_indicator_doesnt_exist(mocker, provisioned_db):
-
     with pytest.raises(HTTPException):
         await maintenance_api_impl.delete_indicator("foo.bar", pool=provisioned_db)
-
 
 
 @pytest.mark.asyncio

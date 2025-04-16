@@ -207,7 +207,6 @@ async def delete_indicator(
             detail=f"Indicator '{indicator_id}' not found",
         )
 
-
     await db.delete_data(
         base_model=Indicator, pool=pool, ids=[indicator_id], id_key="indicator_id"
     )

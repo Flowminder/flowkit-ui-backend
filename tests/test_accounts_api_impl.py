@@ -50,7 +50,6 @@ async def test_update_user_invalid_token(mock_auth0_token_error):
         await accounts_api_impl.update_user("bob", metadata)
 
 
-
 @pytest.mark.asyncio
 async def test_update_user_valid_token(mock_auth0):
     metadata = UserMetadata(

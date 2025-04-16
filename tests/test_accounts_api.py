@@ -4,6 +4,7 @@ from http import HTTPStatus
 from unittest.mock import patch, AsyncMock, Mock
 
 import httpx
+
 # coding: utf-8
 
 from fastapi.testclient import TestClient
@@ -49,11 +50,17 @@ async def test_get_user(client_with_dummied_out_security: TestClient, mock_auth0
 
 
 @pytest.mark.asyncio
-async def test_reset_password(client_with_dummied_out_security: TestClient, monkeypatch):
+async def test_reset_password(
+    client_with_dummied_out_security: TestClient, monkeypatch
+):
     """Test case for reset_password"""
 
     # This isn't ideal - really we should be passing the httpx client into the function via dependency injection rather than it being instantiated inside
-    monkeypatch.setattr(httpx.AsyncClient, "post", AsyncMock(return_value=Mock(status_code=HTTPStatus.OK)))
+    monkeypatch.setattr(
+        httpx.AsyncClient,
+        "post",
+        AsyncMock(return_value=Mock(status_code=HTTPStatus.OK)),
+    )
     headers = {
         "Authorization": "Bearer special-key",
     }
