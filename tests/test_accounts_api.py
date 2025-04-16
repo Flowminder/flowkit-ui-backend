@@ -31,8 +31,11 @@ async def test_delete_user(client_with_dummied_out_security: TestClient, mock_au
     # uncomment below to assert the status code of the HTTP response
     assert response.status_code == 204
 
+
 @pytest.mark.asyncio
-async def test_delete_other_user_fails(client_with_dummied_out_security: TestClient, mock_auth0):
+async def test_delete_other_user_fails(
+    client_with_dummied_out_security: TestClient, mock_auth0
+):
     """Test case for delete_user"""
 
     headers = {
@@ -64,8 +67,11 @@ async def test_get_user(client_with_dummied_out_security: TestClient, mock_auth0
     # uncomment below to assert the status code of the HTTP response
     assert response.status_code == 200
 
+
 @pytest.mark.asyncio
-async def test_get_other_user_fails(client_with_dummied_out_security: TestClient, mock_auth0):
+async def test_get_other_user_fails(
+    client_with_dummied_out_security: TestClient, mock_auth0
+):
     """Test case for get_user"""
     mock_auth0.users.return_value = "user-bob"
     headers = {
@@ -79,6 +85,7 @@ async def test_get_other_user_fails(client_with_dummied_out_security: TestClient
 
     # uncomment below to assert the status code of the HTTP response
     assert response.status_code == 401
+
 
 @pytest.mark.asyncio
 async def test_reset_password(
