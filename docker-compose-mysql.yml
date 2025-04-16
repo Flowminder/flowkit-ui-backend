@@ -23,10 +23,7 @@ services:
       - MYSQL_DATABASE=$DB_NAME
     healthcheck:
       test:
-        [
-          "CMD-SHELL",
-          'mysql -u$$MYSQL_USER -p$$MYSQL_PASSWORD -e "SELECT 1" >/dev/null 2>&1;'
-        ]
+        ["CMD-SHELL", "exit | mysql -h localhost -P 3306 -u $$MYSQL_USER -p$$MYSQL_ROOT_PASSWORD" ]
       interval: 1s
       timeout: 10s
       retries: 30
