@@ -1,4 +1,5 @@
 import pytest
+from auth0 import Auth0Error
 from fastapi import FastAPI, Depends
 from fastapi.security import SecurityScopes
 from fastapi.testclient import TestClient
@@ -15,6 +16,34 @@ from flowkit_ui_backend.db.db import (
 )
 import flowkit_ui_backend.security_api
 
+class StubAuth0Users:
+    def __init__(self, return_value):
+        self.return_value = return_value
+
+    async def get_async(self, uid):
+        return self.return_value
+    async def update_async(self, uid, meta):
+        return self.return_value
+    async def delete_async(self, uid):
+        return self.return_value
+
+class StubAuth0:
+    def __init__(self, return_value=None):
+        self.users = StubAuth0Users(return_value)
+
+@pytest.fixture
+def mock_auth0(monkeypatch):
+    auth0_stub = StubAuth0()
+    async def getter():
+        return auth0_stub
+    monkeypatch.setattr("flowkit_ui_backend.impl.accounts_api_impl.get_auth0", getter)
+    return auth0_stub
+
+@pytest.fixture
+def mock_auth0_token_error(monkeypatch):
+    async def getter():
+        raise Auth0Error(500, 'Test error', "This error happened on purpose.")
+    monkeypatch.setattr("flowkit_ui_backend.impl.accounts_api_impl.get_auth0", getter)
 
 async def monkey_patched_get_token(security_scopes: SecurityScopes, token: str = Depends(flowkit_ui_backend.security_api.oauth2_code)):
     return TokenModel(sub="TEST USER", permissions=["admin"])
