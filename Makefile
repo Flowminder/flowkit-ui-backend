@@ -168,6 +168,7 @@ test: run-db
 		--junit-xml=./test_results/results.xml \
 		tests; \
 	ERR=$$?; \
+	docker compose -f docker-compose-mysql.yml logs ;\
 	docker compose -f docker-compose-mysql.yml down ;\
 	exit $$ERR
 
