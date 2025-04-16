@@ -7,11 +7,13 @@ import httpx
 from typing import Optional
 from http import HTTPStatus
 from aiomysql import Pool
+from asyncache import cached
+from auth0.management.async_auth0 import AsyncAuth0
+from cachetools import TTLCache
 from fastapi import HTTPException
 from flowkit_ui_backend.models.extra_models import TokenModel
 from flowkit_ui_backend.models.user_metadata import UserMetadata
 from auth0.asyncify import asyncify
-from auth0.management import Auth0
 from auth0.authentication import GetToken
 
 
@@ -20,7 +22,7 @@ logger = structlog.get_logger("flowkit_ui_backend.log")
 
 # A note on tokens:
 # We can't re-use the user's token they obtained from the UI as the audience for that is this API,
-# not the Auth0 management API. Instead, we just use the user's token for validation via our security_api.
+# not the AsyncAuth0 management API. Instead, we just use the user's token for validation via our security_api.
 # If the user lacked the permission for the requested endpoint, an exception would have been thrown
 # before we even get here so we can assume the user is legitimate and authorised.
 # Given that, we can simply let the flowkit_ui_backend (client) obtain a M2M token for the management API
@@ -30,7 +32,7 @@ logger = structlog.get_logger("flowkit_ui_backend.log")
 async def get_user(
     uid: str, pool: Pool = None, token_model: TokenModel = None
 ) -> UserMetadata:
-    user = await Auth0(
+    user = await AsyncAuth0(
         os.getenv("AUTH0_DOMAIN"), await get_management_api_m2m_token()
     ).users.get_async(uid)
     if user is None:
@@ -44,7 +46,7 @@ async def update_user(
     pool: Pool = None,
     token_model: TokenModel = None,
 ) -> None:
-    await Auth0(
+    await AsyncAuth0(
         os.getenv("AUTH0_DOMAIN"), await get_management_api_m2m_token()
     ).users.update_async(uid, {"user_metadata": body.dict()})
 
@@ -52,7 +54,7 @@ async def update_user(
 async def delete_user(
     uid: str, pool: Pool = None, token_model: TokenModel = None
 ) -> None:
-    await Auth0(
+    await AsyncAuth0(
         os.getenv("AUTH0_DOMAIN"), await get_management_api_m2m_token()
     ).users.delete_async(uid)
 
@@ -71,10 +73,10 @@ async def reset_password(
             detail=f"Could not trigger password reset for email {email}",
         )
 
-
+@cached(TTLCache(2, 86400))
 async def get_management_api_m2m_token() -> Optional[str]:
     try:
-        # - obtain m2m access token for management API using the flowkit_ui_backend's client grant as set in Auth0 dashboard
+        # - obtain m2m access token for management API using the flowkit_ui_backend's client grant as set in AsyncAuth0 dashboard
         get_token = asyncify(GetToken)(
             os.getenv("AUTH0_DOMAIN"),
             os.getenv("AUTH0_CLIENT_ID"),
