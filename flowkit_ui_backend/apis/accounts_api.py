@@ -156,6 +156,11 @@ async def get_user(
         raise NotImplementedError("The /get_user endpoint is not yet implemented")
 
     try:
+        if uid != token_auth0.sub:
+            return JSONResponse(
+                status_code=HTTPStatus.UNAUTHORIZED,
+                content="You can only request user data on yourself"
+            )
         logger.debug("Starting request")
         impl_result = await accounts_api_impl.get_user(
             uid, pool=request.app.state.pool, token_model=token_auth0
@@ -235,6 +240,11 @@ async def reset_password(
         raise NotImplementedError("The /reset_password endpoint is not yet implemented")
 
     try:
+        if uid != token_auth0.sub:
+            return JSONResponse(
+                status_code=HTTPStatus.UNAUTHORIZED,
+                content="You can only request user data on yourself"
+            )
         logger.debug("Starting request")
         impl_result = await accounts_api_impl.reset_password(
             email, pool=request.app.state.pool, token_model=token_auth0
@@ -313,6 +323,11 @@ async def update_user(
         raise NotImplementedError("The /update_user endpoint is not yet implemented")
 
     try:
+        if uid != token_auth0.sub:
+            return JSONResponse(
+                status_code=HTTPStatus.UNAUTHORIZED,
+                content="You can only request user data on yourself"
+            )
         logger.debug("Starting request")
         impl_result = await accounts_api_impl.update_user(
             uid, user_metadata, pool=request.app.state.pool, token_model=token_auth0
