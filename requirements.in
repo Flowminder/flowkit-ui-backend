@@ -9,6 +9,7 @@ async-exit-stack
 async-generator
 auth0-python
 better-exceptions
+cachetools
 certifi
 chardet
 colorama
