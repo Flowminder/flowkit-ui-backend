@@ -17,7 +17,7 @@ import flowkit_ui_backend.security_api
 
 
 async def monkey_patched_get_token(security_scopes: SecurityScopes, token: str = Depends(flowkit_ui_backend.security_api.oauth2_code)):
-    return TokenModel(sub="TEST USER", permissions=[])
+    return TokenModel(sub="TEST USER", permissions=["admin"])
 
 @pytest.fixture
 def get_dummy_token_auth0(monkeypatch):
