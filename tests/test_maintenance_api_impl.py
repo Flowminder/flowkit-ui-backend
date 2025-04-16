@@ -342,10 +342,6 @@ async def test_delete_indicator_success(mocker, provisioned_db):
 
 @pytest.mark.asyncio
 async def test_delete_indicator_indicator_doesnt_exist(mocker, provisioned_db):
-    mocker.patch(
-        "flowkit_ui_backend.db.db.select_data",
-        side_effect=[[ind], []],
-    )
 
     with pytest.raises(HTTPException):
         await maintenance_api_impl.delete_indicator("foo.bar", pool=provisioned_db)

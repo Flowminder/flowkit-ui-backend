@@ -24,7 +24,7 @@ async def test_get_category(client_with_dummied_out_security: TestClient):
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client_with_dummied_out_security.get("categories/category_id_example",
+    response = client_with_dummied_out_security.get("categories/residents",
         headers=headers,
     )
 
@@ -41,7 +41,7 @@ async def test_get_indicator(client_with_dummied_out_security: TestClient):
     }
     response = client_with_dummied_out_security.request(
         "GET",
-        "indicators/indicator_id_example",
+        "indicators/residents.residents",
         headers=headers,
     )
 
@@ -58,7 +58,7 @@ async def test_get_indicators_for_category(client_with_dummied_out_security: Tes
     }
     response = client_with_dummied_out_security.request(
         "GET",
-        "indicators_for_category/category_id_example",
+        "indicators_for_category/residents",
         headers=headers,
     )
 
@@ -75,7 +75,7 @@ async def test_get_spatial_resolution(client_with_dummied_out_security: TestClie
     }
     response = client_with_dummied_out_security.request(
         "GET",
-        "spatial_resolutions/56",
+        "spatial_resolutions/3",
         headers=headers,
     )
 
@@ -92,7 +92,7 @@ async def test_get_spatial_resolutions_for_category(client_with_dummied_out_secu
     }
     response = client_with_dummied_out_security.request(
         "GET",
-        "spatial_resolutions_for_category/category_id_example",
+        "spatial_resolutions_for_category/residents",
         headers=headers,
     )
 
@@ -109,7 +109,7 @@ async def test_get_temporal_resolution(client_with_dummied_out_security: TestCli
     }
     response = client_with_dummied_out_security.request(
         "GET",
-        "temporal_resolutions/56",
+        "temporal_resolutions/2",
         headers=headers,
     )
 
@@ -126,7 +126,7 @@ async def test_get_temporal_resolutions_for_category(client_with_dummied_out_sec
     }
     response = client_with_dummied_out_security.request(
         "GET",
-        "temporal_resolutions_for_category/category_id_example"
+        "temporal_resolutions_for_category/residents"
         ,
         headers=headers,
     )
@@ -144,7 +144,7 @@ async def test_get_time_range(client_with_dummied_out_security: TestClient):
     }
     response = client_with_dummied_out_security.request(
         "GET",
-        "timerange/category_id_example/indicator_id_example/56/56",
+        "timerange/residents/residents.residents/2/2",
         headers=headers,
     )
 
