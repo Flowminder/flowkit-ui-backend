@@ -24,7 +24,8 @@ async def test_get_category(client_with_dummied_out_security: TestClient):
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client_with_dummied_out_security.get("categories/residents",
+    response = client_with_dummied_out_security.get(
+        "categories/residents",
         headers=headers,
     )
 
@@ -50,7 +51,9 @@ async def test_get_indicator(client_with_dummied_out_security: TestClient):
 
 
 @pytest.mark.asyncio
-async def test_get_indicators_for_category(client_with_dummied_out_security: TestClient):
+async def test_get_indicators_for_category(
+    client_with_dummied_out_security: TestClient,
+):
     """Test case for get_indicators_for_category"""
 
     headers = {
@@ -84,7 +87,9 @@ async def test_get_spatial_resolution(client_with_dummied_out_security: TestClie
 
 
 @pytest.mark.asyncio
-async def test_get_spatial_resolutions_for_category(client_with_dummied_out_security: TestClient):
+async def test_get_spatial_resolutions_for_category(
+    client_with_dummied_out_security: TestClient,
+):
     """Test case for get_spatial_resolutions_for_category"""
 
     headers = {
@@ -118,7 +123,9 @@ async def test_get_temporal_resolution(client_with_dummied_out_security: TestCli
 
 
 @pytest.mark.asyncio
-async def test_get_temporal_resolutions_for_category(client_with_dummied_out_security: TestClient):
+async def test_get_temporal_resolutions_for_category(
+    client_with_dummied_out_security: TestClient,
+):
     """Test case for get_temporal_resolutions_for_category"""
 
     headers = {
@@ -126,8 +133,7 @@ async def test_get_temporal_resolutions_for_category(client_with_dummied_out_sec
     }
     response = client_with_dummied_out_security.request(
         "GET",
-        "temporal_resolutions_for_category/residents"
-        ,
+        "temporal_resolutions_for_category/residents",
         headers=headers,
     )
 
@@ -220,11 +226,17 @@ async def test_list_temporal_resolutions(client_with_dummied_out_security: TestC
     assert response.status_code == 200
 
 
-@pytest.mark.skip("Post tests are broken")
 @pytest.mark.asyncio
 async def test_run_csv_query(client_with_dummied_out_security: TestClient):
     """Test case for run_csv_query"""
-    query_parameters = flowkit_ui_backend.QueryParameters()
+    query_parameters = dict(
+        category_id="relocations",
+        indicator_id="relocations.relocations",
+        srid=3,
+        trid=2,
+        start_date="2020-02-01",
+        duration=1,
+    )
 
     headers = {
         "Authorization": "Bearer special-key",
@@ -240,11 +252,17 @@ async def test_run_csv_query(client_with_dummied_out_security: TestClient):
     assert response.status_code == 200
 
 
-@pytest.mark.skip("Post tests are broken")
 @pytest.mark.asyncio
 async def test_run_query(client_with_dummied_out_security: TestClient):
     """Test case for run_query"""
-    query_parameters = flowkit_ui_backend.QueryParameters()
+    query_parameters = dict(
+        category_id="relocations",
+        indicator_id="relocations.relocations",
+        srid=3,
+        trid=2,
+        start_date="2020-02-01",
+        duration=1,
+    )
 
     headers = {
         "Authorization": "Bearer special-key",
@@ -258,3 +276,9 @@ async def test_run_query(client_with_dummied_out_security: TestClient):
 
     # uncomment below to assert the status code of the HTTP response
     assert response.status_code == 200
+    assert response.json() == dict(
+        min=6040.0,
+        max=6040.0,
+        mdids=None,
+        data_by_date={"2020-02": {"HT0111-01": {"HT0111-02": 6040.0}}},
+    )

@@ -28,11 +28,11 @@ logger = structlog.get_logger("flowkit_ui_backend.log")
 # Given that, we can simply let the flowkit_ui_backend (client) obtain a M2M token for the management API
 # and use that to execute the request.
 
+
 @cached(TTLCache(2, 86400))
 async def get_auth0():
-    return AsyncAuth0(
-        os.getenv("AUTH0_DOMAIN"), await get_management_api_m2m_token()
-    )
+    return AsyncAuth0(os.getenv("AUTH0_DOMAIN"), await get_management_api_m2m_token())
+
 
 async def get_user(
     uid: str, pool: Pool = None, token_model: TokenModel = None
@@ -72,6 +72,7 @@ async def reset_password(
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
                 detail=f"Could not trigger password reset for email {email}",
             )
+
 
 @cached(TTLCache(2, 86400))
 async def get_management_api_m2m_token() -> Optional[str]:
