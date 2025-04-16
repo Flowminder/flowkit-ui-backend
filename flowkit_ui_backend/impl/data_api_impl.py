@@ -518,18 +518,25 @@ async def stream_flows_to_csv(flow_stream: AsyncGenerator) -> AsyncGenerator[str
                 for row in chunk
             ) + "\r\n"
 
+from google.auth import compute_engine
+from google.auth.transport import requests
+import google
 
 async def generate_signed_dqs_url() -> SignedUrl:
     storage_client = storage.Client()
     # Exploratory logging
-    logger.warn(storage_client._credentials.get_cred_info())
     bucket = storage_client.bucket(os.environ["SECURE_FILE_BUCKET"])
     blob = bucket.blob(os.environ["DQS_BUCKET_PATH"])
     filename = Path(os.environ["DQS_BUCKET_PATH"]).name
+    auth_request = requests.Request()
+    credentials, project = google.auth.default()
+    storage_client = storage.Client(project, credentials)
+    signing_credentials = compute_engine.IDTokenCredentials(auth_request, "", service_account_email=credentials.service_account_email)
 
     url = blob.generate_signed_url(
         version="v4",
         expiration=timedelta(minutes=15),
         method="GET",
+        credentials=signing_credentials,
     )
-    return SignedUrl(url=url, file_name=filename)
+    return SignedUrl(url=url, file_name=filename, credentials=signing_credentials)
