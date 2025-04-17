@@ -707,15 +707,7 @@ async def get_latest_date(request: Request = None) -> LatestDate:
         logger.debug("Starting request")
         content = await data_api_impl.get_latest_date(pool=request.app.state.pool)
         logger.debug("Request ready")
-        if isinstance(content, Response):
-            return content
-        if content is not None:
-            return ORJSONResponse(
-                status_code=HTTPStatus.OK,
-                content=jsonable_encoder(content),
-            )
-        else:
-            return Response(status_code=(HTTPStatus.NO_CONTENT))
+        return content
 
     # This is where we handle status codes via exceptions as raised by the impl methods
     except HTTPException as e:
