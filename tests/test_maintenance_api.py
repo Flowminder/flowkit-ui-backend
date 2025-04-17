@@ -20,14 +20,14 @@ from flowkit_ui_backend.models.temporal_resolution import (
 
 @pytest.mark.skip("Post tests are broken")
 @pytest.mark.asyncio
-async def test_add_scope_mapping(client: TestClient):
+async def test_add_scope_mapping(client_with_dummied_out_security: TestClient):
     """Test case for add_scope_mapping"""
     scope_mapping = flowkit_ui_backend.ScopeMapping()
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "POST",
         "/scope_mapping",
         headers=headers,
@@ -35,19 +35,19 @@ async def test_add_scope_mapping(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.skip("Post tests are broken")
 @pytest.mark.asyncio
-async def test_create_category(client: TestClient):
+async def test_create_category(client_with_dummied_out_security: TestClient):
     """Test case for create_category"""
     category = flowkit_ui_backend.Category()
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "POST",
         "/categories",
         headers=headers,
@@ -55,19 +55,19 @@ async def test_create_category(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.skip("Post tests are broken")
 @pytest.mark.asyncio
-async def test_create_data_provider(client: TestClient):
+async def test_create_data_provider(client_with_dummied_out_security: TestClient):
     """Test case for create_data_provider"""
     data_provider = flowkit_ui_backend.DataProvider()
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "POST",
         "/data_providers",
         headers=headers,
@@ -75,19 +75,19 @@ async def test_create_data_provider(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.skip("Post tests are broken")
 @pytest.mark.asyncio
-async def test_create_dataset(client: TestClient):
+async def test_create_dataset(client_with_dummied_out_security: TestClient):
     """Test case for create_dataset"""
     dataset = flowkit_ui_backend.Dataset()
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "POST",
         "/data",
         headers=headers,
@@ -95,19 +95,19 @@ async def test_create_dataset(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.skip("Post tests are broken")
 @pytest.mark.asyncio
-async def test_create_indicator(client: TestClient):
+async def test_create_indicator(client_with_dummied_out_security: TestClient):
     """Test case for create_indicator"""
     indicator = flowkit_ui_backend.Indicator()
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "POST",
         "/indicators",
         headers=headers,
@@ -115,19 +115,19 @@ async def test_create_indicator(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.skip("Post tests are broken")
 @pytest.mark.asyncio
-async def test_create_spatial_resolution(client: TestClient):
+async def test_create_spatial_resolution(client_with_dummied_out_security: TestClient):
     """Test case for create_spatial_resolution"""
     spatial_resolution = flowkit_ui_backend.SpatialResolution()
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "POST",
         "/spatial_resolutions",
         headers=headers,
@@ -135,19 +135,19 @@ async def test_create_spatial_resolution(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.skip("Post tests are broken")
 @pytest.mark.asyncio
-async def test_create_temporal_resolution(client: TestClient):
+async def test_create_temporal_resolution(client_with_dummied_out_security: TestClient):
     """Test case for create_temporal_resolution"""
     temporal_resolution = flowkit_ui_backend.TemporalResolution()
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "POST",
         "/temporal_resolutions",
         headers=headers,
@@ -155,306 +155,305 @@ async def test_create_temporal_resolution(client: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.asyncio
-async def test_delete_category(client: TestClient):
+async def test_delete_category(client_with_dummied_out_security: TestClient):
     """Test case for delete_category"""
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "DELETE",
-        "/categories/{category_id}".format(category_id="category_id_example"),
+        "categories/residents",
         headers=headers,
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 204
 
 
 @pytest.mark.asyncio
-async def test_delete_data_provider(client: TestClient):
+async def test_delete_data_provider(client_with_dummied_out_security: TestClient):
     """Test case for delete_data_provider"""
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "DELETE",
-        "/data_providers/{dpid}".format(dpid=1),
+        "data_providers/{dpid}".format(dpid=1),
         headers=headers,
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 204
 
 
 @pytest.mark.skip("This delete test is currently broken.")
 @pytest.mark.asyncio
-async def test_delete_dataset(client: TestClient):
+async def test_delete_dataset(client_with_dummied_out_security: TestClient):
     """Test case for delete_dataset"""
     dataset = flowkit_ui_backend.Dataset()
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "DELETE",
-        "/data",
+        "data",
         headers=headers,
         json=dataset,
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 204
 
 
 @pytest.mark.asyncio
-async def test_delete_indicator(client: TestClient):
+async def test_delete_indicator(client_with_dummied_out_security: TestClient):
     """Test case for delete_indicator"""
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "DELETE",
-        "/indicators/{indicator_id}".format(indicator_id="indicator_id_example"),
+        "indicators/residents.residents",
         headers=headers,
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 204
 
 
-@pytest.mark.skip("This delete test is currently broken.")
 @pytest.mark.asyncio
-async def test_delete_scope_mapping(client: TestClient):
+async def test_delete_scope_mapping(client_with_dummied_out_security: TestClient):
     """Test case for delete_scope_mapping"""
-    scope_mapping = flowkit_ui_backend.ScopeMapping()
+    scope_mapping = dict(scope="admin", mdid="1")
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "DELETE",
-        "/scope_mapping",
+        "scope_mapping",
         headers=headers,
         json=scope_mapping,
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 204
 
 
 @pytest.mark.asyncio
-async def test_delete_setup(client: TestClient):
+async def test_delete_setup(client_with_dummied_out_security: TestClient):
     """Test case for delete_setup"""
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "DELETE",
-        "/setup",
+        "setup",
         headers=headers,
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 204
 
 
 @pytest.mark.asyncio
-async def test_delete_spatial_resolution(client: TestClient):
+async def test_delete_spatial_resolution(client_with_dummied_out_security: TestClient):
     """Test case for delete_spatial_resolution"""
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "DELETE",
-        "/spatial_resolutions/{srid}".format(srid=56),
+        "spatial_resolutions/{srid}".format(srid=56),
         headers=headers,
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 204
 
 
 @pytest.mark.asyncio
-async def test_delete_temporal_resolution(client: TestClient):
+async def test_delete_temporal_resolution(client_with_dummied_out_security: TestClient):
     """Test case for delete_temporal_resolution"""
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "DELETE",
-        "/temporal_resolutions/{trid}".format(trid=56),
+        "temporal_resolutions/{trid}".format(trid=56),
         headers=headers,
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 204
 
 
 @pytest.mark.skip("Post tests are broken")
 @pytest.mark.asyncio
-async def test_replace_setup(client: TestClient):
+async def test_replace_setup(client_with_dummied_out_security: TestClient):
     """Test case for replace_setup"""
     config = flowkit_ui_backend.Config()
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "POST",
-        "/setup",
+        "setup",
         headers=headers,
         json=config,
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.skip("Patch tests are broken")
 @pytest.mark.asyncio
-async def test_update_category(client: TestClient):
+async def test_update_category(client_with_dummied_out_security: TestClient):
     """Test case for update_category"""
     category = flowkit_ui_backend.Category()
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "PATCH",
-        "/categories/{category_id}".format(category_id="category_id_example"),
+        "categories/{category_id}".format(category_id="category_id_example"),
         headers=headers,
         json=category,
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.skip("Patch tests are broken")
 @pytest.mark.asyncio
-async def test_update_data_provider(client: TestClient):
+async def test_update_data_provider(client_with_dummied_out_security: TestClient):
     """Test case for update_data_provider"""
     data_provider = flowkit_ui_backend.DataProvider()
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "PATCH",
-        "/data_providers/{dpid}".format(dpid=1),
+        "data_providers/{dpid}".format(dpid=1),
         headers=headers,
         json=data_provider,
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.skip("Patch tests are broken")
 @pytest.mark.asyncio
-async def test_update_dataset(client: TestClient):
+async def test_update_dataset(client_with_dummied_out_security: TestClient):
     """Test case for update_dataset"""
     dataset = flowkit_ui_backend.Dataset()
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "PATCH",
-        "/data",
+        "data",
         headers=headers,
         json=dataset,
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.skip("Patch tests are broken")
 @pytest.mark.asyncio
-async def test_update_indicator(client: TestClient):
+async def test_update_indicator(client_with_dummied_out_security: TestClient):
     """Test case for update_indicator"""
     indicator = flowkit_ui_backend.Indicator()
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "PATCH",
-        "/indicators/{indicator_id}".format(indicator_id="indicator_id_example"),
+        "indicators/{indicator_id}".format(indicator_id="indicator_id_example"),
         headers=headers,
         json=indicator,
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.skip("Patch tests are broken")
 @pytest.mark.asyncio
-async def test_update_setup(client: TestClient):
+async def test_update_setup(client_with_dummied_out_security: TestClient):
     """Test case for update_setup"""
     config = flowkit_ui_backend.Config()
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "PATCH",
-        "/setup",
+        "setup",
         headers=headers,
         json=config,
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.skip("Patch tests are broken")
 @pytest.mark.asyncio
-async def test_update_spatial_resolution(client: TestClient):
+async def test_update_spatial_resolution(client_with_dummied_out_security: TestClient):
     """Test case for update_spatial_resolution"""
     spatial_resolution = flowkit_ui_backend.SpatialResolution()
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "PATCH",
-        "/spatial_resolutions/{srid}".format(srid=56),
+        "spatial_resolutions/{srid}".format(srid=56),
         headers=headers,
         json=spatial_resolution,
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200
 
 
 @pytest.mark.skip("Patch tests are broken")
 @pytest.mark.asyncio
-async def test_update_temporal_resolution(client: TestClient):
+async def test_update_temporal_resolution(client_with_dummied_out_security: TestClient):
     """Test case for update_temporal_resolution"""
     temporal_resolution = flowkit_ui_backend.TemporalResolution()
 
     headers = {
         "Authorization": "Bearer special-key",
     }
-    response = client.request(
+    response = client_with_dummied_out_security.request(
         "PATCH",
-        "/temporal_resolutions/{trid}".format(trid=56),
+        "temporal_resolutions/{trid}".format(trid=56),
         headers=headers,
         json=temporal_resolution,
     )
 
     # uncomment below to assert the status code of the HTTP response
-    # assert response.status_code == 200
+    assert response.status_code == 200

@@ -41,7 +41,9 @@ auth0-python==4.7.0
 better-exceptions==0.3.3
     # via -r /tmp/requirements/requirements.in
 cachetools==5.3.2
-    # via asyncache
+    # via
+    #   -r /tmp/requirements/requirements.in
+    #   asyncache
 certifi==2023.11.17
     # via
     #   -r /tmp/requirements/requirements.in
