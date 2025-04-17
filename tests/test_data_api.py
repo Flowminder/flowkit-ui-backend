@@ -275,6 +275,7 @@ async def test_run_query(client_with_dummied_out_security: TestClient):
     )
 
     # uncomment below to assert the status code of the HTTP response
+
     assert response.status_code == 200
     assert response.json() == dict(
         min=6040.0,
