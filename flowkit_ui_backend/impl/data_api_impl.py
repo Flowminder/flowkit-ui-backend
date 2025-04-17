@@ -522,16 +522,39 @@ from google.auth import compute_engine
 from google.auth.transport import requests
 import google
 
+def canonical_request(bucket, path):
+    # Implementation of https://cloud.google.com/storage/docs/authentication/canonical-requests
+    # This dependss on the URL schema
+    resource_path = str(Path(bucket) / Path(path))
+    query_string_params = {
+
+        "X-Goog-Algorithm" : "GOOG-HMAC-SHA256",
+        "X-Goog-Credential" : f"{get_auth}%2F{get_cred_scope}",
+        "X-Goog-Date" : str(datetime.now()),
+        "X-Goog-Expires" : 15*60, # 15 minutes
+    }
+    headers = {"host":"storage.googleapis.com"} + query_string_params
+    query_string = "&".join(f"{k.lower()}={v}" for k,v in query_string_params.items())
+    headers = sorted(["host:storage.googleapis.com", *(k.lower for k in query_string_params.keys())])
+    canonical_headers = "\n".join(f"{k.lower()}={v}" for k,v in headers.items())
+    signed_headers = "host;" + ";".join()
+
+    canonical_request = f"GET\n{resource_path}\n{query_string}\n{canonical_headers}\n\n{signed_headers}\nUNSIGNED-PAYLOAD"
+    
+
+
+
+
 async def generate_signed_dqs_url() -> SignedUrl:
-    storage_client = storage.Client()
+    credentials, project = google.auth.default()
+    storage_client = storage.Client(project, credentials)
     # Exploratory logging
     bucket = storage_client.bucket(os.environ["SECURE_FILE_BUCKET"])
     blob = bucket.blob(os.environ["DQS_BUCKET_PATH"])
     filename = Path(os.environ["DQS_BUCKET_PATH"]).name
     auth_request = requests.Request()
-    credentials, project = google.auth.default()
-    storage_client = storage.Client(project, credentials)
-    signing_credentials = compute_engine.IDTokenCredentials(auth_request, "", service_account_email=credentials.service_account_email)
+    signing_credentials =   .IDTokenCredentials(auth_request, "", service_account_email="playground-run-sa@prj-d-opal-8fyw.iam.gserviceaccount.com")
+    breakpoint()
 
     url = blob.generate_signed_url(
         version="v4",
