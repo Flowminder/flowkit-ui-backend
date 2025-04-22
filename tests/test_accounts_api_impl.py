@@ -96,10 +96,6 @@ async def test_update_user_valid_token(mock_auth0):
     assert result == None
 
 
-@patch(
-    "auth0.management.users.Users.delete",
-    side_effect=AsyncMock(return_value="success"),
-)
 @pytest.mark.asyncio
 async def test_delete_user_valid_token(mock_auth0):
     mock_auth0.users.delete_async = AsyncMock(return_value="success")

@@ -66,8 +66,8 @@ jobs:
           name: Run unit tests
           command: |
             pyenv local 3.11.2
-            python -m venv ./venv
-            source venv/bin/activate
+            python -m venv .venv
+            source .venv/bin/activate
             pip install -r dev-requirements.txt
             mkdir test_results
             export DATA_DIR_LOCAL= && make -e test

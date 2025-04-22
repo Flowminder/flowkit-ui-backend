@@ -2,12 +2,14 @@
 # If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import structlog
-import os
 import httpx
 from typing import Optional, Annotated
 from http import HTTPStatus
 from aiomysql import Pool
-from fastapi import HTTPException, Depends
+from fastapi import Depends
+from asyncache import cached
+from cachetools import TTLCache
+from fastapi import HTTPException
 from flowkit_ui_backend.models.extra_models import TokenModel
 from flowkit_ui_backend.models.user_metadata import UserMetadata
 from auth0.asyncify import asyncify
@@ -66,18 +68,20 @@ async def reset_password(
     pool: Pool = None,
     token_model: TokenModel = None,
 ) -> None:
-    response = httpx.post(
+    async with httpx.AsyncClient() as cl:
+        response = await cl.post(
         url=f"https://{auth0_domain}/dbconnections/change_password",
         headers={"Content-Type": "application/json"},
-        data=f'{{"client_id": "{auth0_client_id}", "email": "{email}", "connection": "Username-Password-Authentication"}}',
+        data={{"client_id": auth0_client_id, "email": email, "connection": "Username-Password-Authentication"}},
     )
-    if response.status_code != HTTPStatus.OK:
-        raise HTTPException(
-            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            detail=f"Could not trigger password reset for email {email}",
-        )
+        if response.status_code != HTTPStatus.OK:
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+                detail=f"Could not trigger password reset for email {email}",
+            )
 
 
+@cached(TTLCache(2, 86400))
 async def get_management_api_m2m_token(
     auth0_domain: str, auth0_client_id: str, auth0_client_secret: str
 ) -> Optional[str]:

@@ -205,43 +205,9 @@ async def delete_indicator(
             detail=f"Indicator '{indicator_id}' not found",
         )
 
-    categories = await db.select_data(
-        base_model=Category,
-        pool=pool,
-        id_key="category_id",
-        ids=[indicators[0].category_id],
-    )
-    if categories in [None, []]:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND,
-            detail=f"Category '{indicators[0].category_id}' for indicator '{indicator_id}' not found",
-        )
-
     await db.delete_data(
         base_model=Indicator, pool=pool, ids=[indicator_id], id_key="indicator_id"
     )
-
-    base_table_name = (
-        "single_location_data"
-        if categories[0].type == "single_location"
-        else "flow_data"
-    )
-    table_name = f"{base_table_name}_{indicator_id}"
-
-    try:
-        await db.run(
-            pool=pool,
-            sql=f"TRUNCATE TABLE `{table_name}`",
-        )
-        await db.run(
-            pool=pool,
-            sql=f"DROP TABLE `{table_name}`",
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            detail=f"Could not delete data table '{table_name}' for indicator '{indicator_id}': {e}",
-        )
 
     return None
 

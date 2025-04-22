@@ -76,6 +76,11 @@ async def delete_user(
         raise NotImplementedError("The /delete_user endpoint is not yet implemented")
 
     try:
+        if uid != token_auth0.sub:
+            return JSONResponse(
+                status_code=HTTPStatus.UNAUTHORIZED,
+                content="You can only request user data on yourself",
+            )
         logger.debug("Starting request")
         impl_result = await accounts_api_impl.delete_user(
             uid,
@@ -160,6 +165,11 @@ async def get_user(
         raise NotImplementedError("The /get_user endpoint is not yet implemented")
 
     try:
+        if uid != token_auth0.sub:
+            return JSONResponse(
+                status_code=HTTPStatus.UNAUTHORIZED,
+                content="You can only request user data on yourself",
+            )
         logger.debug("Starting request")
         impl_result = await accounts_api_impl.get_user(
             uid,
@@ -326,6 +336,11 @@ async def update_user(
         raise NotImplementedError("The /update_user endpoint is not yet implemented")
 
     try:
+        if uid != token_auth0.sub:
+            return JSONResponse(
+                status_code=HTTPStatus.UNAUTHORIZED,
+                content="You can only request user data on yourself",
+            )
         logger.debug("Starting request")
         impl_result = await accounts_api_impl.update_user(
             uid,
