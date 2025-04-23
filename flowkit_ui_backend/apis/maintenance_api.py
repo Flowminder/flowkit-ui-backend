@@ -38,7 +38,7 @@ from flowkit_ui_backend.models.spatial_resolution import SpatialResolution
 from flowkit_ui_backend.models.temporal_resolution import TemporalResolution
 from flowkit_ui_backend.security_api import get_token_auth0
 from flowkit_ui_backend.impl import maintenance_api_impl
-from flowkit_ui_backend.util.config import get_settings, Settings
+from flowkit_ui_backend.util.config import get_settings, Settings, SettingsDep
 
 router = APIRouter(route_class=gzip.GzipRoute)
 logger = structlog.get_logger("flowkit_ui_backend.log")
@@ -70,7 +70,7 @@ logger = structlog.get_logger("flowkit_ui_backend.log")
     response_class=ORJSONResponse,
 )
 async def provision_db(
-    settings: Annotated[Settings, Depends(get_settings)],
+    settings: SettingsDep,
     token_auth0: TokenModel = Security(get_token_auth0, scopes=["admin"]),
     request: Request = None,
 ) -> None:
@@ -136,7 +136,7 @@ async def provision_db(
     response_class=ORJSONResponse,
 )
 async def force_provision_db(
-    settings: Annotated[Settings, Depends(get_settings)],
+    settings: SettingsDep,
     token_auth0: TokenModel = Security(get_token_auth0, scopes=["admin"]),
     request: Request = None,
 ) -> None:

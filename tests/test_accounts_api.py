@@ -16,7 +16,7 @@ from flowkit_ui_backend.models.user_metadata import UserMetadata  # noqa: F401
 
 
 @pytest.mark.asyncio
-async def test_delete_user(client_with_dummied_out_security: TestClient, mock_auth0):
+async def test_delete_user(client_with_dummied_out_security: TestClient):
     """Test case for delete_user"""
 
     headers = {
@@ -34,7 +34,7 @@ async def test_delete_user(client_with_dummied_out_security: TestClient, mock_au
 
 @pytest.mark.asyncio
 async def test_delete_other_user_fails(
-    client_with_dummied_out_security: TestClient, mock_auth0
+    client_with_dummied_out_security: TestClient
 ):
     """Test case for delete_user"""
 

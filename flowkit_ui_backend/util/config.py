@@ -1,8 +1,9 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 # If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 from functools import lru_cache
-from typing import Optional
+from typing import Optional, Annotated
 
+from fastapi import Depends
 from pydantic import BaseSettings, Field
 from pydantic.networks import AnyHttpUrl
 from pydantic.types import SecretStr
@@ -39,3 +40,5 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
+SettingsDep = Annotated[Settings, Depends(get_settings)]

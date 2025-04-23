@@ -541,7 +541,7 @@ async def stream_flows_to_csv(flow_stream: AsyncGenerator) -> AsyncGenerator[str
 
 
 async def get_latest_date(pool: Pool) -> LatestDate:
-    sql = f"SELECT max(dt) FROM `{DB_NAME}`.`metadata`;"
-    _, result = await db.run(sql, pool=pool)
+    sql = f"SELECT max(dt) FROM `metadata`;"
+    _, result = await db.run(sql=sql, pool=pool)
     latest_date = result[0][0].date()
     return LatestDate(latest_date=latest_date)

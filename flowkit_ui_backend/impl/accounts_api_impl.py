@@ -6,17 +6,20 @@ import httpx
 from typing import Optional, Annotated
 from http import HTTPStatus
 from aiomysql import Pool
-from fastapi import Depends
+from auth0.management.async_auth0 import AsyncAuth0
 from asyncache import cached
 from cachetools import TTLCache
 from fastapi import HTTPException
+from fastapi.params import Depends
+from pydantic import SecretStr
+
 from flowkit_ui_backend.models.extra_models import TokenModel
 from flowkit_ui_backend.models.user_metadata import UserMetadata
 from auth0.asyncify import asyncify
 from auth0.management import Auth0
 from auth0.authentication import GetToken
 
-from flowkit_ui_backend.util.config import Settings, get_settings
+from flowkit_ui_backend.util.config import SettingsDep
 
 logger = structlog.get_logger("flowkit_ui_backend.log")
 
@@ -72,7 +75,7 @@ async def reset_password(
         response = await cl.post(
         url=f"https://{auth0_domain}/dbconnections/change_password",
         headers={"Content-Type": "application/json"},
-        data={{"client_id": auth0_client_id, "email": email, "connection": "Username-Password-Authentication"}},
+        data={"client_id": auth0_client_id, "email": email, "connection": "Username-Password-Authentication"},
     )
         if response.status_code != HTTPStatus.OK:
             raise HTTPException(
@@ -85,10 +88,11 @@ async def reset_password(
 async def get_management_api_m2m_token(
     auth0_domain: str, auth0_client_id: str, auth0_client_secret: str
 ) -> Optional[str]:
+    logger.debug("Getting m2m token.")
     try:
         # - obtain m2m access token for management API using the flowkit_ui_backend's client grant as set in Auth0 dashboard
         get_token = asyncify(GetToken)(
-            auth0_domain, auth0_client_id, auth0_client_secret.get_secret_value()
+            auth0_domain, auth0_client_id, auth0_client_secret
         )
         token = await get_token.client_credentials_async(
             f"https://{auth0_domain}/api/v2/",
@@ -100,8 +104,9 @@ async def get_management_api_m2m_token(
 
 
 async def management_api_m2m_token(
-    settings: Annotated[Settings, Depends(get_settings)]
+    settings: SettingsDep
 ) -> Optional[str]:
+    logger.debug("Getting m2m token.")
     return await get_management_api_m2m_token(
         auth0_domain=settings.auth0_domain,
         auth0_client_id=settings.auth0_client_id,
@@ -110,10 +115,11 @@ async def management_api_m2m_token(
 
 
 async def auth0_management(
-    settings: Annotated[Settings, Depends(get_settings)],
-    management_token: Annotated[str, management_api_m2m_token],
-) -> Auth0:
-    return Auth0(
+    settings: SettingsDep,
+    management_token: Annotated[str, Depends(management_api_m2m_token)],
+) -> AsyncAuth0:
+    logger.debug("Getting auth0 connection.")
+    return AsyncAuth0(
         settings.auth0_domain,
         management_token,
     )

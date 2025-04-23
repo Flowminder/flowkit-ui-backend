@@ -27,16 +27,18 @@ from fastapi import (  # noqa: F401
     status,
 )
 
+from flowkit_ui_backend.impl.accounts_api_impl import auth0_management
 from flowkit_ui_backend.util import gzip
 from flowkit_ui_backend.models.extra_models import TokenModel  # noqa: F401
 from flowkit_ui_backend.models.user_metadata import UserMetadata
 from flowkit_ui_backend.security_api import get_token_auth0
 from flowkit_ui_backend.impl import accounts_api_impl
-from flowkit_ui_backend.util.config import get_settings, Settings
+from flowkit_ui_backend.util.config import SettingsDep
 
 router = APIRouter(route_class=gzip.GzipRoute)
 logger = structlog.get_logger("flowkit_ui_backend.log")
 
+ManagementAnnotated = Annotated[Auth0, Depends(auth0_management)]
 
 @router.delete(
     "/users/{uid}",
@@ -63,8 +65,8 @@ logger = structlog.get_logger("flowkit_ui_backend.log")
     response_class=ORJSONResponse,
 )
 async def delete_user(
-    auth0_management: Annotated[Auth0, Depends(accounts_api_impl.auth0_management)],
-    uid: str = Path(description="The user ID"),
+    uid: str,
+    auth0_management_dep: ManagementAnnotated,
     token_auth0: TokenModel = Security(get_token_auth0, scopes=["profile"]),
     request: Request = None,
 ) -> None:
@@ -86,7 +88,7 @@ async def delete_user(
             uid,
             pool=request.app.state.pool,
             token_model=token_auth0,
-            auth0=auth0_management,
+            auth0=auth0_management_dep,
         )
         logger.debug("Request ready")
         content = impl_result[0] if isinstance(impl_result, tuple) else impl_result
@@ -152,7 +154,7 @@ async def delete_user(
     response_class=ORJSONResponse,
 )
 async def get_user(
-    auth0_management: Annotated[Auth0, Depends(accounts_api_impl.auth0_management)],
+    auth0_management: ManagementAnnotated,
     uid: str = Path(description="The user ID"),
     token_auth0: TokenModel = Security(get_token_auth0, scopes=["profile"]),
     request: Request = None,
@@ -240,7 +242,7 @@ async def get_user(
     response_class=ORJSONResponse,
 )
 async def reset_password(
-    settings: Annotated[Settings, Depends(get_settings)],
+    settings: SettingsDep,
     email: str = Path(description="The user&#39;s email address"),
     token_auth0: TokenModel = Security(get_token_auth0, scopes=["profile"]),
     request: Request = None,
@@ -322,7 +324,7 @@ async def reset_password(
     response_class=ORJSONResponse,
 )
 async def update_user(
-    auth0_management: Annotated[Auth0, Depends(accounts_api_impl.auth0_management)],
+    auth0_management: ManagementAnnotated,
     uid: str = Path(description="The user ID"),
     user_metadata: UserMetadata = Body(None, description="The user to update"),
     token_auth0: TokenModel = Security(get_token_auth0, scopes=["profile"]),

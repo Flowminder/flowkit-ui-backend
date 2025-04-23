@@ -22,7 +22,7 @@ from fastapi.security import (  # noqa: F401
 )
 
 from flowkit_ui_backend.models.extra_models import TokenModel
-from flowkit_ui_backend.util.config import get_settings, Settings
+from flowkit_ui_backend.util.config import get_settings, Settings, SettingsDep
 
 logger = structlog.get_logger("flowkit_ui_backend.log")
 
@@ -46,7 +46,7 @@ sv = AsyncAsymmetricSignatureVerifier(
 
 
 async def get_token_auth0(
-    settings: Annotated[Settings, Depends(get_settings)],
+    settings: SettingsDep,
     security_scopes: SecurityScopes,
     token: str = Depends(oauth2_code),
 ) -> TokenModel:
