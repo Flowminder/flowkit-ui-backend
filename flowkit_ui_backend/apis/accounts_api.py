@@ -40,6 +40,7 @@ logger = structlog.get_logger("flowkit_ui_backend.log")
 
 ManagementAnnotated = Annotated[Auth0, Depends(auth0_management)]
 
+
 @router.delete(
     "/users/{uid}",
     responses={

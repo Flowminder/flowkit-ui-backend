@@ -12,7 +12,10 @@ import os
 import pathlib
 
 from flowkit_ui_backend.impl import accounts_api_impl
-from flowkit_ui_backend.impl.accounts_api_impl import auth0_management, management_api_m2m_token
+from flowkit_ui_backend.impl.accounts_api_impl import (
+    auth0_management,
+    management_api_m2m_token,
+)
 from flowkit_ui_backend.models.extra_models import TokenModel
 from flowkit_ui_backend.db.db import (
     provision_db,
@@ -41,17 +44,21 @@ class StubAuth0:
     def __init__(self, return_value=None):
         self.users = StubAuth0Users(return_value)
 
+
 stub_auth_0 = StubAuth0()
+
 
 @pytest.fixture
 def mock_auth0():
     return stub_auth_0
+
 
 async def auth0_management_override(
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> AsyncAuth0:
     print("Overriding auth0")
     return stub_auth_0
+
 
 async def get_token_auth0_override(
     security_scopes: SecurityScopes,
@@ -148,7 +155,10 @@ def admin_token_model():
 @pytest.fixture
 def app_with_dummied_out_security(populated_db) -> FastAPI:
     from flowkit_ui_backend.main import app as application
-    application.dependency_overrides[accounts_api_impl.auth0_management] = auth0_management_override
+
+    application.dependency_overrides[
+        accounts_api_impl.auth0_management
+    ] = auth0_management_override
     application.dependency_overrides[get_token_auth0] = get_token_auth0_override
     return application
 

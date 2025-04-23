@@ -51,6 +51,7 @@ class LogTimings(TimingClient):
     def timing(self, metric_name, timing, tags):
         logger.debug("Timing", metric_name=metric_name, timing=timing, tags=tags)
 
+
 @asynccontextmanager
 async def lifecycle(app: FastAPI):
     logger.debug("Adding gzip support for requests...")
@@ -91,13 +92,14 @@ async def lifecycle(app: FastAPI):
     await app.state.pool.wait_closed()
     logger.debug("Done.")
 
+
 logger.debug(f"Starting {get_settings().app_name}...")
 app = FastAPI(
     title="FlowKitUI Backend",
     description="A REST API for managing and postprocessing Flowkit data",
     version="1.3.0",
     openapi_url=f"/{get_settings().api_version_url_appendix}openapi.json",
-    lifespan=lifecycle
+    lifespan=lifecycle,
 )
 
 app.add_middleware(
@@ -145,6 +147,3 @@ async def http_exception_handler(request, e):
 async def validation_exception_handler(request, e):
     logger.error(f"{type(e)}: {str(e)}")
     return await request_validation_exception_handler(request, e)
-
-
-

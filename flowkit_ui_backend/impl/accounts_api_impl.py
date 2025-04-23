@@ -73,10 +73,14 @@ async def reset_password(
 ) -> None:
     async with httpx.AsyncClient() as cl:
         response = await cl.post(
-        url=f"https://{auth0_domain}/dbconnections/change_password",
-        headers={"Content-Type": "application/json"},
-        data={"client_id": auth0_client_id, "email": email, "connection": "Username-Password-Authentication"},
-    )
+            url=f"https://{auth0_domain}/dbconnections/change_password",
+            headers={"Content-Type": "application/json"},
+            data={
+                "client_id": auth0_client_id,
+                "email": email,
+                "connection": "Username-Password-Authentication",
+            },
+        )
         if response.status_code != HTTPStatus.OK:
             raise HTTPException(
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
@@ -103,9 +107,7 @@ async def get_management_api_m2m_token(
         return None
 
 
-async def management_api_m2m_token(
-    settings: SettingsDep
-) -> Optional[str]:
+async def management_api_m2m_token(settings: SettingsDep) -> Optional[str]:
     logger.debug("Getting m2m token.")
     return await get_management_api_m2m_token(
         auth0_domain=settings.auth0_domain,

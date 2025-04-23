@@ -33,9 +33,7 @@ async def test_delete_user(client_with_dummied_out_security: TestClient):
 
 
 @pytest.mark.asyncio
-async def test_delete_other_user_fails(
-    client_with_dummied_out_security: TestClient
-):
+async def test_delete_other_user_fails(client_with_dummied_out_security: TestClient):
     """Test case for delete_user"""
 
     headers = {

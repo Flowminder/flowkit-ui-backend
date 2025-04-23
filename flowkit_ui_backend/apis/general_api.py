@@ -134,7 +134,9 @@ async def heartbeat(request: Request, settings: SettingsDep) -> Heartbeat:
 
     try:
         logger.debug("Starting request")
-        impl_result = await general_api_impl.heartbeat(pool=request.app.state.pool, settings=settings)
+        impl_result = await general_api_impl.heartbeat(
+            pool=request.app.state.pool, settings=settings
+        )
         logger.debug("Request ready")
         content = impl_result[0] if isinstance(impl_result, tuple) else impl_result
         if isinstance(impl_result, Response):
