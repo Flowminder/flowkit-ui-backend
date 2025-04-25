@@ -2,6 +2,7 @@
 # If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 from datetime import datetime, timedelta
+from hashlib import sha256
 from pathlib import Path
 import structlog
 import math
@@ -518,48 +519,76 @@ async def stream_flows_to_csv(flow_stream: AsyncGenerator) -> AsyncGenerator[str
                 for row in chunk
             ) + "\r\n"
 
-from google.auth import compute_engine
-from google.auth.transport import requests
-import google
 
-def canonical_request(bucket, path):
-    # Implementation of https://cloud.google.com/storage/docs/authentication/canonical-requests
-    # This dependss on the URL schema
-    resource_path = str(Path(bucket) / Path(path))
-    query_string_params = {
+# from google.auth import compute_engine
+# from google.auth.transport import requests
+# import google
 
-        "X-Goog-Algorithm" : "GOOG-HMAC-SHA256",
-        "X-Goog-Credential" : f"{get_auth}%2F{get_cred_scope}",
-        "X-Goog-Date" : str(datetime.now()),
-        "X-Goog-Expires" : 15*60, # 15 minutes
-    }
-    headers = {"host":"storage.googleapis.com"} + query_string_params
-    query_string = "&".join(f"{k.lower()}={v}" for k,v in query_string_params.items())
-    headers = sorted(["host:storage.googleapis.com", *(k.lower for k in query_string_params.keys())])
-    canonical_headers = "\n".join(f"{k.lower()}={v}" for k,v in headers.items())
-    signed_headers = "host;" + ";".join()
 
-    canonical_request = f"GET\n{resource_path}\n{query_string}\n{canonical_headers}\n\n{signed_headers}\nUNSIGNED-PAYLOAD"
+# def canonical_request(bucket, path) -> str:
+#     # Implementation of https://cloud.google.com/storage/docs/authentication/canonical-requests
+#     # This dependss on the URL schema
+#     resource_path = str(Path(bucket) / Path(path))
+#     query_string_params = {
+#         "X-Goog-Algorithm": "GOOG-RSA-SHA256",
+#         "X-Goog-Credential": f"{get_auth}%2F{get_cred_scope}",
+#         "X-Goog-Date": str(datetime.now()),
+#         "X-Goog-Expires": 15 * 60,  # 15 minutes
+#     }
+#     headers = {"host": "storage.googleapis.com"} + query_string_params
+#     query_string = "&".join(f"{k.lower()}={v}" for k, v in query_string_params.items())
+#     headers = sorted(
+#         ["host:storage.googleapis.com", *(k.lower for k in query_string_params.keys())]
+#     )
+#     canonical_headers = "\n".join(f"{k.lower()}={v}" for k, v in headers.items())
+#     signed_headers = "host;" + ";".join(headers)
+
+#     canonical_request = f"GET\n{resource_path}\n{query_string}\n{canonical_headers}\n\n{signed_headers}\nUNSIGNED-PAYLOAD"
+#     return canonical_request
+
+
+# def _scope():
+#     # https://cloud.google.com/storage/docs/authentication/signatures#credential-scope
+#     return "/".join(
+#         datetime.now().strftime("%Y%m%d"),
+#         "eu-west-1",    # This doesn't actually matter       
+#         "storage",
+#         "goog4_request"
+#     )
+
+
+# def string_to_sign(canonical_request) -> str:
+#     out = "\n".join(
+#         [
+#             "GOOG4-RSA-SHA256",
+#             datetime.now().isoformat(timespec="seconds"),
+#             _scope(),
+#             sha256(canonical_request)
+#         ]
+#     )
+
+
+# def generate_signed_url(bucket, path) -> str:
+#     canonical_request = canonical_request(bucket, path)
+#     string_to_sign(canonical_request)
     
-
-
 
 
 async def generate_signed_dqs_url() -> SignedUrl:
     credentials, project = google.auth.default()
+    if credentials.token is None:
+        credentials.refresh()
     storage_client = storage.Client(project, credentials)
     # Exploratory logging
     bucket = storage_client.bucket(os.environ["SECURE_FILE_BUCKET"])
     blob = bucket.blob(os.environ["DQS_BUCKET_PATH"])
     filename = Path(os.environ["DQS_BUCKET_PATH"]).name
-    auth_request = requests.Request()
-    signing_credentials =   .IDTokenCredentials(auth_request, "", service_account_email="playground-run-sa@prj-d-opal-8fyw.iam.gserviceaccount.com")
-    breakpoint()
 
     url = blob.generate_signed_url(
         version="v4",
         expiration=timedelta(minutes=15),
         method="GET",
-        credentials=signing_credentials,
+        service_account_email=credentials.service_account_email,
+        token=credentials.service_account_token
     )
-    return SignedUrl(url=url, file_name=filename, credentials=signing_credentials)
+    return SignedUrl(url=url, file_name=filename)
