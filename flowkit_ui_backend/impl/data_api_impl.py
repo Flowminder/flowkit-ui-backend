@@ -1,13 +1,8 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 # If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-<<<<<<< HEAD
-from datetime import datetime, timedelta
-from hashlib import sha256
+from datetime import timedelta
 from pathlib import Path
-=======
-from datetime import datetime
->>>>>>> main
 import structlog
 import math
 import pendulum
