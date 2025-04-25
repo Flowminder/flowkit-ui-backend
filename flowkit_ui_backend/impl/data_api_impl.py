@@ -588,6 +588,6 @@ async def generate_signed_dqs_url() -> SignedUrl:
         expiration=timedelta(minutes=15),
         method="GET",
         service_account_email=credentials.service_account_email,
-        token=credentials.service_account_token,
+        access_token=credentials.token,
     )
     return SignedUrl(url=url, file_name=filename)
