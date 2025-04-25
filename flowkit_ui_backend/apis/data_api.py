@@ -1012,35 +1012,14 @@ async def list_temporal_resolutions(
 )
 async def dqs(
     token_auth0: TokenModel = Security(get_token_auth0, scopes=["read:free_data"]),
-) -> Categories:
-    """Gets all available categories currently ingested in this flowkit-ui-backend instance"""
-    # if not hasattr(data_api_impl, "generVj") or not callable(
-    #     getattr(data_api_impl, "dqs")
-    # ):
-    #     raise NotImplementedError(
-    #         "The /dqs endpoint is not yet implemented"
-    #     )
+) -> SignedUrl:
+    """Returns a time-limited download link to the Google Storage hosted DQS document"""
 
     try:
         logger.debug("Starting request")
         impl_result = await data_api_impl.generate_signed_dqs_url()
         logger.debug("Request ready")
-        content = impl_result[0] if isinstance(impl_result, tuple) else impl_result
-        if isinstance(impl_result, Response):
-            return impl_result
-        # default to status 200/204 but give the impl the option to define a different status code when returning content
-        status_code = impl_result[1] if isinstance(impl_result, tuple) else None
-        if content is not None:
-            return ORJSONResponse(
-                status_code=status_code if status_code is not None else HTTPStatus.OK,
-                content=jsonable_encoder(content),
-            )
-        else:
-            return Response(
-                status_code=(
-                    status_code if status_code is not None else HTTPStatus.NO_CONTENT
-                )
-            )
+        return impl_result
 
     # This is where we handle status codes via exceptions as raised by the impl methods
     except HTTPException as e:
