@@ -551,7 +551,7 @@ async def stream_flows_to_csv(flow_stream: AsyncGenerator) -> AsyncGenerator[str
 #     # https://cloud.google.com/storage/docs/authentication/signatures#credential-scope
 #     return "/".join(
 #         datetime.now().strftime("%Y%m%d"),
-#         "eu-west-1",    # This doesn't actually matter       
+#         "eu-west-1",    # This doesn't actually matter
 #         "storage",
 #         "goog4_request"
 #     )
@@ -571,7 +571,6 @@ async def stream_flows_to_csv(flow_stream: AsyncGenerator) -> AsyncGenerator[str
 # def generate_signed_url(bucket, path) -> str:
 #     canonical_request = canonical_request(bucket, path)
 #     string_to_sign(canonical_request)
-    
 
 
 async def generate_signed_dqs_url() -> SignedUrl:
@@ -589,6 +588,6 @@ async def generate_signed_dqs_url() -> SignedUrl:
         expiration=timedelta(minutes=15),
         method="GET",
         service_account_email=credentials.service_account_email,
-        token=credentials.service_account_token
+        token=credentials.service_account_token,
     )
     return SignedUrl(url=url, file_name=filename)
