@@ -576,7 +576,7 @@ import google
 async def generate_signed_dqs_url() -> SignedUrl:
     credentials, project = google.auth.default()
     if credentials.token is None:
-        credentials.refresh()
+        credentials.refresh(google.auth.transport.requests.Request())
     storage_client = storage.Client(project, credentials)
     # Exploratory logging
     bucket = storage_client.bucket(os.environ["SECURE_FILE_BUCKET"])
