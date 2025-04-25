@@ -521,3 +521,9 @@ async def test_generate_signed_dqs_url():
     url = await data_api_impl.generate_signed_dqs_url()
     print(url)
     assert "Mobility" in url.url
+
+
+@pytest.mark.asyncio
+async def test_get_latest_date(populated_db):
+    response = await data_api_impl.get_latest_date(pool=populated_db)
+    assert response.latest_date == datetime.date(2020, 7, 1)

@@ -7,11 +7,13 @@ import httpx
 from typing import Optional
 from http import HTTPStatus
 from aiomysql import Pool
+from asyncache import cached
+from auth0.management.async_auth0 import AsyncAuth0
+from cachetools import TTLCache
 from fastapi import HTTPException
 from flowkit_ui_backend.models.extra_models import TokenModel
 from flowkit_ui_backend.models.user_metadata import UserMetadata
 from auth0.asyncify import asyncify
-from auth0.management import Auth0
 from auth0.authentication import GetToken
 
 
@@ -27,12 +29,15 @@ logger = structlog.get_logger("flowkit_ui_backend.log")
 # and use that to execute the request.
 
 
+@cached(TTLCache(2, 86400))
+async def get_auth0():
+    return AsyncAuth0(os.getenv("AUTH0_DOMAIN"), await get_management_api_m2m_token())
+
+
 async def get_user(
     uid: str, pool: Pool = None, token_model: TokenModel = None
 ) -> UserMetadata:
-    user = await Auth0(
-        os.getenv("AUTH0_DOMAIN"), await get_management_api_m2m_token()
-    ).users.get_async(uid)
+    user = await (await get_auth0()).users.get_async(uid)
     if user is None:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="User not found")
     return user
@@ -44,37 +49,35 @@ async def update_user(
     pool: Pool = None,
     token_model: TokenModel = None,
 ) -> None:
-    await Auth0(
-        os.getenv("AUTH0_DOMAIN"), await get_management_api_m2m_token()
-    ).users.update_async(uid, {"user_metadata": body.dict()})
+    await (await get_auth0()).users.update_async(uid, {"user_metadata": body.dict()})
 
 
 async def delete_user(
     uid: str, pool: Pool = None, token_model: TokenModel = None
 ) -> None:
-    await Auth0(
-        os.getenv("AUTH0_DOMAIN"), await get_management_api_m2m_token()
-    ).users.delete_async(uid)
+    await (await get_auth0()).users.delete_async(uid)
 
 
 async def reset_password(
     email: str, pool: Pool = None, token_model: TokenModel = None
 ) -> None:
-    response = httpx.post(
-        url=f"https://{os.getenv('AUTH0_DOMAIN')}/dbconnections/change_password",
-        headers={"Content-Type": "application/json"},
-        data=f'{{"client_id": "{os.getenv("AUTH0_CLIENT_ID")}", "email": "{email}", "connection": "Username-Password-Authentication"}}',
-    )
-    if response.status_code != HTTPStatus.OK:
-        raise HTTPException(
-            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            detail=f"Could not trigger password reset for email {email}",
+    async with httpx.AsyncClient() as cl:
+        response = await cl.post(
+            url=f"https://{os.getenv('AUTH0_DOMAIN')}/dbconnections/change_password",
+            headers={"Content-Type": "application/json"},
+            data=f'{{"client_id": "{os.getenv("AUTH0_CLIENT_ID")}", "email": "{email}", "connection": "Username-Password-Authentication"}}',
         )
+        if response.status_code != HTTPStatus.OK:
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+                detail=f"Could not trigger password reset for email {email}",
+            )
 
 
+@cached(TTLCache(2, 86400))
 async def get_management_api_m2m_token() -> Optional[str]:
     try:
-        # - obtain m2m access token for management API using the flowkit_ui_backend's client grant as set in Auth0 dashboard
+        # - obtain m2m access token for management API using the flowkit_ui_backend's client grant as set in AsyncAuth0 dashboard
         get_token = asyncify(GetToken)(
             os.getenv("AUTH0_DOMAIN"),
             os.getenv("AUTH0_CLIENT_ID"),

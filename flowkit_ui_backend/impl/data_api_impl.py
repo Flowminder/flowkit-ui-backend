@@ -1,9 +1,13 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 # If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+<<<<<<< HEAD
 from datetime import datetime, timedelta
 from hashlib import sha256
 from pathlib import Path
+=======
+from datetime import datetime
+>>>>>>> main
 import structlog
 import math
 import pendulum
@@ -19,6 +23,7 @@ from google.cloud import storage
 import google
 
 from flowkit_ui_backend.models.extra_models import TokenModel
+from flowkit_ui_backend.models.latest_date import LatestDate
 from flowkit_ui_backend.models.query_parameters import QueryParameters
 from flowkit_ui_backend.models.signed_url import SignedUrl
 from flowkit_ui_backend.models.spatial_resolution import SpatialResolution
@@ -539,3 +544,10 @@ async def generate_signed_dqs_url() -> SignedUrl:
         access_token=credentials.token,
     )
     return SignedUrl(url=url, file_name=filename)
+
+
+async def get_latest_date(pool: Pool) -> LatestDate:
+    sql = f"SELECT max(dt) FROM `{DB_NAME}`.`metadata`;"
+    _, result = await db.run(sql, pool=pool)
+    latest_date = result[0][0].date()
+    return LatestDate(latest_date=latest_date)

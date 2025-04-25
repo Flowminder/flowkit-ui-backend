@@ -27,8 +27,14 @@ DB_PW=TEST_PASSWORD
 FLOWKIT_UI_URL=
 # The port on which a local jupyter lab can run
 JUPYTER_PORT=8888
+# The API version
+API_VERSION=v1
 # stub for api urls
 API_VERSION_URL_APPENDIX=/v1
+IMAGE_NAME=flowkit_ui_backend
+GIT_BRANCH=local
+GIT_COMMIT=dirty
+GIT_TAG=dirty
 # Auth0 integration
 AUTH0_DOMAIN=
 AUTH0_CLIENT_ID=
@@ -70,7 +76,7 @@ INGESTION_AUTH0_CLIENT_SECRET_ADMIN=
 
 # Dev settings
 
-CONTAINER_NAME_DB=flowkit-ui-db
+CONTAINER_NAME_DB=localhost
 IMAGE_NAME_DB_ACTUAL=mysql:8.0
 SERVER_PORT_HOST=5000
 

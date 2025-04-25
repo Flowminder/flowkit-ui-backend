@@ -54,8 +54,15 @@ If you need to add any dependencies, add them to `src/impl/requirements.in` or `
 - APP_NAME
 - IMAGE_NAME
 
-## Running
+### Running a non-containerised web backend
 
+``` bash
+ $ docker compose --env-file development_env up db
+ $ python -m uvicorn --env-file development_env flowkit_ui_backend.main:app --host 0.0.0.0 --port 5000 --reload
+ $ mysql -uhamster -hlocalhost -Dflowkit_ui_backend -P3306 --protocol=tcp -pTEST_PASSWORD 
+ $ mysql -uhamster -hlocalhost -Dflowkit_ui_backend -P3306 --protocol=tcp -pTEST_PASSWORD < flowkit_ui_backend/db/mysql_schema.sql 
+ $ mysql -uhamster -hlocalhost -Dflowkit_ui_backend -P3306 --protocol=tcp -pTEST_PASSWORD < tests/test_data.sql 
+```
 
 
 ### Required env vars
