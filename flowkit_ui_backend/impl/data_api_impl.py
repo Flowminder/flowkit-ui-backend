@@ -522,7 +522,7 @@ async def stream_flows_to_csv(flow_stream: AsyncGenerator) -> AsyncGenerator[str
 
 # from google.auth import compute_engine
 # from google.auth.transport import requests
-# import google
+import google
 
 
 # def canonical_request(bucket, path) -> str:
