@@ -12,6 +12,12 @@ from flowkit_ui_backend.util.logging import LogLevel
 
 
 class Settings(BaseSettings):
+    """
+    Config class using pydantic's settings management. By default, this will
+    load the values from environment variables which are just the uppercased
+    version of the name, so for example db_port_container takes the value of DB_PORT_CONTAINER.
+    """
+
     db_port_container: int
     db_pw: SecretStr
     db_name: str = Field(
