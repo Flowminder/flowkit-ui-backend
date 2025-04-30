@@ -40,7 +40,7 @@ cachetools==5.5.2
     #   -r requirements.in
     #   asyncache
     #   google-auth
-certifi==2025.1.31
+certifi==2025.4.26
     # via
     #   -r requirements.in
     #   httpcore
@@ -138,7 +138,7 @@ multidict==6.4.3
     #   yarl
 mysql-connector-python==9.3.0
     # via -r requirements.in
-orjson==3.10.16
+orjson==3.10.18
     # via -r requirements.in
 packaging==25.0
     # via asgi-correlation-id
@@ -210,7 +210,7 @@ starlette==0.46.2
     #   -r requirements.in
     #   asgi-correlation-id
     #   fastapi
-structlog==25.2.0
+structlog==25.3.0
     # via -r requirements.in
 timing-asgi==0.3.1
     # via -r requirements.in

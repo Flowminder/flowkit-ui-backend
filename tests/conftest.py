@@ -1,5 +1,7 @@
+from typing import Annotated, Optional
+
 import pytest
-from auth0 import Auth0Error
+from auth0.management.async_auth0 import AsyncAuth0
 from fastapi import FastAPI, Depends
 from fastapi.security import SecurityScopes
 from fastapi.testclient import TestClient
@@ -9,12 +11,19 @@ import asyncio
 import os
 import pathlib
 
+from flowkit_ui_backend.impl import accounts_api_impl
+from flowkit_ui_backend.impl.accounts_api_impl import (
+    auth0_management,
+    management_api_m2m_token,
+)
 from flowkit_ui_backend.models.extra_models import TokenModel
 from flowkit_ui_backend.db.db import (
     provision_db,
     run_script,
 )
+from flowkit_ui_backend.util.config import get_settings, Settings
 import flowkit_ui_backend.security_api
+from flowkit_ui_backend.security_api import get_token_auth0
 
 
 class StubAuth0Users:
@@ -36,40 +45,26 @@ class StubAuth0:
         self.users = StubAuth0Users(return_value)
 
 
-@pytest.fixture
-def mock_auth0(monkeypatch):
-    auth0_stub = StubAuth0()
-
-    async def getter():
-        return auth0_stub
-
-    monkeypatch.setattr("flowkit_ui_backend.impl.accounts_api_impl.get_auth0", getter)
-    return auth0_stub
+stub_auth_0 = StubAuth0()
 
 
 @pytest.fixture
-def mock_auth0_token_error(monkeypatch):
-    async def getter():
-        raise Auth0Error(500, "Test error", "This error happened on purpose.")
-
-    monkeypatch.setattr("flowkit_ui_backend.impl.accounts_api_impl.get_auth0", getter)
+def mock_auth0():
+    return stub_auth_0
 
 
-async def monkey_patched_get_token(
+async def auth0_management_override(
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> AsyncAuth0:
+    print("Overriding auth0")
+    return stub_auth_0
+
+
+async def get_token_auth0_override(
     security_scopes: SecurityScopes,
     token: str = Depends(flowkit_ui_backend.security_api.oauth2_code),
 ):
     return TokenModel(sub="TEST USER", permissions=["admin"])
-
-
-@pytest.fixture
-def get_dummy_token_auth0(monkeypatch):
-    """
-    Provides a test token.
-    """
-    monkeypatch.setattr(
-        "flowkit_ui_backend.security_api.get_token_auth0", monkey_patched_get_token
-    )
 
 
 @pytest.fixture()
@@ -80,8 +75,13 @@ def event_loop():
     loop.close()
 
 
+@pytest.fixture
+def settings():
+    return get_settings()
+
+
 @pytest_asyncio.fixture()
-async def fresh_pool(event_loop):
+async def fresh_pool(event_loop, settings):
     """
     Creates and yields up a fresh pool connected to a database, cleans it up at exit
 
@@ -93,22 +93,18 @@ async def fresh_pool(event_loop):
     pool = await aiomysql.create_pool(
         host="localhost",
         port=int(os.environ["DB_PORT_HOST"]),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PW"),
-        db=os.getenv("DB_NAME"),
+        user=settings.db_user,
+        password=settings.db_pw.get_secret_value(),
+        db=settings.db_name,
         loop=asyncio.get_event_loop(),
         autocommit=True,
         local_infile=True,
     )
-    try:
+    async with pool.acquire() as conn:
+        cur = await conn.cursor()
+        await cur.execute("DROP DATABASE IF EXISTS `flowkit_ui_backend`")
+        await cur.execute("CREATE DATABASE `flowkit_ui_backend`")
         yield pool
-    finally:
-        async with pool.acquire() as conn:
-            cur = await conn.cursor()
-            await cur.execute("DROP DATABASE `flowkit_ui_backend`")
-            await cur.execute("CREATE DATABASE `flowkit_ui_backend`")
-        pool.close()
-        await pool.wait_closed()
 
 
 @pytest_asyncio.fixture()
@@ -157,9 +153,13 @@ def admin_token_model():
 
 
 @pytest.fixture
-def app_with_dummied_out_security(get_dummy_token_auth0, populated_db) -> FastAPI:
+def app_with_dummied_out_security(populated_db) -> FastAPI:
     from flowkit_ui_backend.main import app as application
 
+    application.dependency_overrides[
+        accounts_api_impl.auth0_management
+    ] = auth0_management_override
+    application.dependency_overrides[get_token_auth0] = get_token_auth0_override
     return application
 
 
@@ -173,9 +173,10 @@ def client_with_dummied_out_security(app_with_dummied_out_security) -> TestClien
 
 
 @pytest.fixture
-def app(get_dummy_token_auth0, populated_db) -> FastAPI:
+def app(populated_db) -> FastAPI:
     from flowkit_ui_backend.main import app as application
 
+    application.dependency_overrides[get_token_auth0] = get_token_auth0_override
     return application
 
 

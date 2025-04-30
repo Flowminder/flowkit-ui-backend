@@ -1,5 +1,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 # If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
+from typing import Annotated
 
 # coding: utf-8
 
@@ -37,6 +38,7 @@ from flowkit_ui_backend.models.spatial_resolution import SpatialResolution
 from flowkit_ui_backend.models.temporal_resolution import TemporalResolution
 from flowkit_ui_backend.security_api import get_token_auth0
 from flowkit_ui_backend.impl import maintenance_api_impl
+from flowkit_ui_backend.util.config import get_settings, Settings, SettingsDep
 
 router = APIRouter(route_class=gzip.GzipRoute)
 logger = structlog.get_logger("flowkit_ui_backend.log")
@@ -68,6 +70,7 @@ logger = structlog.get_logger("flowkit_ui_backend.log")
     response_class=ORJSONResponse,
 )
 async def provision_db(
+    settings: SettingsDep,
     token_auth0: TokenModel = Security(get_token_auth0, scopes=["admin"]),
     request: Request = None,
 ) -> None:
@@ -76,7 +79,7 @@ async def provision_db(
     try:
         logger.debug("Starting request")
         logger.debug("Provisioning database...")
-        success = await db.provision_db(force=False, pool=request.app.state.pool)
+        success = await db.provision_db(pool=request.app.state.pool, force=False)
         logger.debug(f"Provisioned database? {success}")
         logger.debug("Request ready")
         if success:
@@ -133,6 +136,7 @@ async def provision_db(
     response_class=ORJSONResponse,
 )
 async def force_provision_db(
+    settings: SettingsDep,
     token_auth0: TokenModel = Security(get_token_auth0, scopes=["admin"]),
     request: Request = None,
 ) -> None:
@@ -141,7 +145,7 @@ async def force_provision_db(
     try:
         logger.debug("Starting request")
         logger.debug("Forcibly provisioning database...")
-        success = await db.provision_db(force=True, pool=request.app.state.pool)
+        success = await db.provision_db(pool=request.app.state.pool, force=True)
         logger.debug(f"Provisioned database? {success}")
         logger.debug("Request ready")
         if success:
@@ -956,7 +960,9 @@ async def delete_dataset(
     try:
         logger.debug("Starting request")
         impl_result = await maintenance_api_impl.delete_dataset(
-            dataset, pool=request.app.state.pool, token_model=token_auth0
+            dataset,
+            pool=request.app.state.pool,
+            token_model=token_auth0,
         )
         logger.debug("Request ready")
         content = impl_result[0] if isinstance(impl_result, tuple) else impl_result
@@ -1035,7 +1041,9 @@ async def delete_indicator(
     try:
         logger.debug("Starting request")
         impl_result = await maintenance_api_impl.delete_indicator(
-            indicator_id, pool=request.app.state.pool, token_model=token_auth0
+            indicator_id,
+            pool=request.app.state.pool,
+            token_model=token_auth0,
         )
         logger.debug("Request ready")
         content = impl_result[0] if isinstance(impl_result, tuple) else impl_result
@@ -1823,7 +1831,9 @@ async def update_setup(
     try:
         logger.debug("Starting request")
         impl_result = await maintenance_api_impl.update_setup(
-            config, pool=request.app.state.pool, token_model=token_auth0
+            config,
+            pool=request.app.state.pool,
+            token_model=token_auth0,
         )
         logger.debug("Request ready")
         content = impl_result[0] if isinstance(impl_result, tuple) else impl_result

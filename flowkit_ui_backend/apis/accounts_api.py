@@ -1,11 +1,14 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 # If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
+from typing import Annotated
 
 # coding: utf-8
 
 import structlog
 import traceback
 from http import HTTPStatus
+
+from auth0.management import Auth0
 from fastapi.responses import ORJSONResponse, JSONResponse
 from fastapi.encoders import jsonable_encoder
 from fastapi import (  # noqa: F401
@@ -24,14 +27,18 @@ from fastapi import (  # noqa: F401
     status,
 )
 
+from flowkit_ui_backend.impl.accounts_api_impl import auth0_management
 from flowkit_ui_backend.util import gzip
 from flowkit_ui_backend.models.extra_models import TokenModel  # noqa: F401
 from flowkit_ui_backend.models.user_metadata import UserMetadata
 from flowkit_ui_backend.security_api import get_token_auth0
 from flowkit_ui_backend.impl import accounts_api_impl
+from flowkit_ui_backend.util.config import SettingsDep
 
 router = APIRouter(route_class=gzip.GzipRoute)
 logger = structlog.get_logger("flowkit_ui_backend.log")
+
+ManagementAnnotated = Annotated[Auth0, Depends(auth0_management)]
 
 
 @router.delete(
@@ -59,7 +66,8 @@ logger = structlog.get_logger("flowkit_ui_backend.log")
     response_class=ORJSONResponse,
 )
 async def delete_user(
-    uid: str = Path(description="The user ID"),
+    uid: str,
+    auth0_management_dep: ManagementAnnotated,
     token_auth0: TokenModel = Security(get_token_auth0, scopes=["profile"]),
     request: Request = None,
 ) -> None:
@@ -78,7 +86,10 @@ async def delete_user(
             )
         logger.debug("Starting request")
         impl_result = await accounts_api_impl.delete_user(
-            uid, pool=request.app.state.pool, token_model=token_auth0
+            uid,
+            pool=request.app.state.pool,
+            token_model=token_auth0,
+            auth0=auth0_management_dep,
         )
         logger.debug("Request ready")
         content = impl_result[0] if isinstance(impl_result, tuple) else impl_result
@@ -144,6 +155,7 @@ async def delete_user(
     response_class=ORJSONResponse,
 )
 async def get_user(
+    auth0_management: ManagementAnnotated,
     uid: str = Path(description="The user ID"),
     token_auth0: TokenModel = Security(get_token_auth0, scopes=["profile"]),
     request: Request = None,
@@ -163,7 +175,10 @@ async def get_user(
             )
         logger.debug("Starting request")
         impl_result = await accounts_api_impl.get_user(
-            uid, pool=request.app.state.pool, token_model=token_auth0
+            uid,
+            pool=request.app.state.pool,
+            token_model=token_auth0,
+            auth0=auth0_management,
         )
         logger.debug("Request ready")
         content = impl_result[0] if isinstance(impl_result, tuple) else impl_result
@@ -228,6 +243,7 @@ async def get_user(
     response_class=ORJSONResponse,
 )
 async def reset_password(
+    settings: SettingsDep,
     email: str = Path(description="The user&#39;s email address"),
     token_auth0: TokenModel = Security(get_token_auth0, scopes=["profile"]),
     request: Request = None,
@@ -242,7 +258,11 @@ async def reset_password(
     try:
         logger.debug("Starting request")
         impl_result = await accounts_api_impl.reset_password(
-            email, pool=request.app.state.pool, token_model=token_auth0
+            email,
+            pool=request.app.state.pool,
+            token_model=token_auth0,
+            auth0_domain=settings.auth0_domain,
+            auth0_client_id=settings.auth0_client_id,
         )
         logger.debug("Request ready")
         content = impl_result[0] if isinstance(impl_result, tuple) else impl_result
@@ -305,6 +325,7 @@ async def reset_password(
     response_class=ORJSONResponse,
 )
 async def update_user(
+    auth0_management: ManagementAnnotated,
     uid: str = Path(description="The user ID"),
     user_metadata: UserMetadata = Body(None, description="The user to update"),
     token_auth0: TokenModel = Security(get_token_auth0, scopes=["profile"]),
@@ -325,7 +346,11 @@ async def update_user(
             )
         logger.debug("Starting request")
         impl_result = await accounts_api_impl.update_user(
-            uid, user_metadata, pool=request.app.state.pool, token_model=token_auth0
+            uid,
+            user_metadata,
+            pool=request.app.state.pool,
+            token_model=token_auth0,
+            auth0=auth0_management,
         )
         logger.debug("Request ready")
         content = impl_result[0] if isinstance(impl_result, tuple) else impl_result

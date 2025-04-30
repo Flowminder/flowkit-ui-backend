@@ -88,7 +88,9 @@ async def get_category(
     try:
         logger.debug("Starting request")
         impl_result = await data_api_impl.get_category(
-            category_id, pool=request.app.state.pool, token_model=token_auth0
+            category_id,
+            pool=request.app.state.pool,
+            token_model=token_auth0,
         )
         logger.debug("Request ready")
         content = impl_result[0] if isinstance(impl_result, tuple) else impl_result
@@ -767,7 +769,8 @@ async def list_categories(
     try:
         logger.debug("Starting request")
         impl_result = await data_api_impl.list_categories(
-            pool=request.app.state.pool, token_model=token_auth0
+            pool=request.app.state.pool,
+            token_model=token_auth0,
         )
         logger.debug("Request ready")
         content = impl_result[0] if isinstance(impl_result, tuple) else impl_result
@@ -1130,7 +1133,9 @@ async def run_csv_query(
     try:
         logger.debug("Starting request")
         impl_result = await data_api_impl.run_csv_query(
-            query_parameters, pool=request.app.state.pool, token_model=token_auth0
+            query_parameters,
+            pool=request.app.state.pool,
+            token_model=token_auth0,
         )
         logger.debug("Request ready")
         content = impl_result[0] if isinstance(impl_result, tuple) else impl_result

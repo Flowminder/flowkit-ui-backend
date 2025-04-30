@@ -31,6 +31,7 @@ from flowkit_ui_backend.models.data_providers import DataProviders
 from flowkit_ui_backend.models.heartbeat import Heartbeat
 
 from flowkit_ui_backend.impl import general_api_impl
+from flowkit_ui_backend.util.config import SettingsDep
 
 router = APIRouter(route_class=gzip.GzipRoute)
 logger = structlog.get_logger("flowkit_ui_backend.log")
@@ -123,7 +124,7 @@ async def get_setup(request: Request = None) -> Config:
     tags=["general"],
     response_class=ORJSONResponse,
 )
-async def heartbeat(request: Request = None) -> Heartbeat:
+async def heartbeat(request: Request, settings: SettingsDep) -> Heartbeat:
     """Checks whether the API is up and running"""
 
     if not hasattr(general_api_impl, "heartbeat") or not callable(
@@ -133,7 +134,9 @@ async def heartbeat(request: Request = None) -> Heartbeat:
 
     try:
         logger.debug("Starting request")
-        impl_result = await general_api_impl.heartbeat(pool=request.app.state.pool)
+        impl_result = await general_api_impl.heartbeat(
+            pool=request.app.state.pool, settings=settings
+        )
         logger.debug("Request ready")
         content = impl_result[0] if isinstance(impl_result, tuple) else impl_result
         if isinstance(impl_result, Response):
