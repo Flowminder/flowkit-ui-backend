@@ -28,8 +28,6 @@ from flowkit_ui_backend.impl import data_api_impl
 
 logger = structlog.get_logger("flowkit_ui_backend.log")
 
-DB_NAME = os.environ["DB_NAME"]
-
 
 async def create_data_provider(
     data_provider: DataProvider,
@@ -235,8 +233,13 @@ async def delete_temporal_resolution(
 async def replace_setup(
     config: Config, pool: Pool, token_model: TokenModel = None
 ) -> None:
-    await delete_setup(pool=pool)
-    await update_setup(config, pool=pool)
+    await delete_setup(
+        pool=pool,
+    )
+    await update_setup(
+        config,
+        pool=pool,
+    )
     return None
 
 
@@ -266,7 +269,10 @@ async def update_setup(
                 indicator_id, pool=pool, token_model=None
             )
             if indicator is not None:
-                await delete_indicator(indicator_id, pool=pool)
+                await delete_indicator(
+                    indicator_id,
+                    pool=pool,
+                )
         except HTTPException as e:
             # swallowing exception here. If no indicator exists, we don't need to delete
             pass
@@ -323,7 +329,10 @@ async def delete_setup(pool: Pool, token_model: TokenModel = None) -> None:
         try:
             logger.debug(indicator)
             if indicator is not None:
-                result = await delete_indicator(indicator.indicator_id, pool=pool)
+                result = await delete_indicator(
+                    indicator.indicator_id,
+                    pool=pool,
+                )
                 logger.debug("after delete indicator", result=result)
         except HTTPException as e:
             logger.debug("in catch", e=e)
@@ -368,7 +377,7 @@ async def check_dataset_exists(
         could be found.
     """
     sql = f"""
-    SELECT md.mdid FROM `{DB_NAME}`.`metadata` AS md
+    SELECT md.mdid FROM `metadata` AS md
     WHERE md.`category_id`=%(category_id)s
     AND md.`indicator_id`=%(indicator_id)s
     AND md.srid=%(srid)s
@@ -382,7 +391,7 @@ async def check_dataset_exists(
         "trid": dataset.metadata.trid,
         "dt": dataset.metadata.dt,
     }
-    (column_names, result) = await db.run(sql, pool=pool, args=props)
+    (column_names, result) = await db.run(pool=pool, sql=sql, args=props)
     if result is not None and len(result) == 1:
         logger.debug(f"Found existing dataset.")
     elif result is not None and len(result) > 1:
@@ -400,7 +409,10 @@ async def check_dataset_exists(
 async def delete_dataset(
     dataset: Dataset, pool: Pool, token_model: TokenModel = None
 ) -> None:
-    mdid = await check_dataset_exists(dataset, pool=pool)
+    mdid = await check_dataset_exists(
+        dataset,
+        pool=pool,
+    )
     if mdid != -1:
         logger.debug(f"Deleting existing dataset", mdids=mdid)
 
@@ -420,7 +432,7 @@ async def delete_dataset(
         # drop the data table if it exists
 
         sql = f"""
-        DROP TABLE IF EXISTS `{DB_NAME}`.`{table_name}`
+        DROP TABLE IF EXISTS `{table_name}`
         """
         await db.run(sql=sql, pool=pool)
         logger.debug(
@@ -428,20 +440,20 @@ async def delete_dataset(
             mdid=mdid,
         )
         sql = f"""
-        DELETE FROM `{DB_NAME}`.`metadata`
+        DELETE FROM `metadata`
         WHERE `mdid`={mdid}
         """
-        await db.run(sql=sql, pool=pool)
+        await db.run(pool=pool, sql=sql)
         logger.debug(
             "Deleting scope mappings",
             mdid=mdid,
         )
         # Cleanup scope mappings
         sql = f"""
-        DELETE FROM `{DB_NAME}`.`scope_mapping`
+        DELETE FROM `scope_mapping`
         WHERE `mdid`={mdid}
         """
-        await db.run(sql=sql, pool=pool)
+        await db.run(pool=pool, sql=sql)
 
 
 async def add_dataset(
@@ -461,7 +473,10 @@ async def add_dataset(
             detail=f'Unknown data type "{dataset.data_type}"',
         )
 
-    mdid = await check_dataset_exists(dataset, pool=pool)
+    mdid = await check_dataset_exists(
+        dataset,
+        pool=pool,
+    )
     if mdid != -1:
         if overwrite:
             await delete_dataset(dataset, pool=pool)
@@ -510,7 +525,8 @@ async def add_dataset(
 
     # Get table template from db and adapt. This includes the partitioning which was added during the provisioning.
     (column_names, result) = await db.run(
-        f"SHOW CREATE TABLE {DB_NAME}.`{base_table_name}`;", pool=pool
+        pool=pool,
+        sql=f"SHOW CREATE TABLE `{base_table_name}`;",
     )
     if result is None:
         raise HTTPException(
@@ -522,7 +538,7 @@ async def add_dataset(
 
     # create dedicated table
     try:
-        await db.run(sql, pool=pool)
+        await db.run(pool=pool, sql=sql)
     except Exception as e:
         raise HTTPException(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
@@ -550,12 +566,12 @@ async def check_scope_mapping_exists(
     token_model: TokenModel = None,
 ) -> int:
     sql = f"""
-    SELECT sm.id FROM `{DB_NAME}`.`scope_mapping` AS sm
+    SELECT sm.id FROM `scope_mapping` AS sm
     WHERE sm.`scope`=%(scope)s
     AND sm.`mdid`=%(mdid)s
     """
     props = {"scope": scope_mapping.scope, "mdid": scope_mapping.mdid}
-    (column_names, result) = await db.run(sql, pool=pool, args=props)
+    (column_names, result) = await db.run(pool=pool, sql=sql, args=props)
     if result is not None and len(result) == 1:
         logger.debug(
             f"Found existing scope mapping{'' if len(result)==1 else 's'}",
@@ -639,7 +655,7 @@ async def delete_scope_mapping(
     logger.debug("Deleting existing scope mapping", ids=scope_id)
 
     sql = f"""
-    DELETE FROM `{DB_NAME}`.`scope_mapping`
+    DELETE FROM `scope_mapping`
     WHERE `id`={scope_id}
     """
-    await db.run(sql=sql, pool=pool)
+    await db.run(pool=pool, sql=sql)

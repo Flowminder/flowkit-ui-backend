@@ -1,11 +1,23 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 # If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
+from enum import Enum
 
 import structlog
 import logging.config
 from asgi_correlation_id import correlation_id
 from flowkit_ui_backend.util.structlog.dev import ConsoleRenderer
 from typing import Tuple, Any
+
+from flowkit_ui_backend.util.structlog.types import Processor
+
+
+class LogLevel(str, Enum):
+    TRACE = "TRACE"
+    DEBUG = "DEBUG"
+    INFO = "INFO"
+    WARNING = "WARNING"
+    ERROR = "ERROR"
+    FATAL = "FATAL"
 
 
 def add_correlation(
@@ -17,19 +29,19 @@ def add_correlation(
     return event_dict
 
 
-def setup_logging(log_level: str = "INFO", dev_mode: bool = False) -> None:
+def setup_logging(log_level: LogLevel = LogLevel.INFO, dev_mode: bool = False) -> None:
     """
     Configure structured logging
 
     Parameters
     ----------
-    log_level : str, default 'INFO'
+    log_level : LogLevel, default 'INFO'
     dev_mode : bool, default False
         Set to true to use coloured logs and enhanced exception formatting, disables json formatting
     """
 
     if dev_mode:
-        processors: Tuple[flowkit_ui_backend.util.structlog.types.Processor, ...] = (
+        processors: Tuple[Processor, ...] = (
             add_correlation,
             structlog.processors.TimeStamper(fmt="%H:%M:%S.%f"),
             structlog.stdlib.add_log_level,
@@ -43,7 +55,7 @@ def setup_logging(log_level: str = "INFO", dev_mode: bool = False) -> None:
         )
 
     else:
-        processors: Tuple[flowkit_ui_backend.util.structlog.types.Processor, ...] = (
+        processors: Tuple[Processor, ...] = (
             add_correlation,
             structlog.contextvars.merge_contextvars,
             structlog.processors.TimeStamper(fmt="iso"),
