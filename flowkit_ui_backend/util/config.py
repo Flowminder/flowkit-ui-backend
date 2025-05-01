@@ -36,6 +36,8 @@ class Settings(BaseSettings):
     git_branch: str
     git_commit: str
     app_name: str
+    secure_file_bucket: str
+    dqs_bucket_path: str
     git_tag: Optional[str] = None
     dev_mode: int = 0
     log_level: LogLevel = LogLevel.WARNING

@@ -1,7 +1,8 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 # If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-from datetime import datetime
+from datetime import timedelta
+from pathlib import Path
 import structlog
 import math
 import pendulum
@@ -12,9 +13,14 @@ from fastapi.responses import StreamingResponse
 from aiomysql import Pool, SSDictCursor
 from dateutil.relativedelta import relativedelta
 from http import HTTPStatus
+
+from google.cloud import storage
+import google
+
 from flowkit_ui_backend.models.extra_models import TokenModel
 from flowkit_ui_backend.models.latest_date import LatestDate
 from flowkit_ui_backend.models.query_parameters import QueryParameters
+from flowkit_ui_backend.models.signed_url import SignedUrl
 from flowkit_ui_backend.models.spatial_resolution import SpatialResolution
 from flowkit_ui_backend.models.spatial_resolutions import SpatialResolutions
 from flowkit_ui_backend.models.temporal_resolution import TemporalResolution
@@ -538,6 +544,26 @@ async def stream_flows_to_csv(flow_stream: AsyncGenerator) -> AsyncGenerator[str
                 f"{row['dt'].strftime('%Y-%m-%d')},{row['origin']},{row['destination']},{row['data']}"
                 for row in chunk
             ) + "\r\n"
+
+
+async def generate_signed_dqs_url() -> SignedUrl:
+    credentials, project = google.auth.default()
+    if credentials.token is None:
+        credentials.refresh(google.auth.transport.requests.Request())
+    storage_client = storage.Client(project, credentials)
+    # Exploratory logging
+    bucket = storage_client.bucket(get_settings().secure_file_bucket)
+    blob = bucket.blob(get_settings().dqs_bucket_path)
+    filename = Path(os.environ["DQS_BUCKET_PATH"]).name
+
+    url = blob.generate_signed_url(
+        version="v4",
+        expiration=timedelta(minutes=15),
+        method="GET",
+        service_account_email=credentials.service_account_email,
+        access_token=credentials.token,
+    )
+    return SignedUrl(url=url, file_name=filename)
 
 
 async def get_latest_date(pool: Pool) -> LatestDate:
