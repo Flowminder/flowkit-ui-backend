@@ -138,58 +138,12 @@ async def permission_exception_handler(request: Request, e: PermissionError):
 
 
 @app.exception_handler(StarletteHTTPException)
-async def local_http_exception_handler(request, e: StarletteHTTPException):
+async def http_exception_handler(request, e):
     logger.error(f"{type(e)}: {str(e)}")
-    http_exception_handler(request, e)
+    return await http_exception_handler(request, e)
 
 
 @app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request, e: RequestValidationError):
+async def validation_exception_handler(request, e):
     logger.error(f"{type(e)}: {str(e)}")
-    request_validation_exception_handler(request, e)
-
-
-@app.on_event("startup")
-async def _startup():
-    logger.debug("Adding gzip support for requests...")
-    app.router.route_class = gzip.GzipRoute
-
-    logger.debug("Setting up routing...")
-    app.include_router(AccountsApiRouter, prefix=os.environ["API_VERSION_URL_APPENDIX"])
-    app.include_router(DataApiRouter, prefix=os.environ["API_VERSION_URL_APPENDIX"])
-    app.include_router(GeneralApiRouter, prefix=os.environ["API_VERSION_URL_APPENDIX"])
-    app.include_router(
-        MaintenanceApiRouter, prefix=os.environ["API_VERSION_URL_APPENDIX"]
-    )
-
-    logger.debug("Creating db connection pool...")
-    app.state.pool = await aiomysql.create_pool(
-        host=os.environ["CONTAINER_NAME_DB"],
-        port=int(os.environ["DB_PORT_CONTAINER"]),
-        user=os.environ["DB_USER"],
-        password=os.environ["DB_PW"],
-        db=os.environ["DB_NAME"],
-        loop=asyncio.get_event_loop(),
-        autocommit=True,
-        local_infile=True,
-        minsize=1,
-        maxsize=100,
-    )
-    logger.debug("Done.")
-
-    logger.info(
-        f"Check the server is running on http://localhost:{os.environ['SERVER_PORT_HOST']}/{os.environ['API_VERSION_URL_APPENDIX']}/heartbeat"
-    )
-
-    if os.environ["JUPYTER_ENABLED"] == "1":
-        logger.info(
-            f"Jupyter lab running on http://localhost:{os.environ['JUPYTER_PORT']}/lab?token=jupyter"
-        )
-
-
-@app.on_event("shutdown")
-async def _shutdown():
-    logger.debug("Shutting down db connection pool...")
-    app.state.pool.close()
-    await app.state.pool.wait_closed()
-    logger.debug("Done.")
+    return await request_validation_exception_handler(request, e)

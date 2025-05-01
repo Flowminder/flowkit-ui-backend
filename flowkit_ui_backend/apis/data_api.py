@@ -24,7 +24,6 @@ from fastapi import (  # noqa: F401
     status,
 )
 
-from flowkit_ui_backend.models.signed_url import SignedUrl
 from flowkit_ui_backend.models.latest_date import LatestDate
 from flowkit_ui_backend.util import gzip
 from flowkit_ui_backend.models.extra_models import TokenModel  # noqa: F401
@@ -1020,58 +1019,6 @@ async def list_temporal_resolutions(
                     status_code if status_code is not None else HTTPStatus.NO_CONTENT
                 )
             )
-
-    # This is where we handle status codes via exceptions as raised by the impl methods
-    except HTTPException as e:
-        logger.debug(
-            "Request failed",
-            code=e.status_code,
-            content=e.detail,
-            traceback=traceback.print_exception(type(e), e, e.__traceback__),
-        )
-        return JSONResponse(status_code=e.status_code, content=e.detail)
-    except Exception as e:
-        logger.error(e)
-        traceback.print_exception(type(e), e, e.__traceback__)
-        return JSONResponse(
-            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            content=f"Something went wrong: {e}",
-        )
-
-
-@router.get(
-    "/dqs",
-    responses={
-        200: {
-            "model": SignedUrl,
-            "description": "OK: The results for this request were retrieved successfully.",
-        },
-        401: {
-            "description": "Unauthorized: The user does not have the permissions to access this resource."
-        },
-        429: {
-            "description": "Too Many Requests: The user has exceeded the limit of allowed simultaneous requests."
-        },
-        500: {
-            "description": "Internal Server Error: Something went wrong on the server while retrieving the data."
-        },
-        503: {
-            "description": "Service Unavailable: The server is currently down, e.g. for maintenance. Please try again later."
-        },
-    },
-    tags=["data"],
-    response_class=ORJSONResponse,
-)
-async def dqs(
-    token_auth0: TokenModel = Security(get_token_auth0, scopes=["read:free_data"]),
-) -> SignedUrl:
-    """Returns a time-limited download link to the Google Storage hosted DQS document"""
-
-    try:
-        logger.debug("Starting request")
-        impl_result = await data_api_impl.generate_signed_dqs_url()
-        logger.debug("Request ready")
-        return impl_result
 
     # This is where we handle status codes via exceptions as raised by the impl methods
     except HTTPException as e:
