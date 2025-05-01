@@ -34,6 +34,7 @@ from flowkit_ui_backend.models.indicators import Indicators
 from flowkit_ui_backend.models.query_result import QueryResult
 from flowkit_ui_backend.util import util
 from flowkit_ui_backend.db import db
+from flowkit_ui_backend.util.config import get_settings
 
 
 logger = structlog.get_logger("flowkit_ui_backend.log")
