@@ -44,11 +44,10 @@ class Settings(BaseSettings):
     jupyter_enabled: int = 0
     jupyter_port: Optional[int] = None
 
-    
-
 
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
 
 SettingsDep = Annotated[Settings, Depends(get_settings)]

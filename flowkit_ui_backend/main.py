@@ -149,7 +149,6 @@ async def validation_exception_handler(request, e: RequestValidationError):
     request_validation_exception_handler(request, e)
 
 
-
 @app.on_event("startup")
 async def _startup():
     logger.debug("Adding gzip support for requests...")
