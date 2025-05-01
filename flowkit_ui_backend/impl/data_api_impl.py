@@ -552,8 +552,8 @@ async def generate_signed_dqs_url() -> SignedUrl:
         credentials.refresh(google.auth.transport.requests.Request())
     storage_client = storage.Client(project, credentials)
     # Exploratory logging
-    bucket = storage_client.bucket(os.environ["SECURE_FILE_BUCKET"])
-    blob = bucket.blob(os.environ["DQS_BUCKET_PATH"])
+    bucket = storage_client.bucket(get_settings().secure_file_bucket)
+    blob = bucket.blob(get_settings().dqs_bucket_path)
     filename = Path(os.environ["DQS_BUCKET_PATH"]).name
 
     url = blob.generate_signed_url(
