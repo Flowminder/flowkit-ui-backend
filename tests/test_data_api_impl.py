@@ -489,6 +489,33 @@ async def test_csv_generation(populated_db):
 
 
 @pytest.mark.asyncio
+async def test_batched_query_csv_generation(populated_db):
+    params = QueryParameters(
+        category_id="residents",
+        indicator_id="residents.residents",
+        srid=3,
+        trid=2,
+        start_date="2020-02-01",
+        duration=10,
+        mdids_only=False,
+    )
+    response = await data_api_impl.run_csv_query(
+        params,
+        pool=populated_db,
+        token_model=TokenModel(sub="TEST", permissions=["admin"]),
+        query_batch_=5
+    )
+    out = ""
+    async for f in response.body_iterator:
+        out += f
+    assert (
+        out
+        == "date,area_code,value\r\n2020-02-01,HT0111-01,544650.000000000\r\n2020-03-01,HT0111-01,540640.000000000\r\n2020-04-01,HT0111-01,547210.000000000\r\n"
+    )
+
+
+
+@pytest.mark.asyncio
 async def test_flow_csv_generation(populated_db):
     params = QueryParameters(
         category_id="relocations",

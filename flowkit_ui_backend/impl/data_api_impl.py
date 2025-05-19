@@ -1,7 +1,9 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 # If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+from collections.abc import Generator, Iterable
 from datetime import timedelta
+import itertools
 from pathlib import Path
 import structlog
 import math
@@ -398,7 +400,9 @@ async def stream_query(
     metadata: List[Metadata],
     pool: Pool,
     table_name: str,
+    pre_batch_size: int | None = None,
 ) -> AsyncGenerator[list[dict], None]:
+    """Provides an asyncronous generator that"""
     # table_names is consumed twice, so it needs to be a list
     table_names = [f"`{table_name}_{m.mdid}`" for m in metadata]
     short_names = (
@@ -409,16 +413,19 @@ async def stream_query(
         f"SELECT `{short_name}`.*, `dt` FROM {table_name} AS `{short_name}` LEFT JOIN metadata USING (mdid)"
         for table_name, short_name in zip(table_names, short_names)
     )
-    select_query = " UNION ".join(partition_queries)
 
     logger.debug(
         "Running data query...",
         base_table_name=base_table_name,
         table_name=f"{table_name}_<mdid>",
     )
-    async with pool.acquire() as conn, conn.cursor(SSDictCursor) as cursor:
-        await cursor.execute(select_query)
 
+    if not pre_batch_size:
+        pre_batch_size = len(partition_queries)
+    query_factory = itertools.batched(partition_queries, batch_size=pre_batch_size)
+    async with pool.acquire() as conn, conn.cursor(SSDictCursor) as cursor:
+
+        await cursor.execute(next(query_factory))
         column_names = [i[0] for i in cursor.description]
         logger.debug("Executed query", column_names=column_names)
         if "data" not in column_names:
@@ -427,9 +434,13 @@ async def stream_query(
                 detail="Cannot find data for metadata",
             )
         while True:
+
             chunk = await cursor.fetchmany(FETCH_CHUNK_SIZE)
             if chunk == []:
-                break
+                try:
+                    cursor.execute(next(query_factory))
+                except StopIteration:
+                    break
             yield chunk
 
 
