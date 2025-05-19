@@ -15,6 +15,7 @@ from fastapi.responses import StreamingResponse
 from aiomysql import Pool, SSDictCursor
 from dateutil.relativedelta import relativedelta
 from http import HTTPStatus
+from flowkit_ui_backend.util.util import batched
 
 from google.cloud import storage
 import google
@@ -409,10 +410,11 @@ async def stream_query(
         table_name.rpartition(".")[2].strip("`") for table_name in table_names
     )
 
-    partition_queries = (
+    partition_queries = [
         f"SELECT `{short_name}`.*, `dt` FROM {table_name} AS `{short_name}` LEFT JOIN metadata USING (mdid)"
         for table_name, short_name in zip(table_names, short_names)
-    )
+    ]
+    breakpoint()
 
     logger.debug(
         "Running data query...",
@@ -422,7 +424,7 @@ async def stream_query(
 
     if not pre_batch_size:
         pre_batch_size = len(partition_queries)
-    query_factory = itertools.batched(partition_queries, batch_size=pre_batch_size)
+    query_factory = batched(partition_queries, batch_size=pre_batch_size)
     async with pool.acquire() as conn, conn.cursor(SSDictCursor) as cursor:
 
         await cursor.execute(next(query_factory))
@@ -434,7 +436,7 @@ async def stream_query(
                 detail="Cannot find data for metadata",
             )
         while True:
-
+            breakpoint()
             chunk = await cursor.fetchmany(FETCH_CHUNK_SIZE)
             if chunk == []:
                 try:
