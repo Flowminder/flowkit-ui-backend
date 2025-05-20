@@ -40,7 +40,7 @@ WORKDIR /home/hamster
 
 ENV PYTHONPATH="${PYTHONPATH}:/home/hamster/flowkit_ui_backend"
 
-ENTRYPOINT ["uvicorn" , "flowkit_ui_backend.main:app", "--host", "0.0.0.0", "--port",  "5000", "--timeout-keep-alive", "30"]
+ENTRYPOINT ["uvicorn" , "flowkit_ui_backend.main:app", "--host", "0.0.0.0", "--port",  "5000"]
 
 ARG IMAGE_NAME
 ARG GIT_BRANCH
