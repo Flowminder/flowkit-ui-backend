@@ -503,7 +503,7 @@ async def test_batched_query_csv_generation(populated_db):
         params,
         pool=populated_db,
         token_model=TokenModel(sub="TEST", permissions=["admin"]),
-        query_batch_=5
+        query_batch_=5,
     )
     out = ""
     async for f in response.body_iterator:
@@ -512,7 +512,6 @@ async def test_batched_query_csv_generation(populated_db):
         out
         == "date,area_code,value\r\n2020-02-01,HT0111-01,544650.000000000\r\n2020-03-01,HT0111-01,540640.000000000\r\n2020-04-01,HT0111-01,547210.000000000\r\n"
     )
-
 
 
 @pytest.mark.asyncio

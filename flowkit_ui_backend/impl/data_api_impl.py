@@ -15,7 +15,7 @@ from fastapi.responses import StreamingResponse
 from aiomysql import Pool, SSDictCursor
 from dateutil.relativedelta import relativedelta
 from http import HTTPStatus
-from flowkit_ui_backend.util.util import batched 
+from flowkit_ui_backend.util.util import batched
 
 from google.cloud import storage
 import google
@@ -434,7 +434,6 @@ async def stream_query(
         partition_queries, batch_size=pre_batch_size
     )
     async with pool.acquire() as conn, conn.cursor(SSDictCursor) as cursor:
-
         await cursor.execute(next(query_factory))
         column_names = [i[0] for i in cursor.description]
         logger.debug("Executed query", column_names=column_names)
@@ -535,7 +534,9 @@ async def stream_csv(
     if query_parameters.category_id.lower() in ["movements", "presence"]:
         pre_batch_chunk_size = PRE_BATCH_CHUNK_SIZE
 
-    query_stream_generator = stream_query(base_table_name, metadata, pool, table_name, pre_batch_size=pre_batch_chunk_size)
+    query_stream_generator = stream_query(
+        base_table_name, metadata, pool, table_name, pre_batch_size=pre_batch_chunk_size
+    )
     if query_parameters.category_id.lower() in ["residents", "presence"]:
         async for csv_chunk in stream_region_to_csv(query_stream_generator):
             yield csv_chunk
