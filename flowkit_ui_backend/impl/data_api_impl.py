@@ -44,7 +44,6 @@ logger = structlog.get_logger("flowkit_ui_backend.log")
 
 DEFAULT_NUM_BINS = 7
 FETCH_CHUNK_SIZE = 150
-PRE_BATCH_CHUNK_SIZE = 50
 
 
 async def list_categories(
@@ -410,7 +409,7 @@ async def stream_query(
     table_name: str,
     pre_batch_size: int | None = None,
 ) -> AsyncGenerator[list[dict], None]:
-    """Provides an asyncronous generator that"""
+    """Provides an asyncronous generator that streams query outputs. Can pre-batch large queries into separate chunks to not fill up the MySQL stack."""
     # table_names is consumed twice, so it needs to be a list
     table_names = [f"`{table_name}_{m.mdid}`" for m in metadata]
     short_names = (
@@ -532,7 +531,7 @@ async def stream_csv(
     )
     pre_batch_chunk_size = None
     if query_parameters.category_id.lower() in ["movements", "presence"]:
-        pre_batch_chunk_size = PRE_BATCH_CHUNK_SIZE
+        pre_batch_chunk_size = get_settings().daily_csv_pre_batch_chunk_size
 
     query_stream_generator = stream_query(
         base_table_name, metadata, pool, table_name, pre_batch_size=pre_batch_chunk_size
