@@ -15,7 +15,7 @@ from fastapi.responses import StreamingResponse
 from aiomysql import Pool, SSDictCursor
 from dateutil.relativedelta import relativedelta
 from http import HTTPStatus
-from flowkit_ui_backend.util.util import batched
+from flowkit_ui_backend.util.util import batched 
 
 from google.cloud import storage
 import google
@@ -44,6 +44,7 @@ logger = structlog.get_logger("flowkit_ui_backend.log")
 
 DEFAULT_NUM_BINS = 7
 FETCH_CHUNK_SIZE = 150
+PRE_BATCH_CHUNK_SIZE = 50
 
 
 async def list_categories(
@@ -396,6 +397,12 @@ async def get_column_names(
         return [i[0] for i in cursor.description]
 
 
+def _pre_batch_query_factory(partition_queries: Iterable[str], batch_size: int):
+    yield from (
+        " UNION ".join(pq_batch) for pq_batch in batched(partition_queries, batch_size)
+    )
+
+
 async def stream_query(
     base_table_name: str,
     metadata: List[Metadata],
@@ -414,7 +421,6 @@ async def stream_query(
         f"SELECT `{short_name}`.*, `dt` FROM {table_name} AS `{short_name}` LEFT JOIN metadata USING (mdid)"
         for table_name, short_name in zip(table_names, short_names)
     ]
-    breakpoint()
 
     logger.debug(
         "Running data query...",
@@ -424,7 +430,9 @@ async def stream_query(
 
     if not pre_batch_size:
         pre_batch_size = len(partition_queries)
-    query_factory = batched(partition_queries, batch_size=pre_batch_size)
+    query_factory = _pre_batch_query_factory(
+        partition_queries, batch_size=pre_batch_size
+    )
     async with pool.acquire() as conn, conn.cursor(SSDictCursor) as cursor:
 
         await cursor.execute(next(query_factory))
@@ -436,11 +444,10 @@ async def stream_query(
                 detail="Cannot find data for metadata",
             )
         while True:
-            breakpoint()
             chunk = await cursor.fetchmany(FETCH_CHUNK_SIZE)
             if chunk == []:
                 try:
-                    cursor.execute(next(query_factory))
+                    await cursor.execute(next(query_factory))
                 except StopIteration:
                     break
             yield chunk
@@ -524,7 +531,11 @@ async def stream_csv(
         pool,
         token_model,
     )
-    query_stream_generator = stream_query(base_table_name, metadata, pool, table_name)
+    pre_batch_chunk_size = None
+    if query_parameters.category_id.lower() in ["movements", "presence"]:
+        pre_batch_chunk_size = PRE_BATCH_CHUNK_SIZE
+
+    query_stream_generator = stream_query(base_table_name, metadata, pool, table_name, pre_batch_size=pre_batch_chunk_size)
     if query_parameters.category_id.lower() in ["residents", "presence"]:
         async for csv_chunk in stream_region_to_csv(query_stream_generator):
             yield csv_chunk
