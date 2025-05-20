@@ -503,7 +503,6 @@ async def test_batched_query_csv_generation(populated_db):
         params,
         pool=populated_db,
         token_model=TokenModel(sub="TEST", permissions=["admin"]),
-        query_batch_=5,
     )
     out = ""
     async for f in response.body_iterator:
