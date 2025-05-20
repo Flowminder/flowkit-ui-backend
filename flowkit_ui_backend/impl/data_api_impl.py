@@ -1,7 +1,9 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 # If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+from collections.abc import Generator, Iterable
 from datetime import timedelta
+import itertools
 from pathlib import Path
 import structlog
 import math
@@ -13,6 +15,7 @@ from fastapi.responses import StreamingResponse
 from aiomysql import Pool, SSDictCursor
 from dateutil.relativedelta import relativedelta
 from http import HTTPStatus
+from flowkit_ui_backend.util.util import batched
 
 from google.cloud import storage
 import google
@@ -393,32 +396,44 @@ async def get_column_names(
         return [i[0] for i in cursor.description]
 
 
+def _pre_batch_query_factory(partition_queries: Iterable[str], batch_size: int):
+    yield from (
+        " UNION ".join(pq_batch) for pq_batch in batched(partition_queries, batch_size)
+    )
+
+
 async def stream_query(
     base_table_name: str,
     metadata: List[Metadata],
     pool: Pool,
     table_name: str,
+    pre_batch_size: int | None = None,
 ) -> AsyncGenerator[list[dict], None]:
+    """Provides an asyncronous generator that streams query outputs. Can pre-batch large queries into separate chunks to not fill up the MySQL stack."""
     # table_names is consumed twice, so it needs to be a list
     table_names = [f"`{table_name}_{m.mdid}`" for m in metadata]
     short_names = (
         table_name.rpartition(".")[2].strip("`") for table_name in table_names
     )
 
-    partition_queries = (
+    partition_queries = [
         f"SELECT `{short_name}`.*, `dt` FROM {table_name} AS `{short_name}` LEFT JOIN metadata USING (mdid)"
         for table_name, short_name in zip(table_names, short_names)
-    )
-    select_query = " UNION ".join(partition_queries)
+    ]
 
     logger.debug(
         "Running data query...",
         base_table_name=base_table_name,
         table_name=f"{table_name}_<mdid>",
     )
-    async with pool.acquire() as conn, conn.cursor(SSDictCursor) as cursor:
-        await cursor.execute(select_query)
 
+    if not pre_batch_size:
+        pre_batch_size = len(partition_queries)
+    query_factory = _pre_batch_query_factory(
+        partition_queries, batch_size=pre_batch_size
+    )
+    async with pool.acquire() as conn, conn.cursor(SSDictCursor) as cursor:
+        await cursor.execute(next(query_factory))
         column_names = [i[0] for i in cursor.description]
         logger.debug("Executed query", column_names=column_names)
         if "data" not in column_names:
@@ -429,7 +444,10 @@ async def stream_query(
         while True:
             chunk = await cursor.fetchmany(FETCH_CHUNK_SIZE)
             if chunk == []:
-                break
+                try:
+                    await cursor.execute(next(query_factory))
+                except StopIteration:
+                    break
             yield chunk
 
 
@@ -511,7 +529,13 @@ async def stream_csv(
         pool,
         token_model,
     )
-    query_stream_generator = stream_query(base_table_name, metadata, pool, table_name)
+    pre_batch_chunk_size = None
+    if query_parameters.category_id.lower() in ["movements", "presence"]:
+        pre_batch_chunk_size = get_settings().daily_csv_pre_batch_chunk_size
+
+    query_stream_generator = stream_query(
+        base_table_name, metadata, pool, table_name, pre_batch_size=pre_batch_chunk_size
+    )
     if query_parameters.category_id.lower() in ["residents", "presence"]:
         async for csv_chunk in stream_region_to_csv(query_stream_generator):
             yield csv_chunk

@@ -2,6 +2,8 @@
 # If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import annotations
+from collections.abc import Generator, Iterable
+from itertools import islice
 import os
 import glob
 import json
@@ -17,6 +19,22 @@ from flowkit_ui_backend.models.language import Language
 
 
 logger = structlog.get_logger("flowkit_ui_backend.log")
+
+
+def batched(iterable, batch_size, *, strict=False) -> Generator[tuple]:
+    # batched('ABCDEFG', 3) → ABC DEF G
+    if batch_size < 1:
+        raise ValueError("n must be at least one")
+    iterator = iter(iterable)
+    while batch := tuple(islice(iterator, batch_size)):
+        if strict and len(batch) != batch_size:
+            raise ValueError("batched(): incomplete batch")
+        yield batch
+
+
+def batched_str(strings: Iterable[str], batch_size) -> Generator[str]:
+    batcher = batched(strings, batch_size)
+    yield from ("".join(batch) for batch in batcher)
 
 
 def num(s: str) -> Union[int, float]:

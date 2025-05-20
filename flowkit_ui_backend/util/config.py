@@ -43,6 +43,7 @@ class Settings(BaseSettings):
     log_level: LogLevel = LogLevel.WARNING
     jupyter_enabled: int = 0
     jupyter_port: Optional[int] = None
+    daily_csv_pre_batch_chunk_size: int = 50
 
 
 @lru_cache
