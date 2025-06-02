@@ -593,6 +593,21 @@ async def generate_signed_dqs_url() -> SignedUrl:
 
 async def get_latest_date(pool: Pool) -> LatestDate:
     sql = f"SELECT max(dt) FROM `metadata`;"
+    sql = """
+    WITH premium_mdids AS (
+            SELECT
+            mdid
+            FROM
+            `scope_mapping`
+            WHERE
+            scope = 'read:premium_data'
+            )
+    SELECT
+      MAX(dt)
+      FROM metadata as md
+      INNER JOIN premium_mdids USING (mdid);
+
+    """
     _, result = await db.run(sql=sql, pool=pool)
     latest_date = result[0][0].date()
     return LatestDate(latest_date=latest_date)
