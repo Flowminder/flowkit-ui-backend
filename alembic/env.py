@@ -1,7 +1,10 @@
+from pathlib import Path
 from logging.config import fileConfig
+from dataclasses import asdict, dataclass
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+from urllib.parse import quote_plus
+from sqlalchemy import create_engine
+
 
 from alembic import context
 
@@ -26,6 +29,50 @@ target_metadata = None
 # ... etc.
 
 
+@dataclass
+class ConnectionSpec:
+    user: str
+    password: str
+    db_name: str
+    port: int
+    host: str
+
+
+def build_url_from_spec(spec: ConnectionSpec) -> str:
+    url = f"mysql+mysqlconnector://{spec.user}:{spec.password}@{spec.host}:{spec.port}/{spec.db_name}"
+    return url
+
+
+def spec_from_file(file: Path) -> ConnectionSpec:
+    env = {
+        line.split("=")[0]: quote_plus(line.split("=")[1].strip())
+        for line in file.open().readlines()
+    }
+    return ConnectionSpec(
+        user=env["DB_USER"],
+        password=env["DB_PW"],
+        db_name=env["DB_NAME"],
+        port=int(env["PORT"]),
+        host=env["HOST"],
+    )
+
+
+def spec_for_local() -> ConnectionSpec:
+    dev_cred_file = Path(__file__).parent / "local_credentials"
+    return spec_from_file(dev_cred_file)
+
+
+def spec_for_remote() -> ConnectionSpec:
+    dev_cred_file = Path(__file__).parent / "dev_credentials"
+    return spec_from_file(dev_cred_file)
+
+
+spec = spec_for_local()
+
+for key, value in asdict(spec).items():
+    config.set_section_option("mysql_conn", key, value)
+
+
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
 
@@ -38,9 +85,8 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = config.get_main_option("sqlalchemy.url")
     context.configure(
-        url=url,
+        url=build_url_from_spec(spec),
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
@@ -57,16 +103,10 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
+    connectable = create_engine(build_url_from_spec(spec))
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()
