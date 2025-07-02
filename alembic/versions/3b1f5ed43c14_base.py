@@ -11,7 +11,7 @@ from typing import Sequence, Union
 from alembic import op, context
 import sqlalchemy as sa
 from aiomysql import create_pool
-from flowkit_ui_backend.db.db import provision_db
+from ...flowkit_ui_backend.db.db import provision_db
 
 
 # revision identifiers, used by Alembic.

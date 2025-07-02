@@ -3,6 +3,7 @@ aiocsv
 aiofiles
 aiohttp
 aiomysql
+alembic
 aniso8601
 asyncache
 async-exit-stack
