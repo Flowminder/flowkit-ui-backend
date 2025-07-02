@@ -12,7 +12,7 @@ aiohappyeyeballs==2.6.1
     # via
     #   -c requirements.txt
     #   aiohttp
-aiohttp==3.11.18
+aiohttp==3.12.13
     # via
     #   -c requirements.txt
     #   -r requirements.in
@@ -30,6 +30,10 @@ aniso8601==10.0.1
     # via
     #   -c requirements.txt
     #   -r requirements.in
+annotated-types==0.7.0
+    # via
+    #   -c requirements.txt
+    #   pydantic
 anyio==3.7.1
     # via
     #   -c requirements.txt
@@ -58,7 +62,7 @@ attrs==25.3.0
     # via
     #   -c requirements.txt
     #   aiohttp
-auth0-python==4.9.0
+auth0-python==4.10.0
     # via
     #   -c requirements.txt
     #   -r requirements.in
@@ -74,7 +78,7 @@ cachetools==5.5.2
     #   -r requirements.in
     #   asyncache
     #   google-auth
-certifi==2025.4.26
+certifi==2025.6.15
     # via
     #   -c requirements.txt
     #   -r requirements.in
@@ -89,11 +93,11 @@ chardet==5.2.0
     # via
     #   -c requirements.txt
     #   -r requirements.in
-charset-normalizer==3.4.1
+charset-normalizer==3.4.2
     # via
     #   -c requirements.txt
     #   requests
-click==8.1.8
+click==8.2.1
     # via
     #   -c requirements.txt
     #   black
@@ -102,13 +106,13 @@ colorama==0.4.6
     # via
     #   -c requirements.txt
     #   -r requirements.in
-coverage==7.8.0
+coverage==7.9.1
     # via
     #   coverage-badge
     #   pytest-cov
 coverage-badge==1.1.2
     # via -r dev-requirements.in
-cryptography==44.0.2
+cryptography==45.0.4
     # via
     #   -c requirements.txt
     #   auth0-python
@@ -129,21 +133,21 @@ email-validator==2.2.0
     #   -r requirements.in
 executing==2.2.0
     # via stack-data
-fastapi==0.115.12
+fastapi==0.115.14
     # via
     #   -c requirements.txt
     #   -r requirements.in
-frozenlist==1.6.0
+frozenlist==1.7.0
     # via
     #   -c requirements.txt
     #   aiohttp
     #   aiosignal
-google-api-core==2.24.2
+google-api-core==2.25.1
     # via
     #   -c requirements.txt
     #   google-cloud-core
     #   google-cloud-storage
-google-auth==2.39.0
+google-auth==2.40.3
     # via
     #   -c requirements.txt
     #   -r requirements.in
@@ -154,7 +158,7 @@ google-cloud-core==2.4.3
     # via
     #   -c requirements.txt
     #   google-cloud-storage
-google-cloud-storage==3.1.0
+google-cloud-storage==3.1.1
     # via
     #   -c requirements.txt
     #   -r requirements.in
@@ -215,7 +219,7 @@ idna==3.10
     #   yarl
 iniconfig==2.1.0
     # via pytest
-ipython==9.2.0
+ipython==9.4.0
     # via black
 ipython-pygments-lexers==1.1.1
     # via ipython
@@ -236,7 +240,7 @@ markupsafe==3.0.2
     #   jinja2
 matplotlib-inline==0.1.7
     # via ipython
-multidict==6.4.3
+multidict==6.6.3
     # via
     #   -c requirements.txt
     #   aiohttp
@@ -267,17 +271,19 @@ pendulum==3.1.0
     #   -r requirements.in
 pexpect==4.9.0
     # via ipython
-platformdirs==4.3.7
+platformdirs==4.3.8
     # via black
-pluggy==1.5.0
-    # via pytest
+pluggy==1.6.0
+    # via
+    #   pytest
+    #   pytest-cov
 promise==2.3
     # via
     #   -c requirements.txt
     #   -r requirements.in
 prompt-toolkit==3.0.51
     # via ipython
-propcache==0.3.1
+propcache==0.3.2
     # via
     #   -c requirements.txt
     #   aiohttp
@@ -286,7 +292,7 @@ proto-plus==1.26.1
     # via
     #   -c requirements.txt
     #   google-api-core
-protobuf==6.30.2
+protobuf==6.31.1
     # via
     #   -c requirements.txt
     #   google-api-core
@@ -296,13 +302,13 @@ ptyprocess==0.7.0
     # via pexpect
 pure-eval==0.2.3
     # via stack-data
-pyasn1==0.4.8
+pyasn1==0.6.1
     # via
     #   -c requirements.txt
     #   pyasn1-modules
     #   python-jose
     #   rsa
-pyasn1-modules==0.4.1
+pyasn1-modules==0.4.2
     # via
     #   -c requirements.txt
     #   google-auth
@@ -310,16 +316,20 @@ pycparser==2.22
     # via
     #   -c requirements.txt
     #   cffi
-pydantic==1.10.22
+pydantic==2.11.7
     # via
-    #   -c constraints.in
     #   -c requirements.txt
     #   -r requirements.in
     #   fastapi
-pygments==2.19.1
+pydantic-core==2.33.2
+    # via
+    #   -c requirements.txt
+    #   pydantic
+pygments==2.19.2
     # via
     #   ipython
     #   ipython-pygments-lexers
+    #   pytest
 pyjwt==2.10.1
     # via
     #   -c requirements.txt
@@ -328,20 +338,20 @@ pymysql==1.1.1
     # via
     #   -c requirements.txt
     #   aiomysql
-pytest==8.3.5
+pytest==8.4.1
     # via
     #   -r dev-requirements.in
     #   pytest-asyncio
     #   pytest-cov
     #   pytest-dotenv
     #   pytest-mock
-pytest-asyncio==0.26.0
+pytest-asyncio==1.0.0
     # via -r dev-requirements.in
-pytest-cov==6.1.1
+pytest-cov==6.2.1
     # via -r dev-requirements.in
 pytest-dotenv==0.5.2
     # via -r dev-requirements.in
-pytest-mock==3.14.0
+pytest-mock==3.14.1
     # via -r dev-requirements.in
 python-dateutil==2.9.0.post0
     # via
@@ -349,9 +359,9 @@ python-dateutil==2.9.0.post0
     #   -r requirements.in
     #   graphene
     #   pendulum
-python-dotenv==1.1.0
+python-dotenv==1.1.1
     # via pytest-dotenv
-python-jose==3.4.0
+python-jose==3.5.0
     # via
     #   -c requirements.txt
     #   -r requirements.in
@@ -363,7 +373,7 @@ pyyaml==6.0.2
     # via
     #   -c requirements.txt
     #   -r requirements.in
-requests==2.32.3
+requests==2.32.4
     # via
     #   -c requirements.txt
     #   auth0-python
@@ -378,7 +388,7 @@ rx==3.2.0
     # via
     #   -c requirements.txt
     #   -r requirements.in
-setuptools==80.0.1
+setuptools==80.9.0
     # via coverage-badge
 six==1.17.0
     # via
@@ -399,7 +409,7 @@ starlette==0.46.2
     #   -r requirements.in
     #   asgi-correlation-id
     #   fastapi
-structlog==25.3.0
+structlog==25.4.0
     # via
     #   -c requirements.txt
     #   -r requirements.in
@@ -407,7 +417,7 @@ timing-asgi==0.3.1
     # via
     #   -c requirements.txt
     #   -r requirements.in
-tokenize-rt==6.1.0
+tokenize-rt==6.2.0
     # via black
 tomli==2.2.1
     # via coverage
@@ -415,7 +425,7 @@ traitlets==5.14.3
     # via
     #   ipython
     #   matplotlib-inline
-typing-extensions==4.13.2
+typing-extensions==4.14.0
     # via
     #   -c requirements.txt
     #   -r requirements.in
@@ -423,6 +433,12 @@ typing-extensions==4.13.2
     #   fastapi
     #   graphene
     #   ipython
+    #   pydantic
+    #   pydantic-core
+    #   typing-inspection
+typing-inspection==0.4.1
+    # via
+    #   -c requirements.txt
     #   pydantic
 tzdata==2025.2
     # via
@@ -432,13 +448,13 @@ ujson==5.10.0
     # via
     #   -c requirements.txt
     #   -r requirements.in
-urllib3==2.4.0
+urllib3==2.5.0
     # via
     #   -c requirements.txt
     #   -r requirements.in
     #   auth0-python
     #   requests
-uvicorn==0.34.2
+uvicorn==0.35.0
     # via
     #   -c requirements.txt
     #   -r requirements.in
@@ -456,7 +472,7 @@ websockets==15.0.1
     # via
     #   -c requirements.txt
     #   -r requirements.in
-yarl==1.20.0
+yarl==1.20.1
     # via
     #   -c requirements.txt
     #   aiohttp
