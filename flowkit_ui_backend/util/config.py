@@ -4,9 +4,9 @@ from functools import lru_cache
 from typing import Optional, Annotated
 
 from fastapi import Depends
-from pydantic import BaseSettings, Field
-from pydantic.networks import AnyHttpUrl
-from pydantic.types import SecretStr
+from pydantic.v1 import BaseSettings, Field
+from pydantic.v1.networks import AnyHttpUrl
+from pydantic.v1.types import SecretStr
 
 from flowkit_ui_backend.util.logging import LogLevel
 

@@ -15,7 +15,7 @@ from pathlib import Path
 from xmlrpc.client import boolean
 from http import HTTPStatus
 from aiomysql import Pool
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 from flowkit_ui_backend.models.extra_models import TokenModel
 from flowkit_ui_backend.util import util
 

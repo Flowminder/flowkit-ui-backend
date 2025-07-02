@@ -11,7 +11,7 @@ from asyncache import cached
 from cachetools import TTLCache
 from fastapi import HTTPException
 from fastapi.params import Depends
-from pydantic import SecretStr
+from pydantic.v1 import SecretStr
 
 from flowkit_ui_backend.models.extra_models import TokenModel
 from flowkit_ui_backend.models.user_metadata import UserMetadata
