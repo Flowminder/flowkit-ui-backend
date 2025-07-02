@@ -170,6 +170,7 @@ pycparser==2.22
     # via cffi
 pydantic==2.11.7
     # via
+    #   -c constraints.in
     #   -r requirements.in
     #   fastapi
 pydantic-core==2.33.2
