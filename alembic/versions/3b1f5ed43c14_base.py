@@ -7,11 +7,11 @@ Create Date: 2025-06-24 16:07:35.332513
 """
 
 from typing import Sequence, Union
+from pathlib import Path
 
 from alembic import op, context
-import sqlalchemy as sa
 from aiomysql import create_pool
-from ...flowkit_ui_backend.db.db import provision_db
+from flowkit_ui_backend.db.db import SCHEMA_PATH
 
 
 # revision identifiers, used by Alembic.
@@ -23,14 +23,6 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade is a misnomer - this provisions the db"""
-    attrs = context.config.attributes
-    pool = create_pool(
-        maxsize=1,
-        host=attrs["host"],
-        user=attrs["user"],
-        password=attrs["password"],
-        db=attrs["db"],
-        port=attrs["port"],
-    )
-    op.run_async(provision_db(pool))
-    pass
+    schema_query = Path(SCHEMA_PATH).read_text()
+
+    op.execute(schema_query)

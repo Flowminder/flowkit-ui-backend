@@ -67,13 +67,7 @@ def spec_for_remote() -> ConnectionSpec:
     return spec_from_file(dev_cred_file)
 
 
-spec = spec_for_local()
-
-for key, value in asdict(spec).items():
-    config.set_section_option("mysql_conn", key, value)
-
-
-def run_migrations_offline() -> None:
+def run_migrations_offline(spec: ConnectionSpec) -> None:
     """Run migrations in 'offline' mode.
 
     This configures the context with just a URL
@@ -96,7 +90,7 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
-def run_migrations_online() -> None:
+def run_migrations_online(spec: ConnectionSpec) -> None:
     """Run migrations in 'online' mode.
 
     In this scenario we need to create an Engine
@@ -112,7 +106,12 @@ def run_migrations_online() -> None:
             context.run_migrations()
 
 
+spec = spec_for_local()
+
+for key, value in asdict(spec).items():
+    config.set_section_option("mysql_conn", key, str(value))
+
 if context.is_offline_mode():
-    run_migrations_offline()
+    run_migrations_offline(spec)
 else:
-    run_migrations_online()
+    run_migrations_online(spec)
