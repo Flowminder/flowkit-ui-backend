@@ -39,6 +39,7 @@ anyio==3.7.1
     #   -c requirements.txt
     #   httpx
     #   starlette
+    #   watchfiles
     #   watchgod
 asgi-correlation-id==4.3.4
     # via
@@ -101,6 +102,8 @@ click==8.2.1
     # via
     #   -c requirements.txt
     #   black
+    #   rich-toolkit
+    #   typer
     #   uvicorn
 colorama==0.4.6
     # via
@@ -131,12 +134,18 @@ email-validator==2.2.0
     # via
     #   -c requirements.txt
     #   -r requirements.in
+    #   fastapi
 executing==2.2.0
     # via stack-data
 fastapi==0.115.14
     # via
     #   -c requirements.txt
     #   -r requirements.in
+    #   flowkit-ui-backend
+fastapi-cli==0.0.7
+    # via fastapi
+.
+    # via -r dev-requirements.in
 frozenlist==1.7.0
     # via
     #   -c requirements.txt
@@ -204,10 +213,12 @@ httptools==0.6.4
     # via
     #   -c requirements.txt
     #   -r requirements.in
+    #   uvicorn
 httpx==0.28.1
     # via
     #   -c requirements.txt
     #   -r requirements.in
+    #   fastapi
 idna==3.10
     # via
     #   -c requirements.txt
@@ -227,12 +238,16 @@ itsdangerous==2.2.0
     # via
     #   -c requirements.txt
     #   -r requirements.in
+    #   fastapi
 jedi==0.19.2
     # via ipython
 jinja2==3.1.6
     # via
     #   -c requirements.txt
     #   -r requirements.in
+    #   fastapi
+markdown-it-py==3.0.0
+    # via rich
 markupsafe==3.0.2
     # via
     #   -c requirements.txt
@@ -240,6 +255,8 @@ markupsafe==3.0.2
     #   jinja2
 matplotlib-inline==0.1.7
     # via ipython
+mdurl==0.1.2
+    # via markdown-it-py
 multidict==6.6.3
     # via
     #   -c requirements.txt
@@ -255,6 +272,7 @@ orjson==3.10.18
     # via
     #   -c requirements.txt
     #   -r requirements.in
+    #   fastapi
 packaging==25.0
     # via
     #   -c requirements.txt
@@ -321,15 +339,22 @@ pydantic==2.11.7
     #   -c requirements.txt
     #   -r requirements.in
     #   fastapi
+    #   pydantic-extra-types
+    #   pydantic-settings
 pydantic-core==2.33.2
     # via
     #   -c requirements.txt
     #   pydantic
+pydantic-extra-types==2.10.5
+    # via fastapi
+pydantic-settings==2.10.1
+    # via fastapi
 pygments==2.19.2
     # via
     #   ipython
     #   ipython-pygments-lexers
     #   pytest
+    #   rich
 pyjwt==2.10.1
     # via
     #   -c requirements.txt
@@ -360,7 +385,10 @@ python-dateutil==2.9.0.post0
     #   graphene
     #   pendulum
 python-dotenv==1.1.1
-    # via pytest-dotenv
+    # via
+    #   pydantic-settings
+    #   pytest-dotenv
+    #   uvicorn
 python-jose==3.5.0
     # via
     #   -c requirements.txt
@@ -369,16 +397,25 @@ python-multipart==0.0.20
     # via
     #   -c requirements.txt
     #   -r requirements.in
+    #   fastapi
 pyyaml==6.0.2
     # via
     #   -c requirements.txt
     #   -r requirements.in
+    #   fastapi
+    #   uvicorn
 requests==2.32.4
     # via
     #   -c requirements.txt
     #   auth0-python
     #   google-api-core
     #   google-cloud-storage
+rich==14.0.0
+    # via
+    #   rich-toolkit
+    #   typer
+rich-toolkit==0.14.8
+    # via fastapi-cli
 rsa==4.9.1
     # via
     #   -c requirements.txt
@@ -390,6 +427,8 @@ rx==3.2.0
     #   -r requirements.in
 setuptools==80.9.0
     # via coverage-badge
+shellingham==1.5.4
+    # via typer
 six==1.17.0
     # via
     #   -c requirements.txt
@@ -425,6 +464,8 @@ traitlets==5.14.3
     # via
     #   ipython
     #   matplotlib-inline
+typer==0.16.0
+    # via fastapi-cli
 typing-extensions==4.14.0
     # via
     #   -c requirements.txt
@@ -435,11 +476,15 @@ typing-extensions==4.14.0
     #   ipython
     #   pydantic
     #   pydantic-core
+    #   pydantic-extra-types
+    #   rich-toolkit
+    #   typer
     #   typing-inspection
 typing-inspection==0.4.1
     # via
     #   -c requirements.txt
     #   pydantic
+    #   pydantic-settings
 tzdata==2025.2
     # via
     #   -c requirements.txt
@@ -448,6 +493,7 @@ ujson==5.10.0
     # via
     #   -c requirements.txt
     #   -r requirements.in
+    #   fastapi
 urllib3==2.5.0
     # via
     #   -c requirements.txt
@@ -458,10 +504,15 @@ uvicorn==0.35.0
     # via
     #   -c requirements.txt
     #   -r requirements.in
+    #   fastapi
+    #   fastapi-cli
 uvloop==0.21.0
     # via
     #   -c requirements.txt
     #   -r requirements.in
+    #   uvicorn
+watchfiles==1.1.0
+    # via uvicorn
 watchgod==0.8.2
     # via
     #   -c requirements.txt
@@ -472,6 +523,7 @@ websockets==15.0.1
     # via
     #   -c requirements.txt
     #   -r requirements.in
+    #   uvicorn
 yarl==1.20.1
     # via
     #   -c requirements.txt
