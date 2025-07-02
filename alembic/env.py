@@ -63,6 +63,7 @@ def spec_for_local() -> ConnectionSpec:
 
 
 def spec_for_remote() -> ConnectionSpec:
+    print("Caution: running migration on remote db")
     dev_cred_file = Path(__file__).parent / "dev_credentials"
     return spec_from_file(dev_cred_file)
 
@@ -106,10 +107,7 @@ def run_migrations_online(spec: ConnectionSpec) -> None:
             context.run_migrations()
 
 
-spec = spec_for_local()
-
-for key, value in asdict(spec).items():
-    config.set_section_option("mysql_conn", key, str(value))
+spec = spec_for_remote()
 
 if context.is_offline_mode():
     run_migrations_offline(spec)
