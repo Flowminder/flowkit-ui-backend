@@ -107,7 +107,8 @@ def run_migrations_online(spec: ConnectionSpec) -> None:
             context.run_migrations()
 
 
-spec = spec_for_remote()
+# spec = spec_for_remote()
+spec = spec_for_local()
 
 if context.is_offline_mode():
     run_migrations_offline(spec)
