@@ -8,7 +8,7 @@ Create Date: 2025-07-03 16:51:21.868196
 
 from dataclasses import dataclass
 from typing import Sequence, Union, Dict
-
+from flowkit_ui_backend.db.const_data import time_id_mapping
 from alembic import op
 
 
@@ -57,19 +57,12 @@ def upgrade() -> None:
             COMMIT;
             """
 
-    srid_migration = OldNewIdMigration(
-        label_mapping={"Department": 1, "Commune": 2, "Communal section": 3},
+    trid_migration = OldNewIdMigration(
+        label_mapping=time_id_mapping,
         id_name="srid",
         table_name="spatial_resolution",
     )
 
-    trid_migration = OldNewIdMigration(
-        label_mapping={"Year": 1, "Month": 2, "Week": 3, "Day": 4},
-        id_name="trid",
-        table_name="temporal_resolution",
-    )
-
-    op.execute(make_old_new_id_migration(srid_migration))
     op.execute(make_old_new_id_migration(trid_migration))
 
 
