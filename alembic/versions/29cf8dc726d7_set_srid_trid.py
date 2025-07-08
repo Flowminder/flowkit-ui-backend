@@ -31,7 +31,7 @@ def upgrade() -> None:
     def make_old_new_id_migration(mig: OldNewIdMigration) -> str:
         with_clause = "\n".join(
             f'WHEN label LIKE "{label}" THEN {new_id}'
-            for label, new_id in mig.label_mapping
+            for label, new_id in mig.label_mapping.items()
         )
         return f"""
             START TRANSACTION;
