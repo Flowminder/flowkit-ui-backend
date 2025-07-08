@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - `get_latest_date` unauthenticated endpoint for returning the most recent date of ingested data
+- Migrations are now managed by Alembic, with an initial base migration in place.
 
 ### Changed
 - Configuration is now handled by [pydantic's `BaseSettings`](https://docs.pydantic.dev/1.10/usage/settings/)
