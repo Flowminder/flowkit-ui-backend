@@ -9,7 +9,7 @@ Create Date: 2025-07-03 16:51:21.868196
 from dataclasses import dataclass
 from typing import Sequence, Union, Dict
 from flowkit_ui_backend.db.const_data import time_id_mapping
-from alembic import op
+from alembic import op, context
 
 
 # revision identifiers, used by Alembic.
@@ -64,11 +64,7 @@ def upgrade() -> None:
     op.execute(
         f"""
             {make_old_new_id_migration(trid_migration)}
-
-    ALTER TABLE flowkit_ui_backend.temporal_resolution MODIFY trid NULLABLE FALSE;
-    ALTER TABLE flowkit_ui_backend.temporal_resolution DROP PRIMARY KEY;
-    ALTER TABLE flowkit_ui_backend.temporal_resoltuion ADD PRIMARY KEY(`trid`);
-    ALTER TABLE flowkit_ui_backend.temporal_resolution DROP COLUMN(`id`);
+    ALTER TABLE flowkit_ui_backend.temporal_resolution DROP COLUMN `id`, ADD PRIMARY KEY(`trid`), MODIFY `trid` INT NOT NULL;
 
     """
     )

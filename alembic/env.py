@@ -39,7 +39,7 @@ class ConnectionSpec:
 
 
 def build_url_from_spec(spec: ConnectionSpec) -> str:
-    url = f"mysql+mysqlconnector://{spec.user}:{spec.password}@{spec.host}:{spec.port}/{spec.db_name}"
+    url = f"mysql+mysqldb://{spec.user}:{spec.password}@{spec.host}:{spec.port}/{spec.db_name}"
     return url
 
 
