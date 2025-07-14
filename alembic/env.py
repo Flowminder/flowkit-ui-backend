@@ -109,8 +109,8 @@ def run_migrations_online(spec: ConnectionSpec) -> None:
 
 # Safty barrier - explicitly switch this when you're working on
 # remote tables
-spec = spec_for_local()
-# spec = spec_for_remote()
+# spec = spec_for_local()
+spec = spec_for_remote()
 
 if context.is_offline_mode():
     run_migrations_offline(spec)
