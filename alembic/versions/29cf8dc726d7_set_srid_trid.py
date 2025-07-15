@@ -6,10 +6,8 @@ Create Date: 2025-07-03 16:51:21.868196
 
 """
 
-from dataclasses import dataclass
-from typing import Sequence, Union, Dict
-from flowkit_ui_backend.db.const_data import time_id_mapping
-from alembic import op, context
+from typing import Sequence, Union
+from alembic import op
 
 
 # revision identifiers, used by Alembic.
@@ -22,8 +20,8 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     """Upgrade schema."""
 
-    # Not sure that this should live in time_id_mapping - changing it there would
-    # affect how the migrations run in the future.
+    # This is living here as we don't want to load this from multable git libraries
+    time_id_mapping = {"Year": 1, "Month": 2, "Week": 3, "Day": 4}
     with_clause = "\n".join(
         f'WHEN label LIKE "{label}" THEN {new_id}'
         for label, new_id in time_id_mapping.items()
