@@ -44,6 +44,8 @@ def upgrade() -> None:
             UPDATE flowkit_ui_backend.`temporal_resolution`, old_new_mapping
               SET trid = old_new_mapping.new_id
                 WHERE trid = old_new_mapping.old_id;
+            
+
 
     ALTER TABLE flowkit_ui_backend.temporal_resolution DROP COLUMN `id`, ADD PRIMARY KEY(`trid`), MODIFY `trid` INT NOT NULL;
 
