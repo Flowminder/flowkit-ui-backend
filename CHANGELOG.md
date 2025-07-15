@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Configuration is now handled by [pydantic's `BaseSettings`](https://docs.pydantic.dev/1.10/usage/settings/)
+- `mysql_schema.sql` updated to come into parity with Alembic migration 29cf
 
 ### Fixed
 - Fixed profile page erroring due to a change in the auth0 api
