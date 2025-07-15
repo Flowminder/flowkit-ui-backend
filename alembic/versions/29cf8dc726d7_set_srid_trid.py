@@ -22,48 +22,29 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     """Upgrade schema."""
 
-    @dataclass
-    class OldNewIdMigration:
-        label_mapping: Dict
-        id_name: str
-        table_name: str
-
-    def make_old_new_id_migration(mig: OldNewIdMigration) -> str:
-        with_clause = "\n".join(
-            f'WHEN label LIKE "{label}" THEN {new_id}'
-            for label, new_id in mig.label_mapping.items()
-        )
-        return f"""
-
-            WITH old_new_mapping AS (
-              SELECT {mig.id_name} as old_id, label, CASE
-              {with_clause}
-              END AS new_id
-              FROM flowkit_ui_backend.`{mig.table_name}`)
-            UPDATE flowkit_ui_backend.metadata, old_new_mapping
-              SET {mig.id_name} = old_new_mapping.new_id
-                WHERE {mig.id_name} = old_new_mapping.old_id;
-
-            WITH old_new_mapping AS (
-              SELECT {mig.id_name} as old_id, label, CASE
-              {with_clause}
-              END AS new_id
-              FROM flowkit_ui_backend.`{mig.table_name}`)
-            UPDATE flowkit_ui_backend.`{mig.table_name}`, old_new_mapping
-              SET {mig.id_name} = old_new_mapping.new_id
-                WHERE {mig.id_name} = old_new_mapping.old_id;
-
-            """
-
-    trid_migration = OldNewIdMigration(
-        label_mapping=time_id_mapping,
-        id_name="trid",
-        table_name="temporal_resolution",
+    # Not sure that this should live in time_id_mapping - changing it there would
+    # affect how the migrations run in the future.
+    with_clause = "\n".join(
+        f'WHEN label LIKE "{label}" THEN {new_id}'
+        for label, new_id in time_id_mapping.items()
     )
 
     op.execute(
         f"""
-            {make_old_new_id_migration(trid_migration)}
+            CREATE TEMPORARY TABLE old_new_mapping
+              SELECT trid as old_id, label, CASE
+              {with_clause}
+              END AS new_id
+              FROM flowkit_ui_backend.`temporal_resolution`;
+
+            UPDATE flowkit_ui_backend.metadata, old_new_mapping
+              SET trid = old_new_mapping.new_id
+                WHERE trid = old_new_mapping.old_id;
+
+            UPDATE flowkit_ui_backend.`temporal_resolution`, old_new_mapping
+              SET trid = old_new_mapping.new_id
+                WHERE trid = old_new_mapping.old_id;
+
     ALTER TABLE flowkit_ui_backend.temporal_resolution DROP COLUMN `id`, ADD PRIMARY KEY(`trid`), MODIFY `trid` INT NOT NULL;
 
     """
