@@ -155,7 +155,8 @@ CREATE TABLE IF NOT EXISTS `flowkit_ui_backend`.`spatial_resolution` (
 --
 
 CREATE TABLE IF NOT EXISTS `flowkit_ui_backend`.`temporal_resolution` (
-  `trid` INT NOT NULL PRIMARY KEY COMMENT 'A unique identifier',
+  `id` INT PRIMARY KEY AUTO_INCREMENT,
+  `trid` INT DEFAULT NULL COMMENT 'A unique identifier',
   `label` TEXT NOT NULL COMMENT 'A human-readable name',
   `index` INT UNSIGNED NOT NULL COMMENT 'A numeric index placing this resolution in relation to other available resolutions',
   `relativedelta_unit` ENUM('years', 'months', 'weeks', 'days', 'hours') NOT NULL COMMENT 'The unit for the timedelta that this stemporal resolution represents',
