@@ -121,6 +121,7 @@ def run_migrations_online(spec: ConnectionSpec) -> None:
             context.run_migrations()
 
 
+
 xargs = context.get_x_argument(as_dictionary=True)
 if "db_env" in xargs.keys():
     spec = spec_for_remote(xargs["db_env"])
