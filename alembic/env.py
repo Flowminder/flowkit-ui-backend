@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 from logging.config import fileConfig
 from dataclasses import asdict, dataclass
@@ -63,7 +64,10 @@ def spec_for_local() -> ConnectionSpec:
 
 
 def spec_for_remote() -> ConnectionSpec:
-    print("Caution: running migration on remote db")
+    confirm = input("Confirm: running migration on remote db (y/n)\n")
+    if not confirm.startswith("y"):
+        sys.exit(1)
+
     dev_cred_file = Path(__file__).parent / "dev_credentials"
     return spec_from_file(dev_cred_file)
 
@@ -109,8 +113,8 @@ def run_migrations_online(spec: ConnectionSpec) -> None:
 
 # Safty barrier - explicitly switch this when you're working on
 # remote tables
-# spec = spec_for_local()
-spec = spec_for_remote()
+spec = spec_for_local()
+# spec = spec_for_remote()
 
 if context.is_offline_mode():
     run_migrations_offline(spec)
