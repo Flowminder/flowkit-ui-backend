@@ -1,7 +1,9 @@
+import sys
 from pathlib import Path
 from logging.config import fileConfig
 from dataclasses import asdict, dataclass
 
+from typing import Literal
 from urllib.parse import quote_plus
 from sqlalchemy import create_engine
 
@@ -39,7 +41,12 @@ class ConnectionSpec:
 
 
 def build_url_from_spec(spec: ConnectionSpec) -> str:
-    url = f"mysql+mysqlconnector://{spec.user}:{spec.password}@{spec.host}:{spec.port}/{spec.db_name}"
+    url = f"mysql+mysqldb://{spec.user}:{spec.password}@{spec.host}:{spec.port}/{spec.db_name}"
+    return url
+
+
+def build_redacted_url_from_spec(spec: ConnectionSpec) -> str:
+    url = f"mysql+mysqldb://{spec.user}:***@{spec.host}:{spec.port}/{spec.db_name}"
     return url
 
 
@@ -62,9 +69,16 @@ def spec_for_local() -> ConnectionSpec:
     return spec_from_file(dev_cred_file)
 
 
-def spec_for_remote() -> ConnectionSpec:
-    print("Caution: running migration on remote db")
-    dev_cred_file = Path(__file__).parent / "dev_credentials"
+def spec_for_remote(db_env: str) -> ConnectionSpec:
+    if db_env not in ["dev", "staging", "prod"]:
+        print("db_env, if set, must be one of dev, staging, prod")
+        sys.exit(1)
+    if db_env == "prod":
+        extra_confirm = input("Running migration on prod - please type 'confirm'")
+        if extra_confirm != "confirm":
+            sys.exit(1)
+
+    dev_cred_file = Path(__file__).parent / f"{db_env}_credentials"
     return spec_from_file(dev_cred_file)
 
 
@@ -107,10 +121,14 @@ def run_migrations_online(spec: ConnectionSpec) -> None:
             context.run_migrations()
 
 
-# Safty barrier - explicitly switch this when you're working on
-# remote tables
-spec = spec_for_local()
-# spec = spec_for_remote()
+xargs = context.get_x_argument(as_dictionary=True)
+if "db_env" in xargs.keys():
+    spec = spec_for_remote(xargs["db_env"])
+else:
+    spec = spec_for_local()
+
+print("Running migration on:")
+print(build_redacted_url_from_spec(spec))
 
 if context.is_offline_mode():
     run_migrations_offline(spec)

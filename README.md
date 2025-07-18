@@ -42,6 +42,19 @@ The API document can be viewed at [http://localhost:5000/openapi.json](http://lo
 
 If you need to add any dependencies, add them to `src/impl/requirements.in` or `src/impl/dev-requirements.in` and refer to the section above as the docker image will have to be rebuilt.
 
+## Migrations
+
+Migrations between database versions are handled by [https://alembic.sqlalchemy.org/en/latest/](https://alembic.sqlalchemy.org/en/latest/).
+By default, flowkit-ui migrations are targeted at the database running on localhost using the test credentials. To target migrations against
+remote dbs, create a file `dev_credentials`, `staging_credentials` and `prod_credentials` next to `local_credentials`, with the same structure.
+Then, pass Alembic the `-x db_env={dev, staging, prod}` option.
+
+For example, the following brings the dev db to the latest Alembic migration
+``` bash
+source .venv/bin/activate
+python -m alembic -x db_env=dev upgrade head
+```
+
 ## Building without make
 
 ### Build Args
@@ -85,3 +98,4 @@ If you need to add any dependencies, add them to `src/impl/requirements.in` or `
 * LOG_LEVEL (default to warning, default to debug if DEV_MODE=1)
 * JUPYTER_ENABLED (default 0, set to 1 if using jupyter locally)
 * JUPYTER_PORT
+
