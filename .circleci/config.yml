@@ -43,7 +43,7 @@ jobs:
     machine:
       image: ubuntu-2004:2023.04.2
       docker_layer_caching: true
-    resource_class: flowminder/runners
+    resource_class: large  # Keep using CircleCI's hosted runners for building
     working_directory: /tmp/flowkit-ui-backend
     steps:
       - checkout
@@ -61,15 +61,13 @@ jobs:
       - run:
           name: Build docker image
           command: |
-            # Set registry URL for the Makefile if it uses it
-            export DOCKER_REGISTRY=registry.cloud.flowminder.org
             make -e build
       - run:
           name: Tag image for private registry
           command: |
             # Tag the built image for the private registry
-            sudo docker tag flowminder/flowkit-ui-backend:${CIRCLE_TAG:-${CIRCLE_SHA1:0:7}} registry.cloud.flowminder.org/flowminder/flowkit-ui-backend:${CIRCLE_TAG:-${CIRCLE_SHA1:0:7}}
-            sudo docker tag flowminder/flowkit-ui-backend:latest registry.cloud.flowminder.org/flowminder/flowkit-ui-backend:latest
+            docker tag flowminder/flowkit-ui-backend:${CIRCLE_TAG:-${CIRCLE_SHA1:0:7}} registry.cloud.flowminder.org/flowminder/flowkit-ui-backend:${CIRCLE_TAG:-${CIRCLE_SHA1:0:7}}
+            docker tag flowminder/flowkit-ui-backend:latest registry.cloud.flowminder.org/flowminder/flowkit-ui-backend:latest
       - run:
           name: Run unit tests
           command: |
@@ -82,12 +80,34 @@ jobs:
       - store_test_results:
           path: test_results/results.xml
       - run:
-          name: Push image(s) to private registry
+          name: Save Docker image to file
           command: |
-            echo "$DOCKER_CLOUD_PASSWORD" | sudo docker login registry.cloud.flowminder.org -u "$DOCKER_CLOUD_USER" --password-stdin
-            sudo docker push -a registry.cloud.flowminder.org/flowminder/flowkit-ui-backend
+            docker save -o /tmp/flowkit-ui-backend.tar registry.cloud.flowminder.org/flowminder/flowkit-ui-backend:${CIRCLE_TAG:-${CIRCLE_SHA1:0:7}} registry.cloud.flowminder.org/flowminder/flowkit-ui-backend:latest
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+            - flowkit-ui-backend.tar
       - upload_codecov:
           test: test_results
+
+  push:
+    machine:
+      image: default
+    resource_class: flowminder/runners  # Use private runners for pushing
+    steps:
+      - attach_workspace:
+          at: /tmp
+      - run:
+          name: Install Docker CLI
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y docker.io
+      - run:
+          name: Load and push Docker image
+          command: |
+            sudo docker load -i /tmp/flowkit-ui-backend.tar
+            echo "$DOCKER_CLOUD_PASSWORD" | sudo docker login registry.cloud.flowminder.org -u "$DOCKER_CLOUD_USER" --password-stdin
+            sudo docker push -a registry.cloud.flowminder.org/flowminder/flowkit-ui-backend
 
   update-mob-dashtag:
     docker:
@@ -128,14 +148,17 @@ workflows:
   build_test_deploy:
     jobs:
       - lint
-      - build:
+      - build
+      - push:
           context:
             - flowcloud-docker-registry
+          requires:
+            - build
       - update-mob-dashtag:
           context:
             - flowminder-gcp-mobility-dashboard-gcr-context
           requires:
-            - build
+            - push
           filters:
             branches:
               only:
