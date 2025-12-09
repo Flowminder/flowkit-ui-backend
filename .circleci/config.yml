@@ -63,7 +63,7 @@ jobs:
           command: |
             make -e build
       - run:
-          name: Tag image for private registry
+          name: Tag image for a private registry
           command: |
             # Tag the built image for the private registry
             docker tag flowminder/flowkit-ui-backend:${CIRCLE_TAG:-${CIRCLE_SHA1:0:7}} ${REGISTRY_URL}/flowminder/flowkit-ui-backend:${CIRCLE_TAG:-${CIRCLE_SHA1:0:7}}
