@@ -148,7 +148,9 @@ workflows:
   build_test_deploy:
     jobs:
       - lint
-      - build
+      - build:
+          context:
+            - flowcloud-docker-registry
       - push:
           context:
             - flowcloud-docker-registry
