@@ -66,8 +66,8 @@ jobs:
           name: Tag image for private registry
           command: |
             # Tag the built image for the private registry
-            docker tag flowminder/flowkit-ui-backend:${CIRCLE_TAG:-${CIRCLE_SHA1:0:7}} registry.cloud.flowminder.org/flowminder/flowkit-ui-backend:${CIRCLE_TAG:-${CIRCLE_SHA1:0:7}}
-            docker tag flowminder/flowkit-ui-backend:latest registry.cloud.flowminder.org/flowminder/flowkit-ui-backend:latest
+            docker tag flowminder/flowkit-ui-backend:${CIRCLE_TAG:-${CIRCLE_SHA1:0:7}} ${REGISTRY_URL}/flowminder/flowkit-ui-backend:${CIRCLE_TAG:-${CIRCLE_SHA1:0:7}}
+            docker tag flowminder/flowkit-ui-backend:latest ${REGISTRY_URL}/flowminder/flowkit-ui-backend:latest
       - run:
           name: Run unit tests
           command: |
@@ -82,7 +82,7 @@ jobs:
       - run:
           name: Save Docker image to file
           command: |
-            docker save -o /tmp/flowkit-ui-backend.tar registry.cloud.flowminder.org/flowminder/flowkit-ui-backend:${CIRCLE_TAG:-${CIRCLE_SHA1:0:7}} registry.cloud.flowminder.org/flowminder/flowkit-ui-backend:latest
+            docker save -o /tmp/flowkit-ui-backend.tar ${REGISTRY_URL}/flowminder/flowkit-ui-backend:${CIRCLE_TAG:-${CIRCLE_SHA1:0:7}} ${REGISTRY_URL}/flowminder/flowkit-ui-backend:latest
       - persist_to_workspace:
           root: /tmp
           paths:
@@ -106,8 +106,8 @@ jobs:
           name: Load and push Docker image
           command: |
             sudo docker load -i /tmp/flowkit-ui-backend.tar
-            echo "$DOCKER_CLOUD_PASSWORD" | sudo docker login registry.cloud.flowminder.org -u "$DOCKER_CLOUD_USER" --password-stdin
-            sudo docker push -a registry.cloud.flowminder.org/flowminder/flowkit-ui-backend
+            echo "$DOCKER_CLOUD_PASSWORD" | sudo docker login ${REGISTRY_URL} -u "$DOCKER_CLOUD_USER" --password-stdin
+            sudo docker push -a ${REGISTRY_URL}/flowminder/flowkit-ui-backend
 
   update-mob-dashtag:
     docker:
