@@ -81,7 +81,7 @@ jobs:
             docker tag flowminder/flowkit-ui-backend:latest registry.cloud.flowminder.org/flowminder/flowkit-ui-backend:latest
             
             # Login and push
-            echo "$DOCKER_CLOUD_PASSWORD" | docker login registry.cloud.flowminder.org -u "$DOCKER_CLOUD_USER" --password-stdin
+            echo "$QUAY_CLOUD_PASSWORD" | docker login registry.cloud.flowminder.org -u "$QUAY_CLOUD_USER" --password-stdin
             docker push registry.cloud.flowminder.org/flowminder/flowkit-ui-backend:${CIRCLE_TAG:-${CIRCLE_SHA1:0:7}}
             docker push registry.cloud.flowminder.org/flowminder/flowkit-ui-backend:latest
       - upload_codecov:
