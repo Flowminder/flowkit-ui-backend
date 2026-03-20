@@ -34,5 +34,5 @@ for ind in config["indicators"]:
         if len(parts) == 2 and parts[1] in langs:
             translation.setdefault(parts[1], {})[parts[0]] = val
     if translation:
-        escaped = json.dumps(translation, ensure_ascii=False).replace("'", "\\'")
+        escaped = json.dumps(translation, ensure_ascii=False).replace("\\", "\\\\").replace("'", "\\'")
         print(f"UPDATE indicator SET translation = '{escaped}' WHERE indicator_id = '{iid}';")
