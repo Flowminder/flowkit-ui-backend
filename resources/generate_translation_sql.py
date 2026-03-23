@@ -22,7 +22,9 @@ with open(config_path) as f:
 
 langs = {l["code"] for l in config["languages"] if not l.get("default")}
 
-print("-- Generated from config.json - updates indicator translations in flowkit_ui_backend")
+print(
+    "-- Generated from config.json - updates indicator translations in flowkit_ui_backend"
+)
 print("-- Languages:", sorted(langs))
 print()
 
@@ -34,5 +36,11 @@ for ind in config["indicators"]:
         if len(parts) == 2 and parts[1] in langs:
             translation.setdefault(parts[1], {})[parts[0]] = val
     if translation:
-        escaped = json.dumps(translation, ensure_ascii=False).replace("\\", "\\\\").replace("'", "\\'")
-        print(f"UPDATE indicator SET translation = '{escaped}' WHERE indicator_id = '{iid}';")
+        escaped = (
+            json.dumps(translation, ensure_ascii=False)
+            .replace("\\", "\\\\")
+            .replace("'", "\\'")
+        )
+        print(
+            f"UPDATE indicator SET translation = '{escaped}' WHERE indicator_id = '{iid}';"
+        )
