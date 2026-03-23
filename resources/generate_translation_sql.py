@@ -5,10 +5,10 @@ into the flowkit_ui_backend MySQL database.
 
 Usage:
     python3 resources/generate_translation_sql.py > /tmp/update_translations.sql
-    tailscale ssh root@mobdash-sql-prod "mysql -u root -A flowkit_ui_backend" < /tmp/update_translations.sql
+    tailscale ssh root@mobdash-sql-prod "mysql --default-character-set=utf8mb4 -u root -A flowkit_ui_backend" < /tmp/update_translations.sql
 
 Or pipe directly:
-    python3 resources/generate_translation_sql.py | tailscale ssh root@mobdash-sql-prod "mysql -u root -A flowkit_ui_backend"
+    python3 resources/generate_translation_sql.py | tailscale ssh root@mobdash-sql-prod "mysql --default-character-set=utf8mb4 -u root -A flowkit_ui_backend"
 """
 
 import json
