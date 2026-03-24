@@ -256,6 +256,7 @@ async def get_time_range(
 
     logger.debug(f"Formatting dates...", date_format=date_format)
     dates = [row[0].strftime(date_format) for row in result]
+    populated_dates = dates[:]
     min_value = min([row[1] for row in result]) if len(result) > 0 else None
     max_value = max([row[2] for row in result]) if len(result) > 0 else None
 
@@ -278,6 +279,7 @@ async def get_time_range(
             start_date=dates[0],
             end_date=dates[-1],
             all_dates=dates,
+            populated_dates=populated_dates,
             min_value=min_value,
             max_value=max_value,
         )
