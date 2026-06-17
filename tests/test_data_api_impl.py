@@ -324,6 +324,7 @@ async def test_get_time_range(mocker, fresh_pool, token_model):
         start_date="1970",
         end_date="1972",
         all_dates=["1970", "1971", "1972"],
+        populated_dates=["1970", "1972"],
         min_value=1,
         max_value=100,
     )
