@@ -251,7 +251,16 @@
             "scale": "diverging",
             "decimals": 2,
             "min_value": null,
-            "max_value": null
+            "max_value": null,
+            "bins": [
+                { "min": -25, "max": 25, "width": "10%" },
+                { "min": -50, "max": -25, "width": "25%" },
+                { "min": 25, "max": 50, "width": "25%" },
+                { "min": -100, "max": -50, "width": "50%" },
+                { "min": 50, "max": 100, "width": "50%" },
+                { "min": null, "max": -100, "width": "80%" },
+                { "min": 100, "max": null, "width": "80%" }
+            ]
         },
         {
             "category_id": "relocations",
@@ -436,7 +445,16 @@
             "scale": "diverging",
             "decimals": 2,
             "min_value": null,
-            "max_value": null
+            "max_value": null,
+            "bins": [
+                { "min": -25, "max": 25, "width": "10%" },
+                { "min": -50, "max": -25, "width": "25%" },
+                { "min": 25, "max": 50, "width": "25%" },
+                { "min": -100, "max": -50, "width": "50%" },
+                { "min": 50, "max": 100, "width": "50%" },
+                { "min": null, "max": -100, "width": "80%" },
+                { "min": 100, "max": null, "width": "80%" }
+            ]
         },
         {
             "category_id": "movements",
