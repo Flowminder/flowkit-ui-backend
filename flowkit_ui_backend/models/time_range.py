@@ -34,6 +34,7 @@ class TimeRange(BaseModel):
     start_date: Optional[str] = None
     end_date: Optional[str] = None
     all_dates: Optional[List[str]] = None
+    populated_dates: Optional[List[str]] = None
     min_value: Optional[int] = None
     max_value: Optional[int] = None
 
