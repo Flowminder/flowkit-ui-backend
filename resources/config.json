@@ -219,7 +219,14 @@
             "scale": "sequential",
             "decimals": 2,
             "min_value": 0,
-            "max_value": null
+            "max_value": null,
+            "bins": [
+                { "min": 0, "max": 50, "width": "2%" },
+                { "min": 50, "max": 200, "width": "10%" },
+                { "min": 200, "max": 500, "width": "25%" },
+                { "min": 500, "max": 2000, "width": "50%" },
+                { "min": 2000, "max": null, "width": "80%" }
+            ]
         },
         {
             "category_id": "relocations",
@@ -235,7 +242,18 @@
             "scale": "diverging",
             "decimals": 0,
             "min_value": null,
-            "max_value": null
+            "max_value": null,
+            "bins": [
+                { "min": -25, "max": 25, "width": "2%" },
+                { "min": -100, "max": -25, "width": "10%" },
+                { "min": 25, "max": 100, "width": "10%" },
+                { "min": -300, "max": -100, "width": "25%" },
+                { "min": 100, "max": 300, "width": "25%" },
+                { "min": -1000, "max": -300, "width": "50%" },
+                { "min": 300, "max": 1000, "width": "50%" },
+                { "min": null, "max": -1000, "width": "80%" },
+                { "min": 1000, "max": null, "width": "80%" }
+            ]
         },
         {
             "category_id": "relocations",
@@ -415,7 +433,14 @@
             "scale": "sequential",
             "decimals": 0,
             "min_value": 0,
-            "max_value": null
+            "max_value": null,
+            "bins": [
+                { "min": 0, "max": 50, "width": "2%" },
+                { "min": 50, "max": 500, "width": "10%" },
+                { "min": 500, "max": 2000, "width": "25%" },
+                { "min": 2000, "max": 10000, "width": "50%" },
+                { "min": 10000, "max": null, "width": "80%" }
+            ]
         },
         {
             "category_id": "movements",
@@ -431,7 +456,18 @@
             "scale": "diverging",
             "decimals": 0,
             "min_value": null,
-            "max_value": null
+            "max_value": null,
+            "bins": [
+                { "min": -50, "max": 50, "width": "2%" },
+                { "min": -500, "max": -50, "width": "10%" },
+                { "min": 50, "max": 500, "width": "10%" },
+                { "min": -2000, "max": -500, "width": "25%" },
+                { "min": 500, "max": 2000, "width": "25%" },
+                { "min": -10000, "max": -2000, "width": "50%" },
+                { "min": 2000, "max": 10000, "width": "50%" },
+                { "min": null, "max": -10000, "width": "80%" },
+                { "min": 10000, "max": null, "width": "80%" }
+            ]
         },
         {
             "category_id": "movements",
