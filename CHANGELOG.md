@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - `get_latest_date` unauthenticated endpoint for returning the most recent date of ingested data
+- `QueryResult.revisions`: the distinct metadata revisions (data versions) behind a `/query` result
 - Alembic migrations and some convenience around them - see README
 
 ### Changed

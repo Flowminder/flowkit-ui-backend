@@ -28,12 +28,14 @@ class QueryResult(BaseModel):
         max: The max of this QueryResult [Optional].
         data_by_date: The data_by_date of this QueryResult [Optional].
         mdids: The mdids of this QueryResult [Optional].
+        revisions: The distinct data revisions of the metadata behind this QueryResult [Optional].
     """
 
     min: Optional[float] = None
     max: Optional[float] = None
     data_by_date: Optional[Dict[str, Any]] = None
     mdids: Optional[List[str]] = None
+    revisions: Optional[List[str]] = None
 
     class Config:
         extra = "allow"
