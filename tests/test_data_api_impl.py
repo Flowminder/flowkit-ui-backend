@@ -378,6 +378,7 @@ async def test_run_query(populated_db, fresh_pool, admin_token_model):
             "2020-02": {"HT0111-01": 544650.0},
             "2020-03": {"HT0111-01": 540640.0},
         },
+        revisions=["v0.1-demo"],
     )
 
 
@@ -400,6 +401,7 @@ async def test_run_flow_query(populated_db, fresh_pool, admin_token_model):
         min=6040.0,
         max=6040.0,
         data_by_date={"2020-02": {"HT0111-01": {"HT0111-02": 6040.0}}},
+        revisions=["v0.1-demo"],
     )
 
 

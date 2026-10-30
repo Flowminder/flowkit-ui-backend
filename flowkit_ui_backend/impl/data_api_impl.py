@@ -383,6 +383,7 @@ async def run_query(
         min=min_value if min_value != math.inf else None,
         max=max_value if max_value != -math.inf else None,
         data_by_date=dict(sorted(data_by_date.items())),
+        revisions=sorted({m.revision for m in metadata}),
     )
 
     return new_result
