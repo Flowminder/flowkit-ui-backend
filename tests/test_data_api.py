@@ -282,4 +282,5 @@ async def test_run_query(client_with_dummied_out_security: TestClient):
         max=6040.0,
         mdids=None,
         data_by_date={"2020-02": {"HT0111-01": {"HT0111-02": 6040.0}}},
+        revisions=["v0.1-demo"],
     )
