@@ -22,25 +22,37 @@ with open(config_path) as f:
 
 langs = {l["code"] for l in config["languages"] if not l.get("default")}
 
+
+def sql_str(val):
+    return "'" + val.replace("\\", "\\\\").replace("'", "\\'") + "'"
+
+
 print(
-    "-- Generated from config.json - updates indicator translations in flowkit_ui_backend"
+    "-- Generated from config.json - updates indicator text and translations in flowkit_ui_backend"
 )
 print("-- Languages:", sorted(langs))
+print("SET NAMES utf8mb4;")
+print("START TRANSACTION;")
 print()
 
 for ind in config["indicators"]:
     iid = ind["indicator_id"]
+    # default-language text lives in its own columns
+    print(
+        f"UPDATE indicator SET label = {sql_str(ind['label'])}, "
+        f"description = {sql_str(ind['description'])}, "
+        f"method = {sql_str(ind['method'])} WHERE indicator_id = '{iid}';"
+    )
     translation = {}
     for key, val in ind.items():
         parts = key.rsplit("_", 1)
         if len(parts) == 2 and parts[1] in langs:
             translation.setdefault(parts[1], {})[parts[0]] = val
     if translation:
-        escaped = (
-            json.dumps(translation, ensure_ascii=False)
-            .replace("\\", "\\\\")
-            .replace("'", "\\'")
-        )
+        escaped = sql_str(json.dumps(translation, ensure_ascii=False))
         print(
-            f"UPDATE indicator SET translation = '{escaped}' WHERE indicator_id = '{iid}';"
+            f"UPDATE indicator SET translation = {escaped} WHERE indicator_id = '{iid}';"
         )
+
+print()
+print("COMMIT;")

@@ -55,6 +55,17 @@ source .venv/bin/activate
 python -m alembic -x db_env=dev upgrade head
 ```
 
+## Indicator text and translations
+
+Indicator labels, descriptions and method text (English and French) are defined in `resources/config.json`, but the running backend serves them from the `indicator` table in each environment's database. Nothing syncs the two automatically: no deploy or startup step reads `config.json`. To change indicator text, edit `config.json`, then generate and apply the SQL for each environment:
+
+``` bash
+python3 resources/generate_translation_sql.py > /tmp/update_indicator_text.sql
+tailscale ssh root@mobdash-sql-<env> "mysql --default-character-set=utf8mb4 -u root -A flowkit_ui_backend" < /tmp/update_indicator_text.sql
+```
+
+The script writes the English columns and the `translation` JSON in one transaction. Back up the table first (`mysqldump flowkit_ui_backend indicator`), and don't edit indicator text directly in the database, or `config.json` stops matching what's live. See the [Haiti Mobility Dashboard](https://docs.flowminder.org/wiki/Haiti_Mobility_Dashboard) wiki page for more.
+
 ## Building without make
 
 ### Build Args
